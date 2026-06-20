@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0c0c0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PinPong" />
+  <title>PinPong</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0c0c0f;
+      --surface: #17171c;
+      --s2:      #202028;
+      --border:  #2a2a35;
+      --text:    #f0f0f5;
+      --muted:   #606070;
+      --blue:    #3B8BFF;
+      --orange:  #FF6B00;
+      --purple:  #7C3AED;
+      --green:   #34C759;
+      --yellow:  #FFD60A;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      overflow: hidden;
+      height: 100dvh; width: 100dvw;
+      color: var(--text);
+    }
+    #map { position: fixed; inset: 0; z-index: 0; }
+    .header {
+      position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 400;
+      padding: env(safe-area-inset-top, 0px) 0 0;
+      width: fit-content;
+    }
+    .header-inner {
+      margin: 12px 0 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 12px 16px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+      width: fit-content;
+    }
+    .header-top { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 40px; height: 40px; background: var(--orange);
+      border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .logo-text { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
+    .logo-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .progress-bar-track { flex: 1; height: 4px; background: var(--s2); border-radius: 2px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.6s ease; }
+    .progress-label { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .filter-row { display: flex; gap: 8px; margin-top: 10px; }
+    .filter-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: var(--s2);
+      font-size: 12.5px; font-weight: 600; color: #888;
+      cursor: pointer; transition: all 0.15s; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .filter-pill.active-outdoor { border-color: var(--orange); background: rgba(255,107,0,0.12); color: var(--orange); }
+    .filter-pill.active-bar     { border-color: var(--purple); background: rgba(124,58,237,0.12); color: var(--purple); }
+    .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .fab-stack {
+      position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 32px); z-index: 300;
+      display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    }
+    .fab-nearest {
+      display: flex; align-items: center; gap: 8px;
+      padding: 13px 18px; background: var(--blue); color: white;
+      border: none; border-radius: 28px; font-size: 13.5px; font-weight: 600;
+      cursor: pointer; box-shadow: 0 4px 24px rgba(59,139,255,0.4);
+      transition: transform 0.12s, opacity 0.12s;
+      -webkit-tap-highlight-color: transparent; letter-spacing: -0.2px;
+    }
+    .fab-nearest:active { transform: scale(0.95); opacity: 0.85; }
+    .fab-locate {
+      width: 50px; height: 50px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 50%;
+      cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .fab-locate:active { transform: scale(0.92); }
+    .bottom-sheet {
+      position: fixed; bottom: 24px; left: 50%; z-index: 500;
+      width: calc(100% - 32px); max-width: 400px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+      transform: translate(-50%, calc(100% + 40px));
+      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow: hidden;
+    }
+    @media (max-width: 480px) {
+      .sheet-photo { height: 130px; }
+      .sheet-body { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
+      .sheet-type { font-size: 10px; margin-bottom: 2px; }
+      .sheet-name { font-size: 17px; margin-bottom: 6px; }
+      .sheet-stats { gap: 4px; margin-bottom: 8px; }
+      .stat-row { font-size: 12px; }
+      .sheet-notes { margin-bottom: 10px; }
+      .sheet-notes-label { font-size: 10px; margin-bottom: 4px; }
+      .sheet-notes-bullet { font-size: 12px; margin-bottom: 2px; }
+      .btn-directions { padding: 11px; font-size: 13px; }
+    }
+    .bottom-sheet.open { transform: translate(-50%, 0); }
+    .sheet-close-top {
+      position: absolute; top: 12px; right: 12px; z-index: 10;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(0,0,0,0.82); border: 1.5px solid rgba(255,255,255,0.22);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; backdrop-filter: blur(6px);
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .sheet-close-top:active { background: rgba(0,0,0,0.95); }
+    .search-wrap {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 160px);
+      left: 50%; transform: translateX(-50%); z-index: 399;
+      width: 280px;
+    }
+    .search-input {
+      width: 100%; padding: 10px 16px 10px 38px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; color: var(--text); font-size: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4); outline: none;
+      -webkit-appearance: none;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      pointer-events: none; color: var(--muted);
+    }
+    .search-field { position: relative; }
+    .search-results {
+      margin-top: 6px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden; display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .search-result-item {
+      padding: 11px 14px; cursor: pointer; font-size: 13px;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:active { background: var(--s2); }
+    .sheet-photo { width: 100%; height: 220px; object-fit: cover; display: none; background: var(--s2); }
+    .sheet-photo.visible { display: block; }
+    .sheet-body { padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
+    .sheet-type { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+    .sheet-name { font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 12px; }
+    .sheet-stats { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+    .stat-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #bbb;
+    }
+    .stat-row .stat-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+    .stat-row .stat-key { color: var(--muted); flex-shrink: 0; }
+    .stat-row .stat-val { font-weight: 600; color: var(--text); }
+    .stat-row.verified .stat-val  { color: var(--green); }
+    .stat-row.not-found .stat-val { color: #FF3B30; }
+    .sheet-notes { margin-bottom: 16px; }
+    .sheet-notes-label { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .sheet-notes-bullet { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; color: var(--muted); line-height: 1.4; margin-bottom: 4px; }
+    .sheet-notes-bullet::before { content: "•"; color: var(--muted); flex-shrink: 0; }
+    .sheet-actions { display: flex; gap: 10px; }
+    .btn-directions {
+      flex: 1; padding: 14px; background: var(--blue); color: white;
+      border: none; border-radius: 14px; font-size: 14.5px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 16px rgba(59,139,255,0.35);
+    }
+    .btn-directions:active { opacity: 0.8; }
+    .btn-close {
+      width: 52px; height: 52px; background: var(--s2);
+      border: 1px solid var(--border); border-radius: 14px;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #777; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-close:active { background: var(--border); }
+    .leaflet-tile-pane { filter: brightness(1.15) contrast(0.92); }
+    .leaflet-control-zoom { display: none !important; }
+    .leaflet-control-attribution {
+      background: rgba(12,12,15,0.75) !important; color: #555 !important;
+      font-size: 10px !important; border-radius: 8px 0 0 0 !important;
+    }
+    .leaflet-control-attribution a { color: #555 !important; }
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 0.5; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="logo-mark">🏓</div>
+      <div>
+        <div class="logo-text">PinPong</div>
+        <div class="logo-meta" id="logoMeta">laster…</div>
+      </div>
+    </div>
+    <div class="progress-row" id="progressRow" style="display:none">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-pill active-outdoor" id="pill-outdoor" onclick="toggleFilter('outdoor')">
+        <div class="filter-dot" style="background:var(--orange)"></div>Utebord
+      </div>
+      <div class="filter-pill active-bar" id="pill-bar" onclick="toggleFilter('bar')">
+        <div class="filter-dot" style="background:var(--purple)"></div>Barer
+      </div>
+    </div>
+  </div>
+</div>
+<div class="search-wrap">
+  <div class="search-field">
+    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter sted…" autocomplete="off" autocorrect="off" spellcheck="false" />
+  </div>
+  <div class="search-results" id="searchResults"></div>
+</div>
+<div id="map"></div>
+<div class="fab-stack">
+  <button class="fab-nearest" id="btnNearest" onclick="findNearest()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    Nærmeste bord
+  </button>
+  <button class="fab-locate" onclick="locateMe()">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
+    </svg>
+  </button>
+</div>
+<div class="bottom-sheet" id="bottomSheet">
+  <button class="sheet-close-top" onclick="closeSheet()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <img class="sheet-photo" id="sheetPhoto" src="" alt="" />
+  <div class="sheet-body">
+    <div class="sheet-type" id="sheetType"></div>
+    <div class="sheet-name" id="sheetName"></div>
+    <div class="sheet-stats" id="sheetStats"></div>
+    <div class="sheet-notes" id="sheetNote"></div>
+    <div class="sheet-actions">
+      <button class="btn-directions" onclick="openDirections()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Veibeskrivelse
+      </button>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
+
+const STATIC = [
+  { navn:"Blindern",                 lat:59.9393882, lng:10.7231652, type:"outdoor" },
+  { navn:"Stensparken",              lat:59.9291336, lng:10.7308114, type:"outdoor" },
+  { navn:"Lilleborgbanen",           lat:59.9337185, lng:10.7683008, type:"outdoor" },
+  { navn:"Sofienbergparken",         lat:59.9232131, lng:10.7645644, type:"outdoor" },
+  { navn:"Taket på St. Hanshaugen",  lat:59.9255176, lng:10.7451989, type:"outdoor" },
+  { navn:"Grunerhagen",              lat:59.9231318, lng:10.7550015, type:"outdoor" },
+  { navn:"Rodeløkka kolonihage",     lat:59.9283978, lng:10.7731401, type:"outdoor" },
+  { navn:"Vogts gate",               lat:59.9310789, lng:10.7636191, type:"outdoor" },
+  { navn:"Sagene",                   lat:59.9381037, lng:10.7517979, type:"outdoor" },
+  { navn:"Iladalen",                 lat:59.9322454, lng:10.7527243, type:"outdoor" },
+  { navn:"Lakkegata skole",          lat:59.9200232, lng:10.7672644, type:"outdoor" },
+  { navn:"Mølleparken",              lat:59.9296868, lng:10.7568828, type:"outdoor" },
+  { navn:"Vøyenparken",              lat:59.9324830, lng:10.7585277, type:"outdoor" },
+  { navn:"Bjølsen skole",            lat:59.9398579, lng:10.7574463, type:"outdoor" },
+  { navn:"Torshovdalen",             lat:59.9315526, lng:10.7729130, type:"outdoor" },
+  { navn:"Skjønnhaug skole",         lat:59.9281584, lng:10.8765123, type:"outdoor" },
+  { navn:"Caltexløkka",              lat:59.9165710, lng:10.7782639, type:"outdoor" },
+  { navn:"Heibergløkka",             lat:59.9153523, lng:10.7751604, type:"outdoor" },
+  { navn:"Kampen park",              lat:59.9149963, lng:10.7790279, type:"outdoor" },
+  { navn:"Nydalen",                  lat:59.9500350, lng:10.7714855, type:"outdoor" },
+  { navn:"Kringsjå skole",           lat:59.9622263, lng:10.7303788, type:"outdoor" },
+  { navn:"Marienlystparken",         lat:59.9341753, lng:10.7238056, type:"outdoor" },
+  { navn:"Sinsen skole",             lat:59.9354285, lng:10.7839167, type:"outdoor" },
+  { navn:"Fagerborg skole",          lat:59.9335506, lng:10.7298536, type:"outdoor" },
+  { navn:"Urtehagen",                lat:59.9142148, lng:10.7643292, type:"outdoor" },
+  { navn:"Vika terrasse",            lat:59.9140998, lng:10.7293165, type:"outdoor" },
+  { navn:"Hersleb vgs",              lat:59.9176762, lng:10.7656187, type:"outdoor" },
+  { navn:"Lassons gate",             lat:59.9118907, lng:10.7190111, type:"outdoor" },
+  { navn:"Tinkern",                  lat:59.9115512, lng:10.7110250, type:"outdoor" },
+  { navn:"Majorstuen skole",         lat:59.9289730, lng:10.7121185, type:"outdoor" },
+  { navn:"Tøyen",                    lat:59.9140908, lng:10.7727423, type:"outdoor" },
+  { navn:"Kristparken",              lat:59.9178217, lng:10.7483310, type:"outdoor" },
+  { navn:"Rudolf Nielsen plass",     lat:59.9159490, lng:10.7654611, type:"outdoor" },
+  { navn:"Vahl skole",               lat:59.9164933, lng:10.7664373, type:"outdoor" },
+  { navn:"Kringsjå studentby",       lat:59.9648018, lng:10.7319261, type:"outdoor" },
+  { navn:"Ola Narr parken",          lat:59.9234624, lng:10.7759146, type:"outdoor" },
+  { navn:"Ullevål skole",            lat:59.9421684, lng:10.7319998, type:"outdoor" },
+  { navn:"Dælenenga",                lat:59.9264049, lng:10.7630655, type:"outdoor" },
+  { navn:"Foss vgs",                 lat:59.9269155, lng:10.7552217, type:"outdoor" },
+  { navn:"Sofienbergparken 2",       lat:59.9225230, lng:10.7677575, type:"outdoor" },
+  { navn:"Københavngata",            lat:59.9287924, lng:10.7685903, type:"outdoor" },
+  { navn:"Vaterland",                lat:59.9132184, lng:10.7587956, type:"outdoor" },
+  { navn:"Kampen skole",             lat:59.9131876, lng:10.7832771, type:"outdoor" },
+  { navn:"Kampenløkka",              lat:59.9148725, lng:10.7827546, type:"outdoor" },
+  { navn:"G12",                      lat:59.9558213, lng:10.7663830, type:"outdoor" },
+  { navn:"Vinslottet",               lat:59.9267937, lng:10.7936523, type:"outdoor" },
+  { navn:"Fyrstikkalleen skole",     lat:59.9157571, lng:10.7948091, type:"outdoor" },
+  { navn:"Lekeplass ved Helsfyr",    lat:59.9127430, lng:10.7941919, type:"outdoor" },
+  { navn:"St. Hanshaugen",           lat:59.9272768, lng:10.7424180, type:"outdoor" },
+  { navn:"Bygdøy skole",             lat:59.9049487, lng:10.6766785, type:"outdoor" },
+  { navn:"Sukkerbiten",              lat:59.9049733, lng:10.7525070, type:"outdoor" },
+  { navn:"Brygg",                    lat:59.9132947, lng:10.7485544, type:"bar" },
+  { navn:"Kulturhuset",              lat:59.9146374, lng:10.7508109, type:"bar" },
+  { navn:"Raadhuset Bar",            lat:59.9136835, lng:10.7337321, type:"bar" },
+  { navn:"Union Blindern",           lat:59.9407063, lng:10.7216641, type:"bar" },
+  { navn:"Alf",                      lat:59.9272500, lng:10.7508899, type:"bar" },
+  { navn:"Røverstaden",              lat:59.9134458, lng:10.7293552, type:"bar" },
+];
+
+let TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, notater:"", bilde_url:"" }));
+
+function parseCSVLine(line) {
+  const vals = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+    else { cur += c; }
+  }
+  vals.push(cur.trim());
+  return vals;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split("\n");
+  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || "").trim());
+    return obj;
+  });
+}
+
+function resolveImage(url) {
+  if (!url) return "";
+  if (url.includes('imgur.com')) {
+    // Trekk ut Imgur-ID — alltid siste alfanumeriske segment
+    const m = url.match(/([a-zA-Z0-9]+)(?:\?.*)?$/);
+    if (m) return `https://i.imgur.com/${m[1]}.jpg`;
+  }
+  // Full URL → bruk direkte
+  if (url.startsWith("http")) return url;
+  // Bare filnavn → hent fra images/bord/-mappen
+  return `images/bord/${url}`;
+}
+
+async function loadSheetData() {
+  if (!SHEETS_CSV_URL) {
+    updateProgress();
+    document.getElementById('logoMeta').textContent = `${TABLES.length} steder`;
+    return;
+  }
+  try {
+    const res = await fetch(SHEETS_CSV_URL);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    rows.forEach(row => {
+      const navn = (row.navn || "").trim();
+      if (!navn) return;
+      const existing = TABLES.findIndex(t => t.navn.toLowerCase() === navn.toLowerCase());
+      const data = {
+        verifisert: row.verifisert || null,
+        antall:     row.antall     || null,
+        materiale:  row.materiale  || null,
+        tilstand:   row.tilstand  || null,
+        under_tak:  row.under_tak || null,
+        belysning:  row.belysning || null,
+        notater:    row.notater    || "",
+        bilde_url:  (row.url || row.bilde_url) ? resolveImage(row.url || row.bilde_url) : "",
+      };
+      if (existing !== -1) {
+        TABLES[existing] = { ...TABLES[existing], ...data };
+      } else {
+        const lat = parseFloat(row.lat), lng = parseFloat(row.lng);
+        if (!lat || !lng) return;
+        const rawType = (row.type||"outdoor").toLowerCase();
+        const type = rawType === "utendørs" ? "outdoor" : rawType;
+        TABLES.push({ navn, lat, lng, type, ...data });
+      }
+    });
+    updateProgress();
+    renderMarkers();
+  } catch(e) {
+    console.warn("Sheet-feil:", e);
+    document.getElementById('logoMeta').textContent = `${TABLES.length} steder`;
+    updateProgress();
+  }
+}
+
+function updateProgress() {
+  const verified = TABLES.filter(t => t.verifisert === "ja").length;
+  const total = TABLES.length;
+  document.getElementById('progressFill').style.width = Math.round((verified/total)*100) + "%";
+  document.getElementById('progressLabel').textContent = `${verified} / ${total} verifisert`;
+  document.getElementById('logoMeta').textContent = `${total} steder`;
+  document.getElementById('progressRow').style.display = verified > 0 ? 'flex' : 'none';
+}
+
+const map = L.map('map', { center:[59.926,10.752], zoom:13, zoomControl:false, attributionControl:true, tap:true });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
+  maxZoom:19, subdomains:'abcd',
+}).addTo(map);
+
+function iconSize(highlighted=false) {
+  const z = map.getZoom();
+  let base;
+  if      (z <= 12) base = 18;
+  else if (z === 13) base = 22;
+  else if (z === 14) base = 27;
+  else if (z === 15) base = 32;
+  else               base = 38;
+  return highlighted ? base + 8 : base;
+}
+
+function makeIcon(t, highlighted=false) {
+  const color = t.type==='outdoor' ? '#FF6B00' : '#7C3AED';
+  const size  = iconSize(highlighted);
+  const glow  = highlighted ? `filter:drop-shadow(0 0 8px ${color}99);` : '';
+  const opacity = t.verifisert==="nei" ? 0.35 : 1;
+  const pulse = highlighted ? `<div style="position:absolute;top:50%;left:50%;width:${size}px;height:${size}px;margin:-${size/2}px 0 0 -${size/2}px;border-radius:50%;background:${color};opacity:0.35;animation:pulse 1.3s ease-out infinite;pointer-events:none;"></div>` : '';
+  const icon = t.type==='outdoor'
+    ? `<svg width="${Math.round(size*.42)}" height="${Math.round(size*.42)}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="10" rx="8" ry="8" fill="white" opacity="0.92"/><rect x="15" y="14" width="3" height="7" rx="1.5" fill="white" opacity="0.92" transform="rotate(-40 15 14)"/></svg>`
+    : `<svg width="${Math.round(size*.42)}" height="${Math.round(size*.42)}" viewBox="0 0 24 24" fill="white" opacity="0.92" xmlns="http://www.w3.org/2000/svg"><path d="M5 3h14v9a7 7 0 01-14 0V3z"/><rect x="11" y="19" width="2" height="4" rx="1"/></svg>`;
+  const checkmark = t.verifisert==="ja" ? `<div style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;background:#34C759;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
+  const html = `<div style="position:relative;display:flex;flex-direction:column;align-items:center;${glow}opacity:${opacity}">${pulse}<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid rgba(255,255,255,0.15);box-shadow:0 3px 12px ${color}55;display:flex;align-items:center;justify-content:center;">${icon}${checkmark}</div><div style="width:2px;height:6px;background:${color};opacity:0.8;margin-top:-1px;border-radius:0 0 2px 2px;"></div></div>`;
+  return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
+}
+
+let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null;
+
+function renderMarkers() {
+  leafletMarkers.forEach(({ lm }) => map.removeLayer(lm));
+  leafletMarkers = [];
+  TABLES.forEach((t, i) => {
+    if (t.type==='outdoor' && !showOutdoor) return;
+    if (t.type==='bar'     && !showBar)     return;
+    const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t) });
+    lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
+    lm.addTo(map);
+    leafletMarkers.push({ lm, index:i });
+  });
+}
+
+renderMarkers();
+loadSheetData();
+
+// Auto-locate on first visit
+navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
+  userLat = pos.coords.latitude;
+  userLng = pos.coords.longitude;
+  setUserMarker(userLat, userLng);
+  map.flyTo([userLat, userLng], 14, { duration: 1.2 });
+}, () => {});
+
+function openSheet(idx) {
+  const t = TABLES[idx];
+  selectedIdx = idx;
+  const photo = document.getElementById('sheetPhoto');
+  if (t.bilde_url) {
+    photo.src = t.bilde_url;
+    photo.className = 'sheet-photo visible';
+    photo.onerror = () => { photo.className = 'sheet-photo'; };
+  } else {
+    photo.src = ''; photo.className = 'sheet-photo';
+  }
+  document.getElementById('sheetType').textContent = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Bar med bordtennis';
+  document.getElementById('sheetType').style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
+  document.getElementById('sheetName').textContent = t.navn;
+  const stats = document.getElementById('sheetStats');
+  stats.innerHTML = '';
+  if (t.verifisert==='ja')
+    stats.innerHTML += `<div class="stat-row verified"><span class="stat-icon">✅</span><span class="stat-key">Verifisert:</span><span class="stat-val">Ja</span></div>`;
+  else if (t.verifisert==='nei')
+    stats.innerHTML += `<div class="stat-row not-found"><span class="stat-icon">❌</span><span class="stat-key">Verifisert:</span><span class="stat-val">Ikke funnet</span></div>`;
+  else
+    stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⏳</span><span class="stat-key">Status:</span><span class="stat-val">Ikke besøkt ennå</span></div>`;
+  if (t.antall)    stats.innerHTML += `<div class="stat-row"><span class="stat-icon">🏓</span><span class="stat-key">Antall:</span><span class="stat-val">${t.antall}</span></div>`;
+  if (t.tilstand)  stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⭐</span><span class="stat-key">Tilstand:</span><span class="stat-val">${t.tilstand}</span></div>`;
+  if (t.belysning) stats.innerHTML += `<div class="stat-row"><span class="stat-icon">💡</span><span class="stat-key">Belysning:</span><span class="stat-val">${t.belysning}</span></div>`;
+  const notesEl = document.getElementById('sheetNote');
+  notesEl.innerHTML = '';
+  if (t.notater) {
+    const lines = t.notater.split(/[.\n]/).filter(l => l.trim());
+    if (lines.length) {
+      notesEl.innerHTML = `<div class="sheet-notes-label">Notater</div>`;
+      lines.forEach(line => {
+        notesEl.innerHTML += `<div class="sheet-notes-bullet">${line.trim()}</div>`;
+      });
+    }
+  }
+  document.getElementById('bottomSheet').classList.add('open');
+  leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index===idx)));
+  map.panTo([t.lat,t.lng], { animate:true, duration:0.4 });
+}
+
+function closeSheet() {
+  document.getElementById('bottomSheet').classList.remove('open');
+  leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
+  selectedIdx = null;
+}
+
+map.on('click', closeSheet);
+map.on('zoomend', () => {
+  leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx)));
+});
+
+function openDirections() {
+  if (selectedIdx===null) return;
+  const { lat, lng } = TABLES[selectedIdx];
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) window.open(`maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`);
+  else       window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`);
+}
+
+let userLat=null, userLng=null;
+
+function setUserMarker(lat, lng) {
+  if (userMarker) map.removeLayer(userMarker);
+  const icon = L.divIcon({
+    html:`<div style="width:14px;height:14px;background:#34C759;border:2.5px solid rgba(255,255,255,0.9);border-radius:50%;box-shadow:0 0 0 4px rgba(52,199,89,0.25)"></div>`,
+    className:'', iconSize:[14,14], iconAnchor:[7,7],
+  });
+  userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
+}
+
+function locateMe() {
+  if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+    setUserMarker(userLat,userLng);
+    map.flyTo([userLat,userLng], 15, { duration:1 });
+  }, () => alert('Kunne ikke hente posisjon.'));
+}
+
+function haversine(la1,ln1,la2,ln2) {
+  const R=6371e3, φ1=la1*Math.PI/180, φ2=la2*Math.PI/180;
+  const Δφ=(la2-la1)*Math.PI/180, Δλ=(ln2-ln1)*Math.PI/180;
+  const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function findNearest() {
+  if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
+  const btn = document.getElementById('btnNearest');
+  btn.style.opacity='0.55';
+  navigator.geolocation.getCurrentPosition(pos => {
+    btn.style.opacity='1';
+    userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+    setUserMarker(userLat,userLng);
+    let nearestIdx=null, minDist=Infinity;
+    TABLES.forEach((t,i) => {
+      if (t.type==='outdoor' && !showOutdoor) return;
+      if (t.type==='bar'     && !showBar)     return;
+      if (t.verifisert==='nei') return;
+      const d=haversine(userLat,userLng,t.lat,t.lng);
+      if (d<minDist) { minDist=d; nearestIdx=i; }
+    });
+    if (nearestIdx!==null) {
+      const dist=minDist<1000 ? `${Math.round(minDist)} m unna` : `${(minDist/1000).toFixed(1)} km unna`;
+      map.flyTo([TABLES[nearestIdx].lat,TABLES[nearestIdx].lng], 15, { duration:1.1 });
+      setTimeout(() => {
+        openSheet(nearestIdx);
+        const n=document.getElementById('sheetNote');
+        n.textContent=(n.textContent?n.textContent+'  ·  ':'')+' 📍 '+dist;
+      }, 700);
+    }
+  }, () => { btn.style.opacity='1'; alert('Kunne ikke hente posisjon.'); });
+}
+
+function fuzzyScore(name, q) {
+  name = name.toLowerCase();
+  if (name.includes(q)) return 100 + (100 - name.indexOf(q));
+  let j = 0;
+  for (let i = 0; i < name.length && j < q.length; i++) {
+    if (name[i] === q[j]) j++;
+  }
+  return j === q.length ? j : 0;
+}
+
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  if (!q) { searchResults.style.display = 'none'; return; }
+  const matches = TABLES
+    .map((t, i) => ({ t, i, score: fuzzyScore(t.navn, q) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+  if (!matches.length) { searchResults.style.display = 'none'; return; }
+  searchResults.innerHTML = matches.map(({ t, i }) =>
+    `<div class="search-result-item" onclick="selectSearch(${i})">
+      <span style="font-size:10px;color:${t.type==='outdoor'?'var(--orange)':'var(--purple)'}">●</span>
+      <span>${t.navn}</span>
+    </div>`
+  ).join('');
+  searchResults.style.display = 'block';
+});
+
+function selectSearch(idx) {
+  searchInput.value = '';
+  searchResults.style.display = 'none';
+  searchInput.blur();
+  map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
+  setTimeout(() => openSheet(idx), 600);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) searchResults.style.display = 'none';
+});
+
+function toggleFilter(type) {
+  if (type==='outdoor') {
+    showOutdoor=!showOutdoor;
+    const p=document.getElementById('pill-outdoor');
+    p.className='filter-pill'+(showOutdoor?' active-outdoor':'');
+    p.style.opacity=showOutdoor?'1':'0.4';
+  } else {
+    showBar=!showBar;
+    const p=document.getElementById('pill-bar');
+    p.className='filter-pill'+(showBar?' active-bar':'');
+    p.style.opacity=showBar?'1':'0.4';
+  }
+  renderMarkers(); closeSheet();
+}
+</script>
+</body>
+</html>

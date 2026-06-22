@@ -59,6 +59,14 @@
       display: block; width: 32px; height: 3px; border-radius: 2px;
       background: var(--border);
     }
+    .header-collapse-btn {
+      width: 26px; height: 26px; border-radius: 50%; border: none;
+      background: var(--s2); color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0; transition: background 0.12s;
+    }
+    .header-collapse-btn:active { background: var(--border); }
     .header-restore {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px);
       left: 50%; transform: translateX(-50%);
@@ -149,46 +157,48 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
     .sheet-close-top:active { background: rgba(0,0,0,0.95); }
-    /* Search collapsed: icon pill */
-    .search-btn {
-      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
-      left: 50%; transform: translateX(-50%); z-index: 399;
-      width: 44px; height: 44px; border-radius: 50%;
-      background: var(--surface); border: 1px solid var(--border);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--muted); -webkit-tap-highlight-color: transparent;
-      transition: opacity 0.15s;
-    }
-    .search-btn:active { opacity: 0.7; }
-    .search-btn.hidden { display: none; }
-    /* Search expanded: full input */
+    /* Search — single animated container */
     .search-wrap {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
       left: 50%; transform: translateX(-50%); z-index: 399;
-      width: 280px; display: none;
+      width: 44px;
+      transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { display: block; }
-    .search-input {
-      width: 100%; padding: 10px 36px 10px 38px;
+    .search-wrap.expanded { width: 280px; }
+    .search-field {
+      display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; color: var(--text); font-size: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4); outline: none;
-      -webkit-appearance: none;
+      border-radius: 22px; height: 44px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: border-radius 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-input::placeholder { color: var(--muted); }
-    .search-icon {
-      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-      pointer-events: none; color: var(--muted);
-    }
-    .search-close {
-      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-      width: 22px; height: 22px; border-radius: 50%; border: none;
-      background: var(--s2); color: var(--muted); cursor: pointer;
+    .search-wrap.expanded .search-field { border-radius: 14px; }
+    .search-icon-btn {
+      width: 44px; height: 44px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
+      color: var(--muted); cursor: pointer; background: transparent; border: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .search-field { position: relative; }
+    .search-input {
+      flex: 1; border: none; background: transparent;
+      color: var(--text); font-size: 14px; outline: none;
+      padding: 0; min-width: 0;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease 0.12s;
+      -webkit-appearance: none;
+    }
+    .search-wrap.expanded .search-input { opacity: 1; pointer-events: auto; }
+    .search-input::placeholder { color: var(--muted); }
+    .search-close {
+      width: 26px; height: 26px; flex-shrink: 0; margin-right: 9px;
+      border-radius: 50%; border: none; background: var(--s2);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.5); pointer-events: none;
+      transition: opacity 0.16s ease 0.16s, transform 0.16s ease 0.16s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
     .search-results {
       margin-top: 6px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 14px;
@@ -323,10 +333,13 @@
   <div class="header-inner">
     <div class="header-top">
       <div class="logo-mark">🏓</div>
-      <div>
+      <div style="flex:1">
         <div class="logo-text">PinPong</div>
         <div class="logo-meta" id="logoMeta">laster…</div>
       </div>
+      <button class="header-collapse-btn" onclick="hideHeader()" title="Minimer">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>
     </div>
     <div class="progress-row" id="progressRow" style="display:none">
       <div class="progress-bar-track">
@@ -342,7 +355,6 @@
         <div class="filter-dot" style="background:var(--purple)"></div>Inne
       </div>
     </div>
-    <div class="header-drag-handle" id="headerHandle" onclick="hideHeader()"><span></span></div>
   </div>
 </div>
 
@@ -352,15 +364,11 @@
   <span class="header-restore-text">PinPong</span>
 </div>
 
-<!-- Search button (collapsed) -->
-<button class="search-btn" id="searchBtn" onclick="expandSearch()">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-</button>
-
-<!-- Search wrap (expanded) -->
 <div class="search-wrap" id="searchWrap">
   <div class="search-field">
-    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <button class="search-icon-btn" onclick="expandSearch()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
     <input class="search-input" id="searchInput" type="text" placeholder="Søk etter sted…" autocomplete="off" autocorrect="off" spellcheck="false" />
     <button class="search-close" onclick="collapseSearch()">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -857,18 +865,16 @@ function fuzzyScore(name, q) {
 const searchInput  = document.getElementById('searchInput');
 const searchResults= document.getElementById('searchResults');
 const searchWrap   = document.getElementById('searchWrap');
-const searchBtn    = document.getElementById('searchBtn');
 
 function expandSearch() {
-  searchBtn.classList.add('hidden');
   searchWrap.classList.add('expanded');
-  searchInput.focus();
+  setTimeout(() => searchInput.focus(), 200);
 }
 function collapseSearch() {
   searchResults.style.display = 'none';
   searchInput.value = '';
   searchWrap.classList.remove('expanded');
-  searchBtn.classList.remove('hidden');
+  searchInput.blur();
 }
 
 searchInput.addEventListener('input', function() {
@@ -896,7 +902,7 @@ function selectSearch(idx) {
 }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-btn')) {
+  if (!e.target.closest('.search-wrap')) {
     if (searchWrap.classList.contains('expanded')) collapseSearch();
   }
 });

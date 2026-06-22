@@ -162,13 +162,15 @@
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
       left: 50%; transform: translateX(-50%); z-index: 399;
       width: 44px;
-      transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                  top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .search-wrap.expanded { width: 280px; }
+    .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 18px); }
     .search-field {
       display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 22px; height: 44px; overflow: hidden;
+      border-radius: 13px; height: 44px; overflow: hidden;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
       transition: border-radius 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -914,10 +916,12 @@ const headerRestore = document.getElementById('headerRestore');
 function hideHeader() {
   header.classList.add('hidden');
   headerRestore.classList.add('visible');
+  searchWrap.classList.add('header-hidden');
 }
 function showHeader() {
   header.classList.remove('hidden');
   headerRestore.classList.remove('visible');
+  searchWrap.classList.remove('header-hidden');
 }
 
 // Drag-up gesture on header

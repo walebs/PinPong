@@ -471,18 +471,12 @@ function makeIcon(t, highlighted=false) {
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
-let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null;
+let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
 
-function renderMarkers() {
-  if (clusterGroup) map.removeLayer(clusterGroup);
-  leafletMarkers = [];
-  clusterGroup = L.markerClusterGroup({
+function makeClusterGroup(color) {
+  return L.markerClusterGroup({
     iconCreateFunction: cluster => {
       const count = cluster.getChildCount();
-      const types = cluster.getAllChildMarkers().map(m => TABLES[m._tableIndex]?.type);
-      const hasOutdoor = types.some(t => t === 'outdoor');
-      const hasBar = types.some(t => t === 'bar');
-      const color = (hasBar && !hasOutdoor) ? '#7C3AED' : '#FF6B00';
       return L.divIcon({
         html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}</div>`,
         className: '', iconSize: [38, 38], iconAnchor: [19, 19]
@@ -495,6 +489,14 @@ function renderMarkers() {
     animate: true,
     spiderfyOnMaxZoom: true,
   });
+}
+
+function renderMarkers() {
+  if (clusterGroup)    map.removeLayer(clusterGroup);
+  if (clusterGroupBar) map.removeLayer(clusterGroupBar);
+  leafletMarkers = [];
+  clusterGroup    = makeClusterGroup('#FF6B00');
+  clusterGroupBar = makeClusterGroup('#7C3AED');
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
@@ -502,9 +504,11 @@ function renderMarkers() {
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
     leafletMarkers.push({ lm, index:i });
-    clusterGroup.addLayer(lm);
+    if (t.type === 'outdoor') clusterGroup.addLayer(lm);
+    else                      clusterGroupBar.addLayer(lm);
   });
   map.addLayer(clusterGroup);
+  map.addLayer(clusterGroupBar);
 }
 
 renderMarkers();

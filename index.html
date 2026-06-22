@@ -707,7 +707,7 @@ function showNearbyStrip(lat, lng) {
   const nearest = TABLES
     .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
     .sort((a, b) => a.d - b.d)
-    .slice(0, 5);
+    .slice(0, 3);
 
   strip.innerHTML = nearest.map(({ t, i, d }) => {
     const color = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';

@@ -70,15 +70,19 @@
     .header-restore {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px);
       left: 50%; transform: translateX(-50%);
-      z-index: 401; display: none; align-items: center; gap: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 8px 14px 8px 10px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 401; display: none;
+      width: 44px; height: 44px;
+      background: var(--orange); border-radius: 13px;
+      box-shadow: 0 4px 16px rgba(255,107,0,0.45);
       cursor: pointer; -webkit-tap-highlight-color: transparent;
+      align-items: center; justify-content: center;
+      font-size: 22px;
+      transition: transform 0.12s;
     }
+    .header-restore:active { transform: translateX(-50%) scale(0.92); }
     .header-restore.visible { display: flex; }
-    .header-restore-logo { width: 28px; height: 28px; background: var(--orange); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-    .header-restore-text { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .header-restore-logo { display: none; }
+    .header-restore-text { display: none; }
     .header-top { display: flex; align-items: center; gap: 12px; }
     .logo-mark {
       width: 40px; height: 40px; background: var(--orange);
@@ -165,7 +169,7 @@
       transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
                   top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: var(--expanded-w, 280px); }
+    .search-wrap.expanded { width: 280px; }
     .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 66px); }
     .search-field {
       display: flex; align-items: center;
@@ -361,11 +365,7 @@
 </div>
 
 <!-- Restore pill (shown when header is hidden) -->
-<div class="header-restore visible" id="headerRestore" onclick="showHeader()">
-  <div class="header-restore-logo">🏓</div>
-  <span class="header-restore-text">PinPong</span>
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#666;margin-left:2px"><polyline points="6 9 12 15 18 9"/></svg>
-</div>
+<div class="header-restore visible" id="headerRestore" onclick="showHeader()">🏓</div>
 
 <div class="search-wrap header-hidden" id="searchWrap">
   <div class="search-field">
@@ -870,9 +870,6 @@ const searchResults= document.getElementById('searchResults');
 const searchWrap   = document.getElementById('searchWrap');
 
 function expandSearch() {
-  // Match width to the restore pill (or header) whichever is visible
-  const refEl = headerRestore.classList.contains('visible') ? headerRestore : document.querySelector('.header-inner');
-  if (refEl) searchWrap.style.setProperty('--expanded-w', refEl.offsetWidth + 'px');
   searchWrap.classList.add('expanded');
   setTimeout(() => searchInput.focus(), 200);
 }

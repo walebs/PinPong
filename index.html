@@ -99,6 +99,36 @@
     .filter-pill.active-outdoor { border-color: var(--orange); background: rgba(255,107,0,0.12); color: var(--orange); }
     .filter-pill.active-bar     { border-color: var(--purple); background: rgba(124,58,237,0.12); color: var(--purple); }
     .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
+    /* Nearby strip */
+    .nearby-strip {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+      left: 0; right: 0; z-index: 299;
+      display: flex; gap: 10px; padding: 4px 16px 4px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      opacity: 0; transform: translateY(10px); pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .nearby-strip::-webkit-scrollbar { display: none; }
+    .nearby-strip.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .nearby-card {
+      flex-shrink: 0; width: 136px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 11px 13px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      transition: transform 0.12s, opacity 0.12s;
+      border-left-width: 3px; border-left-style: solid;
+    }
+    .nearby-card:active { transform: scale(0.95); opacity: 0.85; }
+    .nearby-card-row { display: flex; align-items: center; justify-content: space-between; }
+    .nearby-card-dist { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.2px; }
+    .nearby-card-check { font-size: 10px; }
+    .nearby-card-name {
+      font-size: 12.5px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 6px;
+    }
+    .nearby-card-type { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
     .fab-stack {
       position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 32px); z-index: 300;
       display: flex; flex-direction: row; gap: 10px; align-items: center;
@@ -376,6 +406,7 @@
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
 </div>
 <div id="map"></div>
+<div class="nearby-strip" id="nearbyStrip"></div>
 <div class="fab-stack">
   <button class="fab-nearest" id="btnNearest" onclick="findNearest()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -671,6 +702,36 @@ loadSheetData().then(() => {
   }
 });
 
+// ── Nearby strip ────────────────────────────────────────
+function showNearbyStrip(lat, lng) {
+  const strip = document.getElementById('nearbyStrip');
+  const nearest = TABLES
+    .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 5);
+
+  strip.innerHTML = nearest.map(({ t, i, d }) => {
+    const color  = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    const dist   = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
+    const check  = t.verifisert === 'ja' ? '<span class="nearby-card-check">✓</span>' : '';
+    const label  = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
+    return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color}">
+      <div class="nearby-card-row">
+        <span class="nearby-card-dist">${dist}</span>${check}
+      </div>
+      <div class="nearby-card-name">${esc(t.navn)}</div>
+      <div class="nearby-card-type">${label}</div>
+    </div>`;
+  }).join('');
+
+  strip.classList.add('visible');
+}
+
+function selectNearby(idx) {
+  map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
+  setTimeout(() => openSheet(idx), 600);
+}
+
 // Auto-locate on first visit
 const geoOpts = { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 };
 navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
@@ -678,6 +739,7 @@ navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
   userLng = pos.coords.longitude;
   setUserMarker(userLat, userLng);
   map.flyTo([userLat, userLng], 14, { duration: 1.2 });
+  showNearbyStrip(userLat, userLng);
 }, () => {}, geoOpts);
 
 function openSheet(idx) {
@@ -797,6 +859,7 @@ function locateMe() {
     userLat=pos.coords.latitude; userLng=pos.coords.longitude;
     setUserMarker(userLat,userLng);
     map.flyTo([userLat,userLng], 15, { duration:1 });
+    showNearbyStrip(userLat, userLng);
   }, err => {
     const msg = err.code === 1
       ? 'Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat'
@@ -820,6 +883,7 @@ function findNearest() {
     btn.style.opacity='1';
     userLat=pos.coords.latitude; userLng=pos.coords.longitude;
     setUserMarker(userLat,userLng);
+    showNearbyStrip(userLat, userLng);
     let nearestIdx=null, minDist=Infinity;
     TABLES.forEach((t,i) => {
       if (t.type==='outdoor' && !showOutdoor) return;

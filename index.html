@@ -111,24 +111,22 @@
     .nearby-strip::-webkit-scrollbar { display: none; }
     .nearby-strip.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-card {
-      flex-shrink: 0; width: 136px;
+      flex-shrink: 0; width: 112px;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 11px 13px;
+      border-radius: 14px; padding: 8px 10px 8px 11px;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      box-shadow: 0 3px 12px rgba(0,0,0,0.35);
       transition: transform 0.12s, opacity 0.12s;
       border-left-width: 3px; border-left-style: solid;
     }
-    .nearby-card:active { transform: scale(0.95); opacity: 0.85; }
-    .nearby-card-row { display: flex; align-items: center; justify-content: space-between; }
-    .nearby-card-dist { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.2px; }
-    .nearby-card-check { font-size: 10px; }
+    .nearby-card:active { transform: scale(0.95); opacity: 0.8; }
+    .nearby-card-dist { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; text-transform: uppercase; }
     .nearby-card-name {
-      font-size: 12.5px; font-weight: 600; color: var(--text);
+      font-size: 11.5px; font-weight: 600; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-top: 6px;
+      margin-top: 3px; line-height: 1.3;
     }
-    .nearby-card-type { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+    .nearby-card-check { font-size: 9px; color: var(--green); }
     .fab-stack {
       position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 32px); z-index: 300;
       display: flex; flex-direction: row; gap: 10px; align-items: center;
@@ -711,16 +709,12 @@ function showNearbyStrip(lat, lng) {
     .slice(0, 5);
 
   strip.innerHTML = nearest.map(({ t, i, d }) => {
-    const color  = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-    const dist   = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
-    const check  = t.verifisert === 'ja' ? '<span class="nearby-card-check">✓</span>' : '';
-    const label  = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
+    const color = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    const dist  = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
+    const check = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color}">
-      <div class="nearby-card-row">
-        <span class="nearby-card-dist">${dist}</span>${check}
-      </div>
+      <div class="nearby-card-dist">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
-      <div class="nearby-card-type">${label}</div>
     </div>`;
   }).join('');
 

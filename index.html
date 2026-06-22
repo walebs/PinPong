@@ -101,7 +101,7 @@
     .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
     /* Nearby strip */
     .nearby-strip {
-      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
       left: 0; right: 0; z-index: 299;
       display: flex; gap: 9px; padding: 4px 16px;
       overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -131,7 +131,9 @@
     .fab-stack {
       position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 32px); z-index: 300;
       display: flex; flex-direction: row; gap: 10px; align-items: center;
+      transition: bottom 0.35s cubic-bezier(0.4,0,0.2,1);
     }
+    .fab-stack.strip-visible { bottom: calc(env(safe-area-inset-bottom, 0px) + 102px); }
     .fab-nearest {
       display: flex; align-items: center; gap: 8px;
       padding: 13px 18px; background: var(--blue); color: white;
@@ -716,6 +718,7 @@ function showNearbyStrip(lat, lng) {
   }).join('');
 
   document.getElementById('nearbyStrip').classList.add('visible');
+  document.querySelector('.fab-stack').classList.add('strip-visible');
 }
 
 function selectNearby(idx) {

@@ -179,12 +179,13 @@
     .sheet-notes-bullet::before { content: "•"; color: var(--muted); flex-shrink: 0; }
     .sheet-actions { display: flex; gap: 10px; }
     .btn-directions {
-      flex: 1; padding: 14px; background: var(--blue); color: white;
-      border: none; border-radius: 14px; font-size: 14.5px; font-weight: 600;
+      flex: 1; padding: 14px; color: white;
+      border: none; border-radius: 14px; font-size: 14px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 8px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 4px 16px rgba(59,139,255,0.35);
+      gap: 7px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
     }
+    .btn-gmaps  { background: var(--blue);   box-shadow: 0 4px 16px rgba(59,139,255,0.35); }
+    .btn-amaps  { background: #3a3a45;        box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
     .btn-directions:active { opacity: 0.8; }
     .btn-close {
       width: 52px; height: 52px; background: var(--s2);
@@ -290,9 +291,13 @@
     <div class="sheet-stats" id="sheetStats"></div>
     <div class="sheet-notes" id="sheetNote"></div>
     <div class="sheet-actions">
-      <button class="btn-directions" onclick="openDirections()">
+      <button class="btn-directions btn-gmaps" onclick="openGoogleMaps()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-        Veibeskrivelse
+        Google Maps
+      </button>
+      <button class="btn-directions btn-amaps" onclick="openAppleMaps()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Apple Maps
       </button>
     </div>
   </div>
@@ -603,12 +608,15 @@ map.on('zoom', () => {
   }, 80);
 });
 
-function openDirections() {
+function openGoogleMaps() {
   if (selectedIdx===null) return;
   const { lat, lng } = TABLES[selectedIdx];
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS) window.open(`maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`);
-  else       window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`);
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`);
+}
+function openAppleMaps() {
+  if (selectedIdx===null) return;
+  const { lat, lng } = TABLES[selectedIdx];
+  window.open(`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`);
 }
 
 let userLat=null, userLng=null;
@@ -628,7 +636,12 @@ function locateMe() {
     userLat=pos.coords.latitude; userLng=pos.coords.longitude;
     setUserMarker(userLat,userLng);
     map.flyTo([userLat,userLng], 15, { duration:1 });
-  }, () => alert('Kunne ikke hente posisjon.'), geoOpts);
+  }, err => {
+    const msg = err.code === 1
+      ? 'Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat'
+      : 'Kunne ikke hente posisjon. Prøv igjen.';
+    alert(msg);
+  }, geoOpts);
 }
 
 function haversine(la1,ln1,la2,ln2) {
@@ -663,7 +676,13 @@ function findNearest() {
         n.textContent=(n.textContent?n.textContent+'  ·  ':'')+' 📍 '+dist;
       }, 700);
     }
-  }, () => { btn.style.opacity='1'; alert('Kunne ikke hente posisjon.'); }, geoOpts);
+  }, err => {
+    btn.style.opacity='1';
+    const msg = err.code === 1
+      ? 'Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat'
+      : 'Kunne ikke hente posisjon. Prøv igjen.';
+    alert(msg);
+  }, geoOpts);
 }
 
 function fuzzyScore(name, q) {

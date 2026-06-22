@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PinPong" />
   <title>PinPong</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin="anonymous" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -278,9 +278,13 @@
     </div>
   </div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
 <script>
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
 const STATIC = [
@@ -544,9 +548,9 @@ function openSheet(idx) {
     stats.innerHTML += `<div class="stat-row not-found"><span class="stat-icon">❌</span><span class="stat-key">Verifisert:</span><span class="stat-val">Ikke funnet</span></div>`;
   else
     stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⏳</span><span class="stat-key">Status:</span><span class="stat-val">Ikke besøkt ennå</span></div>`;
-  if (t.antall)    stats.innerHTML += `<div class="stat-row"><span class="stat-icon">🏓</span><span class="stat-key">Antall:</span><span class="stat-val">${t.antall}</span></div>`;
-  if (t.tilstand)  stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⭐</span><span class="stat-key">Tilstand:</span><span class="stat-val">${t.tilstand}</span></div>`;
-  if (t.belysning) stats.innerHTML += `<div class="stat-row"><span class="stat-icon">💡</span><span class="stat-key">Belysning:</span><span class="stat-val">${t.belysning}</span></div>`;
+  if (t.antall)    stats.innerHTML += `<div class="stat-row"><span class="stat-icon">🏓</span><span class="stat-key">Antall:</span><span class="stat-val">${esc(t.antall)}</span></div>`;
+  if (t.tilstand)  stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⭐</span><span class="stat-key">Tilstand:</span><span class="stat-val">${esc(t.tilstand)}</span></div>`;
+  if (t.belysning) stats.innerHTML += `<div class="stat-row"><span class="stat-icon">💡</span><span class="stat-key">Belysning:</span><span class="stat-val">${esc(t.belysning)}</span></div>`;
   const notesEl = document.getElementById('sheetNote');
   notesEl.innerHTML = '';
   if (t.notater) {
@@ -554,7 +558,7 @@ function openSheet(idx) {
     if (lines.length) {
       notesEl.innerHTML = `<div class="sheet-notes-label">Notater</div>`;
       lines.forEach(line => {
-        notesEl.innerHTML += `<div class="sheet-notes-bullet">${line.trim()}</div>`;
+        notesEl.innerHTML += `<div class="sheet-notes-bullet">${esc(line.trim())}</div>`;
       });
     }
   }
@@ -662,7 +666,7 @@ searchInput.addEventListener('input', function() {
   searchResults.innerHTML = matches.map(({ t, i }) =>
     `<div class="search-result-item" onclick="selectSearch(${i})">
       <span style="font-size:10px;color:${t.type==='outdoor'?'var(--orange)':'var(--purple)'}">●</span>
-      <span>${t.navn}</span>
+      <span>${esc(t.navn)}</span>
     </div>`
   ).join('');
   searchResults.style.display = 'block';

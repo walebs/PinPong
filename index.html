@@ -100,6 +100,20 @@
     .filter-pill.active-bar     { border-color: var(--purple); background: rgba(124,58,237,0.12); color: var(--purple); }
     .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
     /* Nearby strip */
+    .nearby-label {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+      left: 16px; z-index: 299;
+      display: flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+      color: var(--muted); text-transform: uppercase;
+      opacity: 0; transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .nearby-label.visible { opacity: 1; }
+    .nearby-label-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--blue); flex-shrink: 0;
+    }
     .nearby-strip {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
       left: 0; right: 0; z-index: 299;
@@ -407,6 +421,7 @@
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
 </div>
 <div id="map"></div>
+<div class="nearby-label" id="nearbyLabel"><div class="nearby-label-dot"></div>Nærmeste</div>
 <div class="nearby-strip" id="nearbyStrip"></div>
 <div class="fab-stack">
   <button class="fab-locate" onclick="locateMe()">
@@ -718,6 +733,7 @@ function showNearbyStrip(lat, lng) {
   }).join('');
 
   document.getElementById('nearbyStrip').classList.add('visible');
+  document.getElementById('nearbyLabel').classList.add('visible');
   document.querySelector('.fab-stack').classList.add('strip-visible');
 }
 
@@ -921,7 +937,7 @@ const searchWrap   = document.getElementById('searchWrap');
 
 function expandSearch() {
   searchWrap.classList.add('expanded');
-  setTimeout(() => searchInput.focus(), 200);
+  searchInput.focus();
 }
 function collapseSearch() {
   searchResults.style.display = 'none';

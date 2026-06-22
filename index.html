@@ -165,7 +165,7 @@
       transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
                   top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: 280px; }
+    .search-wrap.expanded { width: var(--expanded-w, 280px); }
     .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 66px); }
     .search-field {
       display: flex; align-items: center;
@@ -331,7 +331,7 @@
   </style>
 </head>
 <body>
-<div class="header" id="header">
+<div class="header hidden" id="header">
   <div class="header-inner">
     <div class="header-top">
       <div class="logo-mark">🏓</div>
@@ -361,12 +361,13 @@
 </div>
 
 <!-- Restore pill (shown when header is hidden) -->
-<div class="header-restore" id="headerRestore" onclick="showHeader()">
+<div class="header-restore visible" id="headerRestore" onclick="showHeader()">
   <div class="header-restore-logo">🏓</div>
   <span class="header-restore-text">PinPong</span>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#666;margin-left:2px"><polyline points="6 9 12 15 18 9"/></svg>
 </div>
 
-<div class="search-wrap" id="searchWrap">
+<div class="search-wrap header-hidden" id="searchWrap">
   <div class="search-field">
     <button class="search-icon-btn" onclick="expandSearch()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -869,6 +870,9 @@ const searchResults= document.getElementById('searchResults');
 const searchWrap   = document.getElementById('searchWrap');
 
 function expandSearch() {
+  // Match width to the restore pill (or header) whichever is visible
+  const refEl = headerRestore.classList.contains('visible') ? headerRestore : document.querySelector('.header-inner');
+  if (refEl) searchWrap.style.setProperty('--expanded-w', refEl.offsetWidth + 'px');
   searchWrap.classList.add('expanded');
   setTimeout(() => searchInput.focus(), 200);
 }

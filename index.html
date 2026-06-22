@@ -193,13 +193,37 @@
       transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
     .btn-share:active { opacity: 0.7; }
-    .maps-picker {
-      display: none; flex-direction: column; gap: 8px; margin-top: 8px;
+    .maps-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 1100; backdrop-filter: blur(2px);
     }
-    .maps-picker.open { display: flex; }
+    .maps-modal-overlay.open { display: block; }
+    .maps-modal {
+      display: none; position: fixed; left: 50%; bottom: 32px;
+      transform: translateX(-50%) translateY(20px);
+      width: min(340px, calc(100vw - 32px));
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 16px; z-index: 1101;
+      flex-direction: column; gap: 10px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      transition: transform 0.22s ease, opacity 0.22s ease; opacity: 0;
+    }
+    .maps-modal.open {
+      display: flex; transform: translateX(-50%) translateY(0); opacity: 1;
+    }
+    .maps-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      color: #888; font-size: 13px; font-weight: 500; margin-bottom: 2px;
+    }
+    .maps-modal-close {
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: var(--s2); color: #aaa; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
     .btn-maps-option {
-      width: 100%; padding: 13px; color: white; border: none; border-radius: 12px;
-      font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
+      width: 100%; padding: 14px; color: white; border: none; border-radius: 14px;
+      font-size: 14.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
       gap: 9px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
     }
     .btn-maps-option:active { opacity: 0.8; }
@@ -317,17 +341,26 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
     </div>
-    <div class="maps-picker" id="mapsPicker">
-      <button class="btn-maps-option btn-gmaps" onclick="openGoogleMaps()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-        Google Maps
-      </button>
-      <button class="btn-maps-option btn-amaps" onclick="openAppleMaps()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-        Apple Maps
-      </button>
-    </div>
   </div>
+</div>
+
+<!-- Maps picker modal -->
+<div class="maps-modal-overlay" id="mapsOverlay" onclick="closeMapsPicker()"></div>
+<div class="maps-modal" id="mapsModal">
+  <div class="maps-modal-header">
+    <span>Åpne veibeskrivelse i</span>
+    <button class="maps-modal-close" onclick="closeMapsPicker()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <button class="btn-maps-option btn-gmaps" onclick="openGoogleMaps()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    Google Maps
+  </button>
+  <button class="btn-maps-option btn-amaps" onclick="openAppleMaps()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    Apple Maps
+  </button>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
@@ -585,7 +618,7 @@ navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
 function openSheet(idx) {
   const t = TABLES[idx];
   selectedIdx = idx;
-  document.getElementById('mapsPicker').classList.remove('open');
+  closeMapsPicker();
   history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`);
   const photo = document.getElementById('sheetPhoto');
   if (t.bilde_url) {
@@ -633,7 +666,7 @@ function openSheet(idx) {
 
 function closeSheet() {
   document.getElementById('bottomSheet').classList.remove('open');
-  document.getElementById('mapsPicker').classList.remove('open');
+  closeMapsPicker();
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
   selectedIdx = null;
   history.replaceState(null,'', location.pathname);
@@ -649,7 +682,12 @@ map.on('zoom', () => {
 });
 
 function toggleMapsPicker() {
-  document.getElementById('mapsPicker').classList.toggle('open');
+  document.getElementById('mapsOverlay').classList.add('open');
+  document.getElementById('mapsModal').classList.add('open');
+}
+function closeMapsPicker() {
+  document.getElementById('mapsOverlay').classList.remove('open');
+  document.getElementById('mapsModal').classList.remove('open');
 }
 function openGoogleMaps() {
   if (selectedIdx===null) return;

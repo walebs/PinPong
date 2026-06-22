@@ -99,8 +99,9 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
       transform: translate(-50%, calc(100% + 40px));
-      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
       overflow: hidden;
+      will-change: transform;
     }
     @media (max-width: 480px) {
       .sheet-photo { height: 130px; }
@@ -444,7 +445,7 @@ function updateProgress() {
   document.getElementById('progressRow').style.display = verified > 0 ? 'flex' : 'none';
 }
 
-const map = L.map('map', { center:[59.926,10.752], zoom:13, zoomControl:false, attributionControl:true, tap:true });
+const map = L.map('map', { center:[59.926,10.752], zoom:13, zoomControl:false, attributionControl:true, tap:true, preferCanvas:true, zoomSnap:0.5, zoomDelta:0.5 });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom:19, subdomains:'abcd',
@@ -564,9 +565,15 @@ function openSheet(idx) {
       });
     }
   }
-  document.getElementById('bottomSheet').classList.add('open');
+  const sheet = document.getElementById('bottomSheet');
+  const alreadyOpen = sheet.classList.contains('open');
+  sheet.classList.add('open');
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index===idx)));
-  map.panTo([t.lat,t.lng], { animate:true, duration:0.4 });
+  if (!alreadyOpen) {
+    map.panTo([t.lat, t.lng], { animate:true, duration:0.35 });
+  } else {
+    map.panTo([t.lat, t.lng], { animate:true, duration:0.2 });
+  }
 }
 
 function closeSheet() {
@@ -576,8 +583,12 @@ function closeSheet() {
 }
 
 map.on('click', closeSheet);
-map.on('zoomend', () => {
-  leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx)));
+let zoomTimer;
+map.on('zoom', () => {
+  clearTimeout(zoomTimer);
+  zoomTimer = setTimeout(() => {
+    leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx)));
+  }, 80);
 });
 
 function openDirections() {

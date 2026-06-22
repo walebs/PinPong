@@ -479,8 +479,12 @@ function renderMarkers() {
   clusterGroup = L.markerClusterGroup({
     iconCreateFunction: cluster => {
       const count = cluster.getChildCount();
+      const types = cluster.getAllChildMarkers().map(m => TABLES[m._tableIndex]?.type);
+      const hasOutdoor = types.some(t => t === 'outdoor');
+      const hasBar = types.some(t => t === 'bar');
+      const color = (hasBar && !hasOutdoor) ? '#7C3AED' : '#FF6B00';
       return L.divIcon({
-        html: `<div class="cluster-icon">${count}</div>`,
+        html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}</div>`,
         className: '', iconSize: [38, 38], iconAnchor: [19, 19]
       });
     },
@@ -495,6 +499,7 @@ function renderMarkers() {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t) });
+    lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
     leafletMarkers.push({ lm, index:i });
     clusterGroup.addLayer(lm);

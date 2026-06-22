@@ -331,7 +331,7 @@ const STATIC = [
   { navn:"G12",                      lat:59.9558213, lng:10.7663830, type:"outdoor" },
   { navn:"Vinslottet",               lat:59.9267937, lng:10.7936523, type:"outdoor" },
   { navn:"Fyrstikkalleen skole",     lat:59.9157571, lng:10.7948091, type:"outdoor" },
-  { navn:"Lekeplass ved Helsfyr",    lat:59.9127430, lng:10.7941919, type:"outdoor" },
+  { navn:"Lensmann Hiorths allé",    lat:59.9127430, lng:10.7941919, type:"outdoor" },
   { navn:"St. Hanshaugen",           lat:59.9272768, lng:10.7424180, type:"outdoor" },
   { navn:"Bygdøy skole",             lat:59.9049487, lng:10.6766785, type:"outdoor" },
   { navn:"Sukkerbiten",              lat:59.9049733, lng:10.7525070, type:"outdoor" },
@@ -395,22 +395,27 @@ async function loadSheetData() {
     rows.forEach(row => {
       const navn = (row.navn || "").trim();
       if (!navn) return;
-      const existing = TABLES.findIndex(t => t.navn.toLowerCase() === navn.toLowerCase());
+      const lat = parseFloat(row.lat), lng = parseFloat(row.lng);
       const data = {
         verifisert: row.verifisert ? row.verifisert.toLowerCase() : null,
         label:      row.label || null,
-        antall:     row.antall     || null,
-        materiale:  row.materiale  || null,
+        antall:     row.antall    || null,
+        materiale:  row.materiale || null,
         tilstand:   row.tilstand  || null,
         under_tak:  row.under_tak || null,
         belysning:  row.belysning || null,
-        notater:    row.notater    || "",
+        notater:    row.notater   || "",
         bilde_url:  (row.url || row.bilde_url) ? resolveImage(row.url || row.bilde_url) : "",
       };
+      // Match by name first, then by proximity (~100m)
+      let existing = TABLES.findIndex(t => t.navn.toLowerCase() === navn.toLowerCase());
+      if (existing === -1 && lat && lng) {
+        existing = TABLES.findIndex(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
+      }
       if (existing !== -1) {
-        TABLES[existing] = { ...TABLES[existing], ...data };
+        // Sheet is source of truth — update name too
+        TABLES[existing] = { ...TABLES[existing], navn, ...data };
       } else {
-        const lat = parseFloat(row.lat), lng = parseFloat(row.lng);
         if (!lat || !lng) return;
         const rawType = (row.type||"utendørs").toLowerCase();
         const type = rawType === "utendørs" ? "outdoor" : rawType === "innendørs" ? "bar" : rawType;

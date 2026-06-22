@@ -183,10 +183,28 @@
       border: none; border-radius: 14px; font-size: 14px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       gap: 7px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
+      background: var(--blue); box-shadow: 0 4px 16px rgba(59,139,255,0.35);
     }
-    .btn-gmaps  { background: var(--blue);   box-shadow: 0 4px 16px rgba(59,139,255,0.35); }
-    .btn-amaps  { background: #3a3a45;        box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
     .btn-directions:active { opacity: 0.8; }
+    .btn-share {
+      width: 50px; padding: 14px 0; color: #aaa; background: var(--s2);
+      border: 1px solid var(--border); border-radius: 14px; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+    }
+    .btn-share:active { opacity: 0.7; }
+    .maps-picker {
+      display: none; flex-direction: column; gap: 8px; margin-top: 8px;
+    }
+    .maps-picker.open { display: flex; }
+    .btn-maps-option {
+      width: 100%; padding: 13px; color: white; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
+      gap: 9px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-maps-option:active { opacity: 0.8; }
+    .btn-gmaps { background: var(--blue);  box-shadow: 0 3px 12px rgba(59,139,255,0.3); }
+    .btn-amaps { background: #3a3a45;      box-shadow: 0 3px 12px rgba(0,0,0,0.2); }
     .btn-close {
       width: 52px; height: 52px; background: var(--s2);
       border: 1px solid var(--border); border-radius: 14px;
@@ -249,10 +267,10 @@
     </div>
     <div class="filter-row">
       <div class="filter-pill active-outdoor" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-        <div class="filter-dot" style="background:var(--orange)"></div>Utebord
+        <div class="filter-dot" style="background:var(--orange)"></div>Ute
       </div>
       <div class="filter-pill active-bar" id="pill-bar" onclick="toggleFilter('bar')">
-        <div class="filter-dot" style="background:var(--purple)"></div>Innendørs
+        <div class="filter-dot" style="background:var(--purple)"></div>Inne
       </div>
     </div>
   </div>
@@ -291,11 +309,20 @@
     <div class="sheet-stats" id="sheetStats"></div>
     <div class="sheet-notes" id="sheetNote"></div>
     <div class="sheet-actions">
-      <button class="btn-directions btn-gmaps" onclick="openGoogleMaps()">
+      <button class="btn-directions" onclick="toggleMapsPicker()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Veibeskrivelse
+      </button>
+      <button class="btn-share" onclick="shareTable()" title="Del">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+    </div>
+    <div class="maps-picker" id="mapsPicker">
+      <button class="btn-maps-option btn-gmaps" onclick="openGoogleMaps()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
         Google Maps
       </button>
-      <button class="btn-directions btn-amaps" onclick="openAppleMaps()">
+      <button class="btn-maps-option btn-amaps" onclick="openAppleMaps()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
         Apple Maps
       </button>
@@ -535,7 +562,16 @@ function renderMarkers() {
 }
 
 renderMarkers();
-loadSheetData();
+loadSheetData().then(() => {
+  const param = new URLSearchParams(location.search).get('bord');
+  if (param) {
+    const idx = TABLES.findIndex(t => t.navn.toLowerCase() === param.toLowerCase());
+    if (idx !== -1) {
+      map.setView([TABLES[idx].lat, TABLES[idx].lng], 15, { animate: false });
+      setTimeout(() => openSheet(idx), 400);
+    }
+  }
+});
 
 // Auto-locate on first visit
 const geoOpts = { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 };
@@ -549,6 +585,8 @@ navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
 function openSheet(idx) {
   const t = TABLES[idx];
   selectedIdx = idx;
+  document.getElementById('mapsPicker').classList.remove('open');
+  history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`);
   const photo = document.getElementById('sheetPhoto');
   if (t.bilde_url) {
     photo.src = t.bilde_url;
@@ -595,8 +633,10 @@ function openSheet(idx) {
 
 function closeSheet() {
   document.getElementById('bottomSheet').classList.remove('open');
+  document.getElementById('mapsPicker').classList.remove('open');
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
   selectedIdx = null;
+  history.replaceState(null,'', location.pathname);
 }
 
 map.on('click', closeSheet);
@@ -608,6 +648,9 @@ map.on('zoom', () => {
   }, 80);
 });
 
+function toggleMapsPicker() {
+  document.getElementById('mapsPicker').classList.toggle('open');
+}
 function openGoogleMaps() {
   if (selectedIdx===null) return;
   const { lat, lng } = TABLES[selectedIdx];
@@ -617,6 +660,21 @@ function openAppleMaps() {
   if (selectedIdx===null) return;
   const { lat, lng } = TABLES[selectedIdx];
   window.open(`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`);
+}
+function shareTable() {
+  if (selectedIdx===null) return;
+  const navn = TABLES[selectedIdx].navn;
+  const url = `${location.origin}${location.pathname}?bord=${encodeURIComponent(navn)}`;
+  if (navigator.share) {
+    navigator.share({ title: navn, text: `Sjekk ut dette bordtennisbordet: ${navn}`, url });
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.querySelector('.btn-share');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      setTimeout(() => btn.innerHTML = orig, 1800);
+    });
+  }
 }
 
 let userLat=null, userLng=null;

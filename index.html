@@ -101,24 +101,20 @@
     .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
     /* Nearby strip */
     .nearby-label {
-      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
       left: 16px; z-index: 299;
-      display: flex; align-items: center; gap: 5px;
       font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
       color: #999; text-transform: uppercase;
       opacity: 0; transition: opacity 0.35s ease;
       pointer-events: none;
     }
     .nearby-label.visible { opacity: 1; }
-    .nearby-label-dot {
-      width: 5px; height: 5px; border-radius: 50%;
-      background: var(--blue); flex-shrink: 0;
-    }
     .nearby-strip {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
       left: 0; right: 0; z-index: 299;
-      display: flex; gap: 9px; padding: 4px 16px;
+      display: flex; gap: 9px; padding: 10px 16px 4px;
       overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      border-top: 1px solid var(--border);
       opacity: 0; transform: translateY(10px); pointer-events: none;
       transition: opacity 0.35s ease, transform 0.35s ease;
     }
@@ -421,7 +417,7 @@
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
 </div>
 <div id="map"></div>
-<div class="nearby-label" id="nearbyLabel"><div class="nearby-label-dot"></div>Nærmeste</div>
+<div class="nearby-label" id="nearbyLabel">Nærmeste</div>
 <div class="nearby-strip" id="nearbyStrip"></div>
 <div class="fab-stack">
   <button class="fab-locate" onclick="locateMe()">

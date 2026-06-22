@@ -38,16 +38,39 @@
       position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 400;
       padding: env(safe-area-inset-top, 0px) 0 0;
       width: fit-content;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      will-change: transform;
     }
+    .header.hidden { transform: translateX(-50%) translateY(calc(-100% - env(safe-area-inset-top, 0px) - 20px)); }
     .header-inner {
       margin: 12px 0 0;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 12px 16px;
+      padding: 12px 16px 10px;
       box-shadow: 0 4px 32px rgba(0,0,0,0.5);
       width: fit-content;
     }
+    .header-drag-handle {
+      display: flex; justify-content: center; padding: 4px 0 0;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .header-drag-handle span {
+      display: block; width: 32px; height: 3px; border-radius: 2px;
+      background: var(--border);
+    }
+    .header-restore {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px);
+      left: 50%; transform: translateX(-50%);
+      z-index: 401; display: none; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 8px 14px 8px 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .header-restore.visible { display: flex; }
+    .header-restore-logo { width: 28px; height: 28px; background: var(--orange); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .header-restore-text { font-size: 13px; font-weight: 600; color: var(--muted); }
     .header-top { display: flex; align-items: center; gap: 12px; }
     .logo-mark {
       width: 40px; height: 40px; background: var(--orange);
@@ -126,13 +149,28 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
     .sheet-close-top:active { background: rgba(0,0,0,0.95); }
+    /* Search collapsed: icon pill */
+    .search-btn {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
+      left: 50%; transform: translateX(-50%); z-index: 399;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted); -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    .search-btn:active { opacity: 0.7; }
+    .search-btn.hidden { display: none; }
+    /* Search expanded: full input */
     .search-wrap {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
       left: 50%; transform: translateX(-50%); z-index: 399;
-      width: 280px;
+      width: 280px; display: none;
     }
+    .search-wrap.expanded { display: block; }
     .search-input {
-      width: 100%; padding: 10px 16px 10px 38px;
+      width: 100%; padding: 10px 36px 10px 38px;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; color: var(--text); font-size: 14px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4); outline: none;
@@ -142,6 +180,13 @@
     .search-icon {
       position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
       pointer-events: none; color: var(--muted);
+    }
+    .search-close {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      width: 22px; height: 22px; border-radius: 50%; border: none;
+      background: var(--s2); color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
     }
     .search-field { position: relative; }
     .search-results {
@@ -274,7 +319,7 @@
   </style>
 </head>
 <body>
-<div class="header">
+<div class="header" id="header">
   <div class="header-inner">
     <div class="header-top">
       <div class="logo-mark">🏓</div>
@@ -297,12 +342,29 @@
         <div class="filter-dot" style="background:var(--purple)"></div>Inne
       </div>
     </div>
+    <div class="header-drag-handle" id="headerHandle" onclick="hideHeader()"><span></span></div>
   </div>
 </div>
-<div class="search-wrap">
+
+<!-- Restore pill (shown when header is hidden) -->
+<div class="header-restore" id="headerRestore" onclick="showHeader()">
+  <div class="header-restore-logo">🏓</div>
+  <span class="header-restore-text">PinPong</span>
+</div>
+
+<!-- Search button (collapsed) -->
+<button class="search-btn" id="searchBtn" onclick="expandSearch()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+</button>
+
+<!-- Search wrap (expanded) -->
+<div class="search-wrap" id="searchWrap">
   <div class="search-field">
     <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input class="search-input" id="searchInput" type="text" placeholder="Søk etter sted…" autocomplete="off" autocorrect="off" spellcheck="false" />
+    <button class="search-close" onclick="collapseSearch()">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
   <div class="search-results" id="searchResults"></div>
 </div>
@@ -791,8 +853,23 @@ function fuzzyScore(name, q) {
   return j === q.length ? j : 0;
 }
 
-const searchInput = document.getElementById('searchInput');
-const searchResults = document.getElementById('searchResults');
+// ── Search ──────────────────────────────────────────────
+const searchInput  = document.getElementById('searchInput');
+const searchResults= document.getElementById('searchResults');
+const searchWrap   = document.getElementById('searchWrap');
+const searchBtn    = document.getElementById('searchBtn');
+
+function expandSearch() {
+  searchBtn.classList.add('hidden');
+  searchWrap.classList.add('expanded');
+  searchInput.focus();
+}
+function collapseSearch() {
+  searchResults.style.display = 'none';
+  searchInput.value = '';
+  searchWrap.classList.remove('expanded');
+  searchBtn.classList.remove('hidden');
+}
 
 searchInput.addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();
@@ -813,16 +890,41 @@ searchInput.addEventListener('input', function() {
 });
 
 function selectSearch(idx) {
-  searchInput.value = '';
-  searchResults.style.display = 'none';
-  searchInput.blur();
+  collapseSearch();
   map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
   setTimeout(() => openSheet(idx), 600);
 }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('.search-wrap')) searchResults.style.display = 'none';
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-btn')) {
+    if (searchWrap.classList.contains('expanded')) collapseSearch();
+  }
 });
+
+// ── Header hide / show ───────────────────────────────────
+const header        = document.getElementById('header');
+const headerRestore = document.getElementById('headerRestore');
+
+function hideHeader() {
+  header.classList.add('hidden');
+  headerRestore.classList.add('visible');
+}
+function showHeader() {
+  header.classList.remove('hidden');
+  headerRestore.classList.remove('visible');
+}
+
+// Drag-up gesture on header
+(function() {
+  let startY = 0, dragging = false;
+  header.addEventListener('touchstart', e => { startY = e.touches[0].clientY; dragging = true; }, { passive: true });
+  header.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy < -40) { dragging = false; hideHeader(); }
+  }, { passive: true });
+  header.addEventListener('touchend', () => { dragging = false; });
+})();
 
 function toggleFilter(type) {
   if (type==='outdoor') {

@@ -192,7 +192,7 @@
       justify-content: center; color: #777; -webkit-tap-highlight-color: transparent;
     }
     .btn-close:active { background: var(--border); }
-    .leaflet-tile-pane { filter: brightness(1.4) contrast(0.82) saturate(0.6); }
+    .leaflet-tile-pane { filter: brightness(0.95) contrast(1.6) saturate(0.35); }
     .leaflet-control-zoom { display: none !important; }
     .cluster-icon {
       width: 38px; height: 38px; background: #FF6B00;
@@ -236,7 +236,7 @@
         <div class="filter-dot" style="background:var(--orange)"></div>Utebord
       </div>
       <div class="filter-pill active-bar" id="pill-bar" onclick="toggleFilter('bar')">
-        <div class="filter-dot" style="background:var(--purple)"></div>Barer
+        <div class="filter-dot" style="background:var(--purple)"></div>Innendørs
       </div>
     </div>
   </div>
@@ -335,15 +335,15 @@ const STATIC = [
   { navn:"St. Hanshaugen",           lat:59.9272768, lng:10.7424180, type:"outdoor" },
   { navn:"Bygdøy skole",             lat:59.9049487, lng:10.6766785, type:"outdoor" },
   { navn:"Sukkerbiten",              lat:59.9049733, lng:10.7525070, type:"outdoor" },
-  { navn:"Brygg",                    lat:59.9132947, lng:10.7485544, type:"bar" },
-  { navn:"Kulturhuset",              lat:59.9146374, lng:10.7508109, type:"bar" },
-  { navn:"Raadhuset Bar",            lat:59.9136835, lng:10.7337321, type:"bar" },
-  { navn:"Union Blindern",           lat:59.9407063, lng:10.7216641, type:"bar" },
-  { navn:"Alf",                      lat:59.9272500, lng:10.7508899, type:"bar" },
-  { navn:"Røverstaden",              lat:59.9134458, lng:10.7293552, type:"bar" },
+  { navn:"Brygg",                    lat:59.9132947, lng:10.7485544, type:"bar", label:"Bryggebar" },
+  { navn:"Kulturhuset",              lat:59.9146374, lng:10.7508109, type:"bar", label:"Kulturhus" },
+  { navn:"Raadhuset Bar",            lat:59.9136835, lng:10.7337321, type:"bar", label:"Bar" },
+  { navn:"Union Blindern",           lat:59.9407063, lng:10.7216641, type:"bar", label:"Studentklubb" },
+  { navn:"Alf",                      lat:59.9272500, lng:10.7508899, type:"bar", label:"Bar" },
+  { navn:"Røverstaden",              lat:59.9134458, lng:10.7293552, type:"bar", label:"Bar" },
 ];
 
-let TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, notater:"", bilde_url:"" }));
+let TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, notater:"", bilde_url:"", label: s.label || null }));
 
 function parseCSVLine(line) {
   const vals = [];
@@ -398,6 +398,7 @@ async function loadSheetData() {
       const existing = TABLES.findIndex(t => t.navn.toLowerCase() === navn.toLowerCase());
       const data = {
         verifisert: row.verifisert ? row.verifisert.toLowerCase() : null,
+        label:      row.label || null,
         antall:     row.antall     || null,
         materiale:  row.materiale  || null,
         tilstand:   row.tilstand  || null,
@@ -411,8 +412,8 @@ async function loadSheetData() {
       } else {
         const lat = parseFloat(row.lat), lng = parseFloat(row.lng);
         if (!lat || !lng) return;
-        const rawType = (row.type||"outdoor").toLowerCase();
-        const type = rawType === "utendørs" ? "outdoor" : rawType;
+        const rawType = (row.type||"utendørs").toLowerCase();
+        const type = rawType === "utendørs" ? "outdoor" : rawType === "innendørs" ? "bar" : rawType;
         TABLES.push({ navn, lat, lng, type, ...data });
       }
     });
@@ -518,7 +519,7 @@ function openSheet(idx) {
   } else {
     photo.src = ''; photo.className = 'sheet-photo';
   }
-  document.getElementById('sheetType').textContent = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Bar med bordtennis';
+  document.getElementById('sheetType').textContent = t.type==='outdoor' ? '🏓 Utebord' : `🍺 ${t.label || 'Innendørs'}`;
   document.getElementById('sheetType').style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   document.getElementById('sheetName').textContent = t.navn;
   const stats = document.getElementById('sheetStats');

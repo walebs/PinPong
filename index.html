@@ -109,14 +109,17 @@
     }
     .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-label {
-      padding: 0 0 6px 4px;
+      padding: 0 0 6px 3px;
       font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
       color: var(--orange); text-transform: uppercase;
+    }
+    .nearby-divider {
+      height: 1px; background: var(--border);
+      margin: 0 19px 0 3px;
     }
     .nearby-strip {
       display: flex; gap: 9px; padding: 10px 16px 4px 0;
       overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-      border-top: 1px solid var(--border);
     }
     .nearby-strip::-webkit-scrollbar { display: none; }
     .nearby-card {
@@ -418,6 +421,7 @@
 <div id="map"></div>
 <div class="nearby-container" id="nearbyContainer">
   <div class="nearby-label">Nærmeste</div>
+  <div class="nearby-divider"></div>
   <div class="nearby-strip" id="nearbyStrip"></div>
 </div>
 <div class="fab-stack">

@@ -472,11 +472,11 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 function iconSize(highlighted=false) {
   const z = map.getZoom();
   let base;
-  if      (z <= 12) base = 18;
-  else if (z === 13) base = 22;
-  else if (z === 14) base = 27;
-  else if (z === 15) base = 32;
-  else               base = 38;
+  if      (z <= 12) base = 12;
+  else if (z === 13) base = 16;
+  else if (z === 14) base = 22;
+  else if (z === 15) base = 30;
+  else               base = 36;
   return highlighted ? base + 8 : base;
 }
 

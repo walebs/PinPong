@@ -101,17 +101,17 @@
     .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
     /* Nearby strip */
     .nearby-label {
-      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
       left: 16px; z-index: 299;
-      display: flex; align-items: center; gap: 4px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
-      color: var(--muted); text-transform: uppercase;
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      color: #999; text-transform: uppercase;
       opacity: 0; transition: opacity 0.35s ease;
       pointer-events: none;
     }
     .nearby-label.visible { opacity: 1; }
     .nearby-label-dot {
-      width: 6px; height: 6px; border-radius: 50%;
+      width: 5px; height: 5px; border-radius: 50%;
       background: var(--blue); flex-shrink: 0;
     }
     .nearby-strip {
@@ -945,6 +945,12 @@ function collapseSearch() {
   searchWrap.classList.remove('expanded');
   searchInput.blur();
 }
+
+searchInput.addEventListener('blur', () => {
+  setTimeout(() => {
+    if (searchInput.value.trim() === '') collapseSearch();
+  }, 150);
+});
 
 searchInput.addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();

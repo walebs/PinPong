@@ -464,9 +464,12 @@ function updateProgress() {
 }
 
 const map = L.map('map', { center:[59.926,10.752], zoom:13, zoomControl:false, attributionControl:true, tap:true, preferCanvas:true, zoomSnap:0.5, zoomDelta:0.5 });
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom:19, subdomains:'abcd',
+}).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+  maxZoom:19, subdomains:'abcd', minZoom:10, maxNativeZoom:13,
 }).addTo(map);
 
 function iconSize(highlighted=false) {
@@ -540,12 +543,13 @@ renderMarkers();
 loadSheetData();
 
 // Auto-locate on first visit
+const geoOpts = { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 };
 navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
   userLat = pos.coords.latitude;
   userLng = pos.coords.longitude;
   setUserMarker(userLat, userLng);
   map.flyTo([userLat, userLng], 14, { duration: 1.2 });
-}, () => {});
+}, () => {}, geoOpts);
 
 function openSheet(idx) {
   const t = TABLES[idx];
@@ -634,7 +638,7 @@ function locateMe() {
     userLat=pos.coords.latitude; userLng=pos.coords.longitude;
     setUserMarker(userLat,userLng);
     map.flyTo([userLat,userLng], 15, { duration:1 });
-  }, () => alert('Kunne ikke hente posisjon.'));
+  }, () => alert('Kunne ikke hente posisjon.'), geoOpts);
 }
 
 function haversine(la1,ln1,la2,ln2) {
@@ -669,7 +673,7 @@ function findNearest() {
         n.textContent=(n.textContent?n.textContent+'  ·  ':'')+' 📍 '+dist;
       }, 700);
     }
-  }, () => { btn.style.opacity='1'; alert('Kunne ikke hente posisjon.'); });
+  }, () => { btn.style.opacity='1'; alert('Kunne ikke hente posisjon.'); }, geoOpts);
 }
 
 function fuzzyScore(name, q) {

@@ -696,9 +696,10 @@ const map = L.map('map', {
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom: 19, subdomains: 'abcd',
-  updateWhenIdle: true,
-  updateWhenZooming: false,
-  keepBuffer: 4,
+  updateWhenIdle: false,
+  updateWhenZooming: true,
+  keepBuffer: 8,
+  crossOrigin: true,
 }).addTo(map);
 
 function iconSize(highlighted=false) {
@@ -873,7 +874,7 @@ function openSheet(idx) {
     if (lines.length) {
       notesEl.innerHTML = `<div class="notes-label">Notater</div>`;
       lines.forEach(line => {
-        notesEl.innerHTML += `<div class="note-line">${esc(line.trim())}</div>`;
+        notesEl.innerHTML += `<div class="note-line">· ${esc(line.trim())}</div>`;
       });
     }
   }

@@ -780,7 +780,7 @@ function selectNearby(idx) {
 }
 
 // Auto-locate on first visit
-const geoOpts = { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 };
+const geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 };
 navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
   userLat = pos.coords.latitude;
   userLng = pos.coords.longitude;

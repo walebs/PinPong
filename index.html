@@ -217,7 +217,7 @@
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
       left: 50%; transform: translateX(-50%); z-index: 402;
       width: 44px;
-      transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+      transition: width 0.16s cubic-bezier(0.4, 0, 0.2, 1),
                   top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .search-wrap.expanded { width: min(260px, calc(100vw - 120px)); }
@@ -227,7 +227,7 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 13px; height: 44px; overflow: hidden;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      transition: border-radius 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: border-radius 0.16s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .search-wrap.expanded .search-field { border-radius: 14px; }
     .search-icon-btn {
@@ -779,15 +779,38 @@ function selectNearby(idx) {
   setTimeout(() => openSheet(idx), 600);
 }
 
-// Auto-locate on first visit
-const geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 };
-navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => {
-  userLat = pos.coords.latitude;
-  userLng = pos.coords.longitude;
-  setUserMarker(userLat, userLng);
-  map.flyTo([userLat, userLng], 14, { duration: 1.2 });
-  showNearbyStrip(userLat, userLng);
-}, () => {}, geoOpts);
+// Continuous location watch
+const geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
+let locationWatchId = null;
+let firstFix = true;
+
+function onPositionUpdate(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  userLat = lat; userLng = lng;
+  setUserMarker(lat, lng);
+  if (firstFix) {
+    firstFix = false;
+    map.flyTo([lat, lng], 14, { duration: 1.2 });
+    showNearbyStrip(lat, lng);
+  }
+}
+
+function startLocationWatch() {
+  if (!navigator.geolocation) return;
+  if (locationWatchId !== null) return;
+  locationWatchId = navigator.geolocation.watchPosition(
+    onPositionUpdate,
+    err => {
+      if (err.code === 1) {
+        alert('Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat');
+      }
+    },
+    geoOpts
+  );
+}
+
+startLocationWatch();
 
 function openSheet(idx) {
   const t = TABLES[idx];
@@ -896,27 +919,24 @@ function shareTable() {
 let userLat=null, userLng=null;
 
 function setUserMarker(lat, lng) {
-  if (userMarker) map.removeLayer(userMarker);
-  const icon = L.divIcon({
-    html:`<div style="width:14px;height:14px;background:#34C759;border:2.5px solid rgba(255,255,255,0.9);border-radius:50%;box-shadow:0 0 0 4px rgba(52,199,89,0.25)"></div>`,
-    className:'', iconSize:[14,14], iconAnchor:[7,7],
-  });
-  userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
+  if (userMarker) {
+    userMarker.setLatLng([lat, lng]);
+  } else {
+    const icon = L.divIcon({
+      html:`<div style="width:14px;height:14px;background:#34C759;border:2.5px solid rgba(255,255,255,0.9);border-radius:50%;box-shadow:0 0 0 4px rgba(52,199,89,0.25)"></div>`,
+      className:'', iconSize:[14,14], iconAnchor:[7,7],
+    });
+    userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
+  }
 }
 
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
-  navigator.geolocation.getCurrentPosition(pos => {
-    userLat=pos.coords.latitude; userLng=pos.coords.longitude;
-    setUserMarker(userLat,userLng);
-    map.flyTo([userLat,userLng], 15, { duration:1 });
+  startLocationWatch();
+  if (userLat !== null) {
+    map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);
-  }, err => {
-    const msg = err.code === 1
-      ? 'Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat'
-      : 'Kunne ikke hente posisjon. Prøv igjen.';
-    alert(msg);
-  }, geoOpts);
+  }
 }
 
 function haversine(la1,ln1,la2,ln2) {
@@ -927,38 +947,25 @@ function haversine(la1,ln1,la2,ln2) {
 }
 
 function findNearest() {
-  if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
-  const btn = document.getElementById('btnNearest');
-  btn.style.opacity='0.55';
-  navigator.geolocation.getCurrentPosition(pos => {
-    btn.style.opacity='1';
-    userLat=pos.coords.latitude; userLng=pos.coords.longitude;
-    setUserMarker(userLat,userLng);
-    showNearbyStrip(userLat, userLng);
-    let nearestIdx=null, minDist=Infinity;
-    TABLES.forEach((t,i) => {
-      if (t.type==='outdoor' && !showOutdoor) return;
-      if (t.type==='bar'     && !showBar)     return;
-      if (t.verifisert==='nei') return;
-      const d=haversine(userLat,userLng,t.lat,t.lng);
-      if (d<minDist) { minDist=d; nearestIdx=i; }
-    });
-    if (nearestIdx!==null) {
-      const dist=minDist<1000 ? `${Math.round(minDist)} m unna` : `${(minDist/1000).toFixed(1)} km unna`;
-      map.flyTo([TABLES[nearestIdx].lat,TABLES[nearestIdx].lng], 15, { duration:1.1 });
-      setTimeout(() => {
-        openSheet(nearestIdx);
-        const n=document.getElementById('sheetNote');
-        n.textContent=(n.textContent?n.textContent+'  ·  ':'')+' 📍 '+dist;
-      }, 700);
-    }
-  }, err => {
-    btn.style.opacity='1';
-    const msg = err.code === 1
-      ? 'Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat'
-      : 'Kunne ikke hente posisjon. Prøv igjen.';
-    alert(msg);
-  }, geoOpts);
+  if (userLat === null) return;
+  showNearbyStrip(userLat, userLng);
+  let nearestIdx=null, minDist=Infinity;
+  TABLES.forEach((t,i) => {
+    if (t.type==='outdoor' && !showOutdoor) return;
+    if (t.type==='bar'     && !showBar)     return;
+    if (t.verifisert==='nei') return;
+    const d=haversine(userLat,userLng,t.lat,t.lng);
+    if (d<minDist) { minDist=d; nearestIdx=i; }
+  });
+  if (nearestIdx!==null) {
+    const dist=minDist<1000 ? `${Math.round(minDist)} m unna` : `${(minDist/1000).toFixed(1)} km unna`;
+    map.flyTo([TABLES[nearestIdx].lat,TABLES[nearestIdx].lng], 15, { duration:1.1 });
+    setTimeout(() => {
+      openSheet(nearestIdx);
+      const n=document.getElementById('sheetNote');
+      n.textContent=(n.textContent?n.textContent+'  ·  ':'')+' 📍 '+dist;
+    }, 700);
+  }
 }
 
 function fuzzyScore(name, q) {

@@ -359,6 +359,7 @@
       border-radius: 50%;
       box-shadow: 0 0 6px rgba(52,199,89,0.8);
       position: relative; z-index: 2;
+      transition: box-shadow 0.25s ease;
     }
     .user-dot-ring {
       position: absolute; width: 10px; height: 10px;
@@ -863,7 +864,7 @@ function startLocationWatch() {
 
 startLocationWatch();
 
-// ── Compass ─────────────────────────────────────────────
+// ── Directional glow on user dot ────────────────────────
 let compassActive = false;
 let lastHeading = null;
 
@@ -873,13 +874,27 @@ function getHeading(e) {
   return null;
 }
 
+function applyDirectionalGlow(heading) {
+  const core = document.querySelector('.user-dot-core');
+  if (!core) return;
+  const rad = heading * Math.PI / 180;
+  const gx = (Math.sin(rad) * 5).toFixed(1);
+  const gy = (-Math.cos(rad) * 5).toFixed(1);
+  core.style.boxShadow = `${gx}px ${gy}px 9px rgba(52,199,89,0.95), 0 0 4px rgba(52,199,89,0.4)`;
+}
+
+function clearDirectionalGlow() {
+  const core = document.querySelector('.user-dot-core');
+  if (core) core.style.boxShadow = '0 0 6px rgba(52,199,89,0.8)';
+}
+
 function onOrientation(e) {
   const heading = getHeading(e);
   if (heading === null || !compassActive) return;
-  if (lastHeading !== null && Math.abs(heading - lastHeading) < 1) return;
+  if (lastHeading !== null && Math.abs(heading - lastHeading) < 1.5) return;
   lastHeading = heading;
-  map.setBearing(heading);
   document.getElementById('compassNeedle').style.transform = `rotate(${-heading}deg)`;
+  applyDirectionalGlow(heading);
 }
 
 async function toggleCompass() {
@@ -888,8 +903,8 @@ async function toggleCompass() {
     compassActive = false;
     btn.classList.remove('active');
     window.removeEventListener('deviceorientation', onOrientation, true);
-    map.setBearing(0);
     document.getElementById('compassNeedle').style.transform = 'rotate(0deg)';
+    clearDirectionalGlow();
     return;
   }
   if (typeof DeviceOrientationEvent !== 'undefined' &&

@@ -177,12 +177,18 @@
     .bottom-sheet {
       position: fixed; bottom: 24px; left: 50%; z-index: 500;
       width: calc(100% - 32px); max-width: 400px;
+      max-height: calc(100vh - 120px);
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
       transform: translate(-50%, calc(100% + 40px));
-      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), bottom 0.35s cubic-bezier(0.4,0,0.2,1);
       overflow: hidden;
       will-change: transform;
+    }
+    .bottom-sheet.strip-above {
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+      max-height: calc(100vh - env(safe-area-inset-top, 0px) - 220px);
+      overflow-y: auto;
     }
     @media (max-width: 480px) {
       .sheet-photo { height: 130px; }
@@ -702,7 +708,6 @@ function makeClusterGroup(color) {
   group.on('clusterclick', function(e) {
     if (e.layer.getChildCount() <= 3) {
       e.layer.spiderfy();
-      L.DomEvent.stopPropagation(e);
     }
   });
   return group;
@@ -711,14 +716,14 @@ function makeClusterGroup(color) {
 function expandSmallClusters() {
   [clusterGroup, clusterGroupBar].forEach(g => {
     if (!g || !g._featureGroup) return;
-    g._featureGroup.eachLayer(l => {
-      if (l instanceof L.MarkerCluster && l.getChildCount() <= 3) {
+    g._featureGroup.getLayers().forEach(l => {
+      if (typeof l.getChildCount === 'function' && l.getChildCount() <= 3) {
         l.spiderfy();
       }
     });
   });
 }
-map.on('zoomend moveend', () => setTimeout(expandSmallClusters, 100));
+map.on('zoomend', () => setTimeout(expandSmallClusters, 250));
 
 function renderMarkers() {
   if (clusterGroup)    map.removeLayer(clusterGroup);
@@ -829,6 +834,8 @@ function openSheet(idx) {
   }
   const sheet = document.getElementById('bottomSheet');
   const alreadyOpen = sheet.classList.contains('open');
+  const stripVisible = document.getElementById('nearbyContainer').classList.contains('visible');
+  sheet.classList.toggle('strip-above', stripVisible);
   sheet.classList.add('open');
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index===idx)));
   if (!alreadyOpen) {
@@ -839,7 +846,7 @@ function openSheet(idx) {
 }
 
 function closeSheet() {
-  document.getElementById('bottomSheet').classList.remove('open');
+  document.getElementById('bottomSheet').classList.remove('open', 'strip-above');
   closeMapsPicker();
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
   selectedIdx = null;

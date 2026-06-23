@@ -215,7 +215,7 @@
       transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
                   top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: 280px; }
+    .search-wrap.expanded { width: min(260px, calc(100vw - 120px)); }
     .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 66px); }
     .search-field {
       display: flex; align-items: center;
@@ -684,7 +684,7 @@ function makeIcon(t, highlighted=false) {
 let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
 
 function makeClusterGroup(color) {
-  return L.markerClusterGroup({
+  const group = L.markerClusterGroup({
     iconCreateFunction: cluster => {
       const count = cluster.getChildCount();
       return L.divIcon({
@@ -699,7 +699,26 @@ function makeClusterGroup(color) {
     animate: true,
     spiderfyOnMaxZoom: true,
   });
+  group.on('clusterclick', function(e) {
+    if (e.layer.getChildCount() <= 3) {
+      e.layer.spiderfy();
+      L.DomEvent.stopPropagation(e);
+    }
+  });
+  return group;
 }
+
+function expandSmallClusters() {
+  [clusterGroup, clusterGroupBar].forEach(g => {
+    if (!g || !g._featureGroup) return;
+    g._featureGroup.eachLayer(l => {
+      if (l instanceof L.MarkerCluster && l.getChildCount() <= 3) {
+        l.spiderfy();
+      }
+    });
+  });
+}
+map.on('zoomend moveend', () => setTimeout(expandSmallClusters, 100));
 
 function renderMarkers() {
   if (clusterGroup)    map.removeLayer(clusterGroup);

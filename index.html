@@ -190,11 +190,9 @@
       .sheet-body { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
       .sheet-type { font-size: 10px; margin-bottom: 2px; }
       .sheet-name { font-size: 17px; margin-bottom: 6px; }
-      .sheet-stats { gap: 4px; margin-bottom: 8px; }
-      .stat-row { font-size: 12px; }
-      .sheet-notes { margin-bottom: 10px; }
-      .sheet-notes-label { font-size: 10px; margin-bottom: 4px; }
-      .sheet-notes-bullet { font-size: 12px; margin-bottom: 2px; }
+      .sheet-content { gap: 10px; min-height: 80px; }
+      .stat-val { font-size: 12px; }
+      .note-line { font-size: 10px; }
       .btn-directions { padding: 11px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
@@ -275,20 +273,18 @@
     .sheet-body { padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
     .sheet-type { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
     .sheet-name { font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 12px; }
-    .sheet-stats { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
-    .stat-row {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 13px; color: #bbb;
+    .sheet-content {
+      display: flex; gap: 14px; margin-bottom: 16px; min-height: 90px;
     }
-    .stat-row .stat-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
-    .stat-row .stat-key { color: var(--muted); flex-shrink: 0; }
-    .stat-row .stat-val { font-weight: 600; color: var(--text); }
-    .stat-row.verified .stat-val  { color: var(--green); }
-    .stat-row.not-found .stat-val { color: #FF3B30; }
-    .sheet-notes { margin-bottom: 16px; }
-    .sheet-notes-label { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-    .sheet-notes-bullet { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; color: var(--muted); line-height: 1.4; margin-bottom: 4px; }
-    .sheet-notes-bullet::before { content: "•"; color: var(--muted); flex-shrink: 0; }
+    .sheet-stats-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .sheet-notes-col { flex: 0 0 38%; }
+    .stat-item { display: flex; flex-direction: column; gap: 2px; }
+    .stat-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
+    .stat-val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .stat-val.verified  { color: var(--green); }
+    .stat-val.not-found { color: #FF3B30; }
+    .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    .note-line { font-size: 11px; color: var(--muted); line-height: 1.45; margin-bottom: 3px; }
     .sheet-actions { display: flex; gap: 10px; }
     .btn-directions {
       flex: 1; padding: 14px; color: white;
@@ -484,8 +480,10 @@
   <div class="sheet-body">
     <div class="sheet-type" id="sheetType"></div>
     <div class="sheet-name" id="sheetName"></div>
-    <div class="sheet-stats" id="sheetStats"></div>
-    <div class="sheet-notes" id="sheetNote"></div>
+    <div class="sheet-content">
+      <div class="sheet-stats-col" id="sheetStats"></div>
+      <div class="sheet-notes-col" id="sheetNote"></div>
+    </div>
     <div class="sheet-actions">
       <button class="btn-directions" onclick="toggleMapsPicker()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -851,24 +849,22 @@ function openSheet(idx) {
   document.getElementById('sheetType').style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   document.getElementById('sheetName').textContent = t.navn;
   const stats = document.getElementById('sheetStats');
+  const si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
   stats.innerHTML = '';
-  if (t.verifisert==='ja')
-    stats.innerHTML += `<div class="stat-row verified"><span class="stat-icon">✅</span><span class="stat-key">Verifisert:</span><span class="stat-val">Ja</span></div>`;
-  else if (t.verifisert==='nei')
-    stats.innerHTML += `<div class="stat-row not-found"><span class="stat-icon">❌</span><span class="stat-key">Verifisert:</span><span class="stat-val">Ikke funnet</span></div>`;
-  else
-    stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⏳</span><span class="stat-key">Status:</span><span class="stat-val">Ikke besøkt ennå</span></div>`;
-  if (t.antall)    stats.innerHTML += `<div class="stat-row"><span class="stat-icon">🏓</span><span class="stat-key">Antall:</span><span class="stat-val">${esc(t.antall)}</span></div>`;
-  if (t.tilstand)  stats.innerHTML += `<div class="stat-row"><span class="stat-icon">⭐</span><span class="stat-key">Tilstand:</span><span class="stat-val">${esc(t.tilstand)}</span></div>`;
-  if (t.belysning) stats.innerHTML += `<div class="stat-row"><span class="stat-icon">💡</span><span class="stat-key">Belysning:</span><span class="stat-val">${esc(t.belysning)}</span></div>`;
+  if (t.verifisert==='ja')       stats.innerHTML += si({ label:'Status', val:'Verifisert', cls:' verified' });
+  else if (t.verifisert==='nei') stats.innerHTML += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
+  else                           stats.innerHTML += si({ label:'Status', val:'Ikke besøkt' });
+  if (t.antall)    stats.innerHTML += si({ label:'Antall',    val: esc(t.antall) });
+  if (t.tilstand)  stats.innerHTML += si({ label:'Tilstand',  val: esc(t.tilstand) });
+  if (t.belysning) stats.innerHTML += si({ label:'Belysning', val: esc(t.belysning) });
   const notesEl = document.getElementById('sheetNote');
   notesEl.innerHTML = '';
   if (t.notater) {
     const lines = t.notater.split(/[.\n]/).filter(l => l.trim());
     if (lines.length) {
-      notesEl.innerHTML = `<div class="sheet-notes-label">Notater</div>`;
+      notesEl.innerHTML = `<div class="notes-label">Notater</div>`;
       lines.forEach(line => {
-        notesEl.innerHTML += `<div class="sheet-notes-bullet">${esc(line.trim())}</div>`;
+        notesEl.innerHTML += `<div class="note-line">${esc(line.trim())}</div>`;
       });
     }
   }

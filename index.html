@@ -181,14 +181,9 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
       transform: translate(-50%, calc(100% + 40px));
-      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), bottom 0.35s cubic-bezier(0.4,0,0.2,1);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
       overflow: hidden;
       will-change: transform;
-    }
-    .bottom-sheet.strip-above {
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
-      max-height: calc(100vh - env(safe-area-inset-top, 0px) - 220px);
-      overflow-y: auto;
     }
     @media (max-width: 480px) {
       .sheet-photo { height: 130px; }
@@ -205,7 +200,7 @@
     .bottom-sheet.open { transform: translate(-50%, 0); }
     .sheet-close-top {
       position: absolute; top: 12px; right: 12px; z-index: 10;
-      width: 32px; height: 32px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: rgba(0,0,0,0.82); border: 1.5px solid rgba(255,255,255,0.22);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; color: #fff; backdrop-filter: blur(6px);
@@ -213,6 +208,10 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
     .sheet-close-top:active { background: rgba(0,0,0,0.95); }
+    .nearby-container.sheet-open {
+      opacity: 0; pointer-events: none; transform: translateY(12px);
+    }
+    .fab-stack.sheet-open { opacity: 0; pointer-events: none; }
     /* Search — single animated container */
     .search-wrap {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
@@ -457,7 +456,7 @@
 </div>
 <div class="bottom-sheet" id="bottomSheet">
   <button class="sheet-close-top" onclick="closeSheet()">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
   <img class="sheet-photo" id="sheetPhoto" src="" alt="" />
   <div class="sheet-body">
@@ -834,9 +833,9 @@ function openSheet(idx) {
   }
   const sheet = document.getElementById('bottomSheet');
   const alreadyOpen = sheet.classList.contains('open');
-  const stripVisible = document.getElementById('nearbyContainer').classList.contains('visible');
-  sheet.classList.toggle('strip-above', stripVisible);
   sheet.classList.add('open');
+  document.getElementById('nearbyContainer').classList.add('sheet-open');
+  document.querySelector('.fab-stack').classList.add('sheet-open');
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index===idx)));
   if (!alreadyOpen) {
     map.panTo([t.lat, t.lng], { animate:true, duration:0.35 });
@@ -846,7 +845,9 @@ function openSheet(idx) {
 }
 
 function closeSheet() {
-  document.getElementById('bottomSheet').classList.remove('open', 'strip-above');
+  document.getElementById('bottomSheet').classList.remove('open');
+  document.getElementById('nearbyContainer').classList.remove('sheet-open');
+  document.querySelector('.fab-stack').classList.remove('sheet-open');
   closeMapsPicker();
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
   selectedIdx = null;

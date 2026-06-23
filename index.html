@@ -359,15 +359,14 @@
       border-radius: 50%;
       box-shadow: 0 0 6px rgba(52,199,89,0.8);
       position: relative; z-index: 2;
-      transition: box-shadow 0.25s ease;
     }
     .user-dot-ring {
       position: absolute; width: 10px; height: 10px;
       border-radius: 50%; background: rgba(52,199,89,0.45);
-      animation: radar-ping 3.6s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+      animation: radar-ping 6s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
     }
-    .user-dot-ring:nth-child(2) { animation-delay: 1.2s; }
-    .user-dot-ring:nth-child(3) { animation-delay: 2.4s; }
+    .user-dot-ring:nth-child(2) { animation-delay: 2s; }
+    .user-dot-ring:nth-child(3) { animation-delay: 4s; }
     .leaflet-control-zoom { display: none !important; }
     .zoom-btns {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); right: 16px; z-index: 400;
@@ -841,48 +840,6 @@ function startLocationWatch() {
 }
 
 startLocationWatch();
-// Auto-start orientation on Android (no permission needed); iOS gets it on locateMe tap
-if (!(typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function')) {
-  window.addEventListener('deviceorientation', onOrientation, true);
-}
-
-// ── Directional glow on user dot (always-on when location active) ───
-let lastHeading = null;
-
-function getHeading(e) {
-  if (typeof e.webkitCompassHeading === 'number') return e.webkitCompassHeading;
-  if (e.alpha !== null) return (360 - e.alpha) % 360;
-  return null;
-}
-
-function applyDirectionalGlow(heading) {
-  const core = document.querySelector('.user-dot-core');
-  if (!core) return;
-  const rad = heading * Math.PI / 180;
-  const gx = (Math.sin(rad) * 9).toFixed(1);
-  const gy = (-Math.cos(rad) * 9).toFixed(1);
-  core.style.boxShadow = `${gx}px ${gy}px 12px rgba(52,199,89,0.95), 0 0 4px rgba(52,199,89,0.35)`;
-}
-
-function onOrientation(e) {
-  const heading = getHeading(e);
-  if (heading === null) return;
-  if (lastHeading !== null && Math.abs(heading - lastHeading) < 1.5) return;
-  lastHeading = heading;
-  applyDirectionalGlow(heading);
-}
-
-async function startOrientationWatch() {
-  if (typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function') {
-    try {
-      const perm = await DeviceOrientationEvent.requestPermission();
-      if (perm !== 'granted') return;
-    } catch(e) { return; }
-  }
-  window.addEventListener('deviceorientation', onOrientation, true);
-}
 
 function openSheet(idx) {
   const t = TABLES[idx];
@@ -1008,7 +965,6 @@ function setUserMarker(lat, lng) {
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
-  startOrientationWatch();
   if (userLat !== null) {
     map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);

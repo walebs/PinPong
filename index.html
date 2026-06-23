@@ -82,8 +82,8 @@
     .header-restore-logo { display: none; }
     .header-restore-text { display: none; }
     .logo-mark {
-      width: 40px; height: 40px; background: var(--orange);
-      border-radius: 12px; display: flex; align-items: center;
+      width: 44px; height: 44px; background: var(--orange);
+      border-radius: 13px; display: flex; align-items: center;
       justify-content: center; font-size: 20px; flex-shrink: 0;
     }
     .logo-text { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
@@ -145,7 +145,7 @@
     .nearby-card:active { transform: scale(0.95); opacity: 0.8; }
     .nearby-card-dist { font-size: 10px; font-weight: 700; color: var(--orange); letter-spacing: 0.3px; }
     .nearby-card-name {
-      font-size: 12px; font-weight: 600; color: var(--text);
+      font-size: 10px; font-weight: 600; color: var(--text);
       margin-top: 3px; line-height: 1.35;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
@@ -218,7 +218,7 @@
                   top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .search-wrap.expanded { width: min(260px, calc(100vw - 120px)); }
-    .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 66px); }
+    .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 62px); }
     .search-field {
       display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--border);
@@ -634,6 +634,7 @@ async function loadSheetData() {
     const res = await fetch(SHEETS_CSV_URL + '&t=' + Date.now(), { cache: 'no-store' });
     const text = await res.text();
     const rows = parseCSV(text);
+    const newTables = [];
     rows.forEach(row => {
       const navn = (row.navn || "").trim();
       if (!navn) return;
@@ -649,21 +650,22 @@ async function loadSheetData() {
         notater:    row.notater   || "",
         bilde_url:  (row.url || row.bilde_url) ? resolveImage(row.url || row.bilde_url) : "",
       };
-      // Match by name first, then by proximity (~100m)
-      let existing = TABLES.findIndex(t => t.navn.toLowerCase() === navn.toLowerCase());
-      if (existing === -1 && lat && lng) {
-        existing = TABLES.findIndex(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
+      // Try to match a static entry for coords/type
+      let base = STATIC.find(t => t.navn.toLowerCase() === navn.toLowerCase());
+      if (!base && lat && lng) {
+        base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
       }
-      if (existing !== -1) {
-        // Sheet is source of truth — update name too
-        TABLES[existing] = { ...TABLES[existing], navn, ...data };
+      if (base) {
+        newTables.push({ ...base, navn, ...data });
       } else {
         if (!lat || !lng) return;
         const rawType = (row.type||"utendørs").toLowerCase();
         const type = rawType === "utendørs" ? "outdoor" : rawType === "innendørs" ? "bar" : rawType;
-        TABLES.push({ navn, lat, lng, type, ...data });
+        newTables.push({ navn, lat, lng, type, ...data });
       }
     });
+    // Sheet is sole source of truth — only show what's in the sheet
+    if (newTables.length > 0) TABLES = newTables;
     updateProgress();
     renderMarkers();
   } catch(e) {

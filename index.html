@@ -668,6 +668,7 @@ async function loadSheetData() {
     if (newTables.length > 0) TABLES = newTables;
     updateProgress();
     renderMarkers();
+    if (userLat !== null) showNearbyStrip(userLat, userLng);
   } catch(e) {
     console.warn("Sheet-feil:", e);
     document.getElementById('logoMeta').textContent = `${TABLES.length} steder`;

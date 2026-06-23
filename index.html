@@ -687,9 +687,9 @@ const map = L.map('map', {
   zoomSnap: 0.5, zoomDelta: 0.5,
   minZoom: 5, maxZoom: 19,
   inertia: true,
-  inertiaDeceleration: 200,
-  inertiaMaxSpeed: 1800,
-  easeLinearity: 0.1,
+  inertiaDeceleration: 80,
+  inertiaMaxSpeed: 1200,
+  easeLinearity: 0.08,
 });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',

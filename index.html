@@ -660,23 +660,16 @@ function updateProgress() {
   document.getElementById('progressRow').style.display = verified > 0 ? 'flex' : 'none';
 }
 
-const OSLO_BOUNDS = L.latLngBounds(
-  [59.72, 10.30],  // sørvest — inkluderer Asker/Bærum
-  [60.08, 11.25]   // nordøst — inkluderer Lillestrøm/Lørenskog
-);
 const map = L.map('map', {
   center: [59.926, 10.752], zoom: 13,
   zoomControl: false, attributionControl: true,
   tap: true, preferCanvas: true,
   zoomSnap: 0.5, zoomDelta: 0.5,
-  minZoom: 8, maxZoom: 19,
-  maxBounds: OSLO_BOUNDS,
-  maxBoundsViscosity: 0.85,
+  minZoom: 5, maxZoom: 19,
 });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom: 19, subdomains: 'abcd',
-  bounds: OSLO_BOUNDS,
 }).addTo(map);
 
 function iconSize(highlighted=false) {

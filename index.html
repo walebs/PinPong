@@ -383,21 +383,6 @@
       user-select: none;
     }
     .zoom-btn:active { background: var(--s2); }
-    .compass-btn {
-      width: 40px; height: 40px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .compass-btn.active {
-      border-color: var(--orange);
-      box-shadow: 0 0 10px rgba(255,107,0,0.3);
-    }
-    .compass-btn:active { background: var(--s2); }
-    .compass-needle {
-      transition: transform 0.15s ease-out;
-    }
     .cluster-icon {
       width: 30px; height: 30px; background: #FF6B00;
       border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);
@@ -467,13 +452,6 @@
 <div class="zoom-btns">
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
-  <button class="compass-btn" id="compassBtn" onclick="toggleCompass()">
-    <svg class="compass-needle" id="compassNeedle" width="18" height="18" viewBox="0 0 18 18">
-      <polygon points="9,1 11,9 9,11 7,9" fill="var(--orange)"/>
-      <polygon points="9,17 11,9 9,11 7,9" fill="var(--muted)"/>
-      <circle cx="9" cy="9" r="1.5" fill="var(--text)"/>
-    </svg>
-  </button>
 </div>
 <div id="map"></div>
 <div class="nearby-container" id="nearbyContainer">
@@ -863,9 +841,13 @@ function startLocationWatch() {
 }
 
 startLocationWatch();
+// Auto-start orientation on Android (no permission needed); iOS gets it on locateMe tap
+if (!(typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function')) {
+  window.addEventListener('deviceorientation', onOrientation, true);
+}
 
-// ── Directional glow on user dot ────────────────────────
-let compassActive = false;
+// ── Directional glow on user dot (always-on when location active) ───
 let lastHeading = null;
 
 function getHeading(e) {
@@ -878,35 +860,20 @@ function applyDirectionalGlow(heading) {
   const core = document.querySelector('.user-dot-core');
   if (!core) return;
   const rad = heading * Math.PI / 180;
-  const gx = (Math.sin(rad) * 5).toFixed(1);
-  const gy = (-Math.cos(rad) * 5).toFixed(1);
-  core.style.boxShadow = `${gx}px ${gy}px 9px rgba(52,199,89,0.95), 0 0 4px rgba(52,199,89,0.4)`;
-}
-
-function clearDirectionalGlow() {
-  const core = document.querySelector('.user-dot-core');
-  if (core) core.style.boxShadow = '0 0 6px rgba(52,199,89,0.8)';
+  const gx = (Math.sin(rad) * 9).toFixed(1);
+  const gy = (-Math.cos(rad) * 9).toFixed(1);
+  core.style.boxShadow = `${gx}px ${gy}px 12px rgba(52,199,89,0.95), 0 0 4px rgba(52,199,89,0.35)`;
 }
 
 function onOrientation(e) {
   const heading = getHeading(e);
-  if (heading === null || !compassActive) return;
+  if (heading === null) return;
   if (lastHeading !== null && Math.abs(heading - lastHeading) < 1.5) return;
   lastHeading = heading;
-  document.getElementById('compassNeedle').style.transform = `rotate(${-heading}deg)`;
   applyDirectionalGlow(heading);
 }
 
-async function toggleCompass() {
-  const btn = document.getElementById('compassBtn');
-  if (compassActive) {
-    compassActive = false;
-    btn.classList.remove('active');
-    window.removeEventListener('deviceorientation', onOrientation, true);
-    document.getElementById('compassNeedle').style.transform = 'rotate(0deg)';
-    clearDirectionalGlow();
-    return;
-  }
+async function startOrientationWatch() {
   if (typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
@@ -914,8 +881,6 @@ async function toggleCompass() {
       if (perm !== 'granted') return;
     } catch(e) { return; }
   }
-  compassActive = true;
-  btn.classList.add('active');
   window.addEventListener('deviceorientation', onOrientation, true);
 }
 
@@ -1043,6 +1008,7 @@ function setUserMarker(lat, lng) {
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
+  startOrientationWatch();
   if (userLat !== null) {
     map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);

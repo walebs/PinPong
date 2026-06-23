@@ -349,6 +349,28 @@
     }
     .btn-close:active { background: var(--border); }
     .leaflet-tile-pane { filter: brightness(1.22) contrast(1.1) saturate(0.5); }
+    @keyframes radar-ping {
+      0%   { transform: scale(1); opacity: 0.7; }
+      100% { transform: scale(3.5); opacity: 0; }
+    }
+    .user-dot {
+      width: 10px; height: 10px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-dot-core {
+      width: 10px; height: 10px;
+      background: #34C759; border: 2px solid rgba(255,255,255,0.95);
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(52,199,89,0.8);
+      position: relative; z-index: 2;
+    }
+    .user-dot-ring {
+      position: absolute; width: 10px; height: 10px;
+      border-radius: 50%; background: rgba(52,199,89,0.5);
+      animation: radar-ping 1.8s ease-out infinite;
+    }
+    .user-dot-ring:nth-child(2) { animation-delay: 0.6s; }
+    .user-dot-ring:nth-child(3) { animation-delay: 1.2s; }
     .leaflet-control-zoom { display: none !important; }
     .zoom-btns {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); right: 16px; z-index: 400;
@@ -923,8 +945,13 @@ function setUserMarker(lat, lng) {
     userMarker.setLatLng([lat, lng]);
   } else {
     const icon = L.divIcon({
-      html:`<div style="width:14px;height:14px;background:#34C759;border:2.5px solid rgba(255,255,255,0.9);border-radius:50%;box-shadow:0 0 0 4px rgba(52,199,89,0.25)"></div>`,
-      className:'', iconSize:[14,14], iconAnchor:[7,7],
+      html:`<div class="user-dot">
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-core"></div>
+      </div>`,
+      className:'', iconSize:[10,10], iconAnchor:[5,5],
     });
     userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
   }

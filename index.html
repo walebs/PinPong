@@ -992,7 +992,7 @@ function openSheet(idx) {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
   const typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
-  const typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:6px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
+  const typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   _sheetName.textContent = t.navn;

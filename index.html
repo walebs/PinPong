@@ -786,11 +786,12 @@ function makeClusterGroup(color) {
     zoomToBoundsOnClick: false,
     disableClusteringAtZoom: 14,
     animate: true,
-    spiderfyOnMaxZoom: true,
-    removeOutsideVisibleBounds: false,
+    spiderfyOnMaxZoom: false,
   });
   group.on('clusterclick', function(e) {
-    map.fitBounds(e.layer.getBounds().pad(0.3), { maxZoom: 14, animate: true });
+    const bounds = e.layer.getBounds().pad(0.3);
+    const zoom = Math.min(14, map.getBoundsZoom(bounds));
+    map.setView(bounds.getCenter(), zoom, { animate: true });
   });
   return group;
 }

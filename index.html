@@ -751,6 +751,9 @@ function makeClusterGroup(color) {
   const group = L.markerClusterGroup({
     iconCreateFunction: cluster => {
       const count = cluster.getChildCount();
+      if (count <= 3) {
+        return L.divIcon({ html: '', className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
+      }
       return L.divIcon({
         html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}</div>`,
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
@@ -761,7 +764,7 @@ function makeClusterGroup(color) {
     zoomToBoundsOnClick: false,
     disableClusteringAtZoom: 15,
     animate: true,
-    spiderfyOnMaxZoom: true,
+    spiderfyOnMaxZoom: false,
   });
   group.on('clusterclick', function(e) {
     if (e.layer.getChildCount() <= 3) {
@@ -769,6 +772,13 @@ function makeClusterGroup(color) {
     } else {
       map.fitBounds(e.layer.getBounds(), { padding: [50, 50] });
     }
+  });
+  group.on('animationend', function() {
+    group._featureGroup.eachLayer(function(layer) {
+      if (layer instanceof L.MarkerCluster && layer.getChildCount() <= 3) {
+        layer.spiderfy();
+      }
+    });
   });
   return group;
 }

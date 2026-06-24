@@ -222,14 +222,12 @@
     .fab-stack.sheet-open { opacity: 0; pointer-events: none; }
     /* Search — single animated container */
     .search-wrap {
-      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 150px);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 195px);
       left: 50%; transform: translateX(-50%); z-index: 402;
       width: 44px;
-      transition: width 0.16s cubic-bezier(0.4, 0, 0.2, 1),
-                  top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.16s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: min(260px, calc(100vw - 120px)); }
-    .search-wrap.header-hidden { top: calc(env(safe-area-inset-top, 0px) + 62px); }
+    .search-wrap.expanded { width: min(280px, calc(100vw - 80px)); }
     .search-field {
       display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--border);
@@ -265,7 +263,9 @@
     }
     .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
     .search-results {
-      margin-top: 6px; background: var(--surface);
+      position: absolute; bottom: 100%; left: 0; right: 0;
+      margin-bottom: 6px;
+      background: var(--surface);
       border: 1px solid var(--border); border-radius: 14px;
       overflow: hidden; display: none;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);
@@ -484,7 +484,7 @@
 <div class="nearby-container" id="nearbyContainer">
   <div class="nearby-header">
     <button class="nearby-compass-btn" onclick="startCompass()">
-      <svg id="compassNeedle" width="22" height="22" viewBox="0 0 20 20">
+      <svg id="compassNeedle" width="26" height="26" viewBox="0 0 20 20">
         <polygon points="10,2 12,10 10,12 8,10" fill="var(--orange)"/>
         <polygon points="10,18 12,10 10,12 8,10" fill="var(--muted)"/>
         <circle cx="10" cy="10" r="1.5" fill="var(--text)"/>
@@ -1010,7 +1010,7 @@ function openSheet(idx) {
     const lines = t.notater.split(/[.\n]/).filter(l => l.trim());
     if (lines.length) {
       notesHtml = `<div class="notes-label">Notater</div>` +
-        lines.map(line => `<div class="note-line">${esc(line.trim())}</div>`).join('');
+        lines.map(line => `<div class="note-line"><span style="opacity:0.35;margin-right:5px">·</span>${esc(line.trim())}</div>`).join('');
     }
   }
   _sheetNote.innerHTML = notesHtml;

@@ -352,9 +352,12 @@
     .btn-close:active { background: var(--border); }
     .leaflet-tile-pane { filter: brightness(1.22) contrast(1.1) saturate(0.5); will-change: transform; }
     .leaflet-map-pane  { will-change: transform; }
+    /* Prevent tile seam flicker on zoom (sub-pixel anti-aliasing gaps) */
+    .leaflet-tile { outline: 1px solid transparent; }
+    #map { background: var(--bg); }
+    /* Desktop: desaturate tiles only — NOT the marker/overlay panes */
     @media (hover: hover) and (pointer: fine) {
-      .leaflet-tile-pane,
-      .leaflet-zoom-animated { filter: brightness(0.9) contrast(1.0) saturate(0.08) !important; }
+      .leaflet-tile-pane { filter: brightness(0.9) contrast(1.0) saturate(0.08) !important; }
     }
     #compassNeedle { transition: transform 0.1s ease-out; }
     @keyframes radar-ping {

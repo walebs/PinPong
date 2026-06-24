@@ -226,7 +226,6 @@
                   background 0.2s ease;
     }
     .search-wrap.expanded .search-field {
-      border-radius: 14px 14px 0 0;
       background: rgba(23,23,28,0.9);
     }
     .search-icon-btn {
@@ -256,8 +255,9 @@
     }
     .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
     .search-results {
-      margin-top: 6px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 14px;
+      margin-top: 8px; background: rgba(23,23,28,0.9);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(42,42,53,0.5); border-radius: 14px;
       overflow: hidden; display: none;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
@@ -1148,8 +1148,19 @@ const AREAS = [
   { navn:'Romsås',         lat:59.9633, lng:10.8838 },
   { navn:'Stovner',        lat:59.9700, lng:10.9237 },
   { navn:'Furuset',        lat:59.9472, lng:10.9134 },
-  { navn:'Lillestrøm',     lat:59.9553, lng:11.0515 },
-  { navn:'Lørenskog',      lat:59.9240, lng:10.9621 },
+  { navn:'Lillestrøm',        lat:59.9553, lng:11.0515 },
+  { navn:'Lørenskog',         lat:59.9240, lng:10.9621 },
+  { navn:'Nationaltheatret',  lat:59.9143, lng:10.7322 },
+  { navn:'Aker Brygge',       lat:59.9089, lng:10.7261 },
+  { navn:'Oslo S',            lat:59.9108, lng:10.7523 },
+  { navn:'Vigelandsparken',   lat:59.9274, lng:10.6984 },
+  { navn:'Bislett',           lat:59.9237, lng:10.7202 },
+  { navn:'Majorstuen',        lat:59.9282, lng:10.7150 },
+  { navn:'Karl Johan',        lat:59.9127, lng:10.7461 },
+  { navn:'Youngstorget',      lat:59.9153, lng:10.7508 },
+  { navn:'Rådhusplassen',     lat:59.9117, lng:10.7326 },
+  { navn:'Botanisk hage',     lat:59.9141, lng:10.7744 },
+  { navn:'Ullevål',           lat:59.9456, lng:10.7195 },
 ];
 
 // ── Search ──────────────────────────────────────────────
@@ -1240,16 +1251,6 @@ document.addEventListener('click', e => {
   }
 });
 
-// ── Filter fab toggle ────────────────────────────────────
-const filterFabPills  = document.getElementById('filterFabPills');
-const filterFabToggle = document.getElementById('filterFabToggle');
-let filterFabOpen = true;
-
-function toggleFilterFab() {
-  filterFabOpen = !filterFabOpen;
-  filterFabPills.classList.toggle('pills-hidden', !filterFabOpen);
-  filterFabToggle.textContent = filterFabOpen ? '▲' : '▼';
-}
 
 
 function toggleFilter(type) {

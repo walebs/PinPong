@@ -53,35 +53,35 @@
     .filter-dropdown {
       position: absolute; top: calc(100% + 8px); left: 0;
       background: rgba(18,18,22,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border); border-radius: 14px;
-      min-width: 148px; overflow: hidden;
+      border: 1px solid var(--border); border-radius: 12px;
+      width: 110px; overflow: hidden;
       opacity: 0; transform: translateY(-6px); pointer-events: none;
       transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.4,0,0.2,1);
     }
     .filter-fab.open .filter-dropdown { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .filter-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
       transition: background 0.1s;
     }
-    .filter-row:not(:last-child) { border-bottom: 1px solid rgba(42,42,53,0.5); }
+    .filter-row:not(:last-child) { border-bottom: 1px solid rgba(42,42,53,0.4); }
     .filter-row:active { background: rgba(255,255,255,0.04); }
     .filter-row-dot {
-      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; opacity: 0.3;
+      width: 12px; height: 1.5px; border-radius: 1px; flex-shrink: 0;
       transition: opacity 0.15s;
     }
+    #pill-outdoor   .filter-row-dot { background: var(--orange); }
+    #pill-bar       .filter-row-dot { background: var(--purple); }
+    #pill-belysning .filter-row-dot { background: #F5C518; }
+    #pill-tak       .filter-row-dot { background: #4fc3f7; }
+    .filter-row-dot { opacity: 0.25; }
     .filter-row.active .filter-row-dot { opacity: 1; }
     .filter-row-label {
-      font-size: 13px; font-weight: 500; color: var(--muted); flex: 1;
+      font-size: 12px; font-weight: 500; color: var(--muted);
       transition: color 0.15s;
     }
     .filter-row.active .filter-row-label { color: var(--text); }
-    .filter-row-check {
-      font-size: 13px; color: var(--orange); opacity: 0;
-      transition: opacity 0.15s;
-    }
-    .filter-row.active .filter-row-check { opacity: 1; }
-    /* legacy — keep IDs working */
+    .filter-row-check { display: none; }
     .filter-pill { display: none; }
     .filter-dot  { display: none; }
     /* Nearby strip */

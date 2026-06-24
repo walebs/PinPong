@@ -751,9 +751,6 @@ function makeClusterGroup(color) {
   const group = L.markerClusterGroup({
     iconCreateFunction: cluster => {
       const count = cluster.getChildCount();
-      if (count <= 3) {
-        return L.divIcon({ html: '', className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
-      }
       return L.divIcon({
         html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}</div>`,
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
@@ -764,7 +761,7 @@ function makeClusterGroup(color) {
     zoomToBoundsOnClick: false,
     disableClusteringAtZoom: 15,
     animate: true,
-    spiderfyOnMaxZoom: false,
+    spiderfyOnMaxZoom: true,
   });
   group.on('clusterclick', function(e) {
     if (e.layer.getChildCount() <= 3) {
@@ -960,22 +957,6 @@ function closeSheet() {
 }
 
 map.on('click', closeSheet);
-
-let _spiderTimer;
-function spiderfySmallClusters() {
-  clearTimeout(_spiderTimer);
-  _spiderTimer = setTimeout(function() {
-    [clusterGroup, clusterGroupBar].forEach(function(g) {
-      if (!g) return;
-      g._featureGroup.eachLayer(function(layer) {
-        if (layer instanceof L.MarkerCluster && layer.getChildCount() <= 3) {
-          layer.spiderfy();
-        }
-      });
-    });
-  }, 150);
-}
-map.on('zoomend', spiderfySmallClusters);
 
 let zoomTimer;
 map.on('zoom', () => {

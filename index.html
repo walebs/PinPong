@@ -801,7 +801,7 @@ function makeClusterGroup(color) {
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);
     const zoom = Math.min(14, map.getBoundsZoom(bounds));
-    map.setView(bounds.getCenter(), zoom, { animate: true });
+    map.flyTo(bounds.getCenter(), zoom, { duration: 0.5, easeLinearity: 0.5 });
   });
   return group;
 }

@@ -36,25 +36,31 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Filter pills — top left */
+    /* Filter legend — top left */
     .filter-fab {
-      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 16px;
-      z-index: 401; display: flex; gap: 7px;
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); left: 16px;
+      z-index: 401; display: flex; flex-direction: column; gap: 6px;
+      transition: opacity 0.18s ease;
     }
+    .filter-fab.search-active { opacity: 0; pointer-events: none; }
     .filter-pill {
-      height: 44px; padding: 0 16px; border-radius: 13px; border: none;
-      font-size: 13px; font-weight: 700; color: #fff;
+      display: flex; align-items: center; gap: 7px;
+      background: none; border: none; padding: 0;
       cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
-      display: flex; align-items: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      opacity: 0.38; transition: opacity 0.15s, transform 0.12s;
+      opacity: 0.28; transition: opacity 0.15s;
     }
-    .filter-pill:active { transform: scale(0.93); }
-    #pill-outdoor { background: var(--orange); }
-    #pill-bar     { background: var(--purple); }
     .filter-pill.active-outdoor,
     .filter-pill.active-bar { opacity: 1; }
-    .filter-dot { display: none; }
+    .filter-pill:active { opacity: 0.6; }
+    .filter-dot {
+      width: 18px; height: 2.5px; border-radius: 2px; flex-shrink: 0;
+    }
+    #pill-outdoor .filter-dot { background: var(--orange); }
+    #pill-bar     .filter-dot { background: var(--purple); }
+    .filter-pill-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; color: var(--text);
+    }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -182,9 +188,7 @@
       width: 110px;
       transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: min(320px, calc(100vw - 32px)); }
-    .filter-fab { transition: opacity 0.18s ease; }
-    .filter-fab.search-active { opacity: 0; pointer-events: none; }
+    .search-wrap.expanded { width: min(260px, calc(100vw - 120px)); }
     .search-label {
       font-size: 13px; font-weight: 600; color: var(--muted);
       white-space: nowrap; flex: 1;
@@ -193,12 +197,17 @@
     .search-wrap.expanded .search-label { opacity: 0; pointer-events: none; position: absolute; }
     .search-field {
       display: flex; align-items: center;
-      background: var(--surface); border: 1px solid var(--border);
+      background: rgba(23,23,28,0.55); border: 1px solid rgba(42,42,53,0.5);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border-radius: 13px; height: 44px; overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      transition: border-radius 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      transition: border-radius 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+                  background 0.2s ease;
     }
-    .search-wrap.expanded .search-field { border-radius: 14px; }
+    .search-wrap.expanded .search-field {
+      border-radius: 14px 14px 0 0;
+      background: rgba(23,23,28,0.9);
+    }
     .search-icon-btn {
       width: 44px; height: 44px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
@@ -395,13 +404,11 @@
 <body>
 <!-- Filter fab — top left -->
 <div class="filter-fab">
-  <div class="filter-fab-pills" id="filterFabPills">
-    <div class="filter-pill active-outdoor" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-      <div class="filter-dot" style="background:var(--orange)"></div>Ute
-    </div>
-    <div class="filter-pill active-bar" id="pill-bar" onclick="toggleFilter('bar')">
-      <div class="filter-dot" style="background:var(--purple)"></div>Inne
-    </div>
+  <div class="filter-pill active-outdoor" id="pill-outdoor" onclick="toggleFilter('outdoor')">
+    <div class="filter-dot"></div><span class="filter-pill-label">Ute</span>
+  </div>
+  <div class="filter-pill active-bar" id="pill-bar" onclick="toggleFilter('bar')">
+    <div class="filter-dot"></div><span class="filter-pill-label">Inne</span>
   </div>
 </div>
 

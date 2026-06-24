@@ -445,12 +445,12 @@
       <span class="filter-row-label">Inne</span>
       <span class="filter-row-check">✓</span>
     </div>
-    <div class="filter-row active" id="pill-belysning" onclick="toggleFilter('belysning')">
+    <div class="filter-row" id="pill-belysning" onclick="toggleFilter('belysning')">
       <div class="filter-row-dot" style="background:#F5C518"></div>
       <span class="filter-row-label">Belysning</span>
       <span class="filter-row-check">✓</span>
     </div>
-    <div class="filter-row active" id="pill-tak" onclick="toggleFilter('tak')">
+    <div class="filter-row" id="pill-tak" onclick="toggleFilter('tak')">
       <div class="filter-row-dot" style="background:#4fc3f7"></div>
       <span class="filter-row-label">Under tak</span>
       <span class="filter-row-check">✓</span>
@@ -803,8 +803,8 @@ function renderMarkers() {
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
-    if (showBelysning && !( t.belysning && /ja|yes/i.test(t.belysning) )) return;
-    if (showTak       && !( t.under_tak && /ja|yes|tak/i.test(t.under_tak) )) return;
+    if (showBelysning && !( (t.belysning && /ja|yes/i.test(t.belysning)) || /belysning|lys|lyst/i.test(t.notater||'') )) return;
+    if (showTak       && !( (t.under_tak && /ja|yes/i.test(t.under_tak)) || /under tak|tak/i.test(t.notater||'') )) return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });

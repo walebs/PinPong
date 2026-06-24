@@ -109,13 +109,14 @@
     }
     .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: flex-end; justify-content: space-between;
       padding: 0 16px 8px 16px;
     }
     .nearby-label {
       flex: 1; text-align: center;
       font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
       color: var(--orange); text-transform: uppercase;
+      padding-bottom: 4px;
     }
     .nearby-compass-btn {
       width: 44px; height: 44px; background: var(--surface);
@@ -474,7 +475,7 @@
 <div class="nearby-container" id="nearbyContainer">
   <div class="nearby-header">
     <button class="nearby-compass-btn" onclick="startCompass()">
-      <svg id="compassNeedle" width="18" height="18" viewBox="0 0 20 20">
+      <svg id="compassNeedle" width="15" height="15" viewBox="0 0 20 20">
         <polygon points="10,2 12,10 10,12 8,10" fill="var(--orange)"/>
         <polygon points="10,18 12,10 10,12 8,10" fill="var(--muted)"/>
         <circle cx="10" cy="10" r="1.5" fill="var(--text)"/>

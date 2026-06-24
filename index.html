@@ -152,6 +152,7 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.45);
       transition: transform 0.12s, opacity 0.12s;
       border-left-width: 3px; border-left-style: solid;
+      border-right-width: 3px; border-right-style: solid;
     }
     .nearby-card:active { transform: scale(0.95); opacity: 0.8; }
     .nearby-card-dist { font-size: 10px; font-weight: 700; color: var(--orange); letter-spacing: 0.3px; }
@@ -849,7 +850,7 @@ function showNearbyStrip(lat, lng) {
     const dist  = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
     const check = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     const glow  = idx === 0 ? ' nearest-glow' : '';
-    return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color}">
+    return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
     </div>`;

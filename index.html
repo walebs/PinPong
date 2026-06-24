@@ -1162,6 +1162,11 @@ function toggleFilter(type) {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
+
+// Prevent browser-level pinch zoom (iOS Safari ignores user-scalable=no)
+document.addEventListener('gesturestart',  e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
 </script>
 </body>
 </html>

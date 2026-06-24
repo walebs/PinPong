@@ -35,7 +35,7 @@
       touch-action: manipulation;
     }
     button { touch-action: manipulation; }
-    #map { position: fixed; inset: 0; z-index: 0; }
+    #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
     .header {
       position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 400;
       padding: env(safe-area-inset-top, 0px) 0 0;
@@ -1177,6 +1177,32 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('gesturestart',  e => e.preventDefault(), { passive: false });
 document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
 document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
+
+// ── Smooth trackpad / mouse-wheel zoom ───────────────────
+// Replace Leaflet's debounced scroll handler with a per-frame approach
+// that follows the trackpad directly with no queued animations.
+map.scrollWheelZoom.disable();
+(function () {
+  let zoom = map.getZoom();
+  let raf  = null;
+  let pt   = null;
+
+  map.getContainer().addEventListener('wheel', e => {
+    e.preventDefault();
+    pt = map.mouseEventToLatLng(e);
+    // Normalize: deltaMode 0=px (trackpad), 1=line (~20px), 2=page (~300px)
+    const px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
+    zoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), zoom - px / 150));
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      map.setZoomAround(pt, zoom, { animate: false });
+      raf = null;
+    });
+  }, { passive: false });
+
+  // Keep zoom in sync when changed by buttons, URL param, etc.
+  map.on('zoomend', () => { if (!raf) zoom = map.getZoom(); });
+})();
 </script>
 </body>
 </html>

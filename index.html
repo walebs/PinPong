@@ -32,7 +32,9 @@
       overflow: hidden;
       height: 100dvh; width: 100dvw;
       color: var(--text);
+      touch-action: manipulation;
     }
+    button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; }
     .header {
       position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 400;
@@ -710,7 +712,7 @@ const map = L.map('map', {
   minZoom: 5, maxZoom: 19,
   rotate: true, rotateControl: false, bearing: 0,
   inertia: true,
-  inertiaDeceleration: 650,
+  inertiaDeceleration: 280,
   inertiaMaxSpeed: Infinity,
   easeLinearity: 0.2,
 });

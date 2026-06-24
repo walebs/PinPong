@@ -36,32 +36,18 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Filter fab — top left */
+    /* Filter pills — top left */
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 16px;
-      z-index: 401; display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
+      z-index: 401; display: flex; gap: 7px;
     }
-    .filter-fab-pills {
-      display: flex; gap: 6px;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-    .filter-fab-pills.pills-hidden { opacity: 0; pointer-events: none; transform: translateY(-6px); }
-    .filter-fab-toggle {
-      width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border);
-      background: var(--surface); color: var(--muted);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.35); transition: background 0.12s;
-      font-size: 11px;
-    }
-    .filter-fab-toggle:active { background: var(--s2); }
     .filter-pill {
-      padding: 7px 14px; border-radius: 20px; border: none;
-      font-size: 12px; font-weight: 700; color: #fff;
-      cursor: pointer; transition: opacity 0.15s, transform 0.12s; user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      opacity: 0.35;
+      height: 44px; padding: 0 16px; border-radius: 13px; border: none;
+      font-size: 13px; font-weight: 700; color: #fff;
+      cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+      display: flex; align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      opacity: 0.38; transition: opacity 0.15s, transform 0.12s;
     }
     .filter-pill:active { transform: scale(0.93); }
     #pill-outdoor { background: var(--orange); }
@@ -191,16 +177,18 @@
     /* Search — single animated container */
     .search-wrap {
       position: fixed;
-      top: 48vh;
-      left: 50%; transform: translateX(-50%); z-index: 402;
-      width: 44px;
-      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-                  top 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .search-wrap.expanded {
       top: calc(env(safe-area-inset-top, 0px) + 14px);
-      width: min(320px, calc(100vw - 32px));
+      left: 50%; transform: translateX(-50%); z-index: 402;
+      width: 110px;
+      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    .search-wrap.expanded { width: min(320px, calc(100vw - 32px)); }
+    .search-label {
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      white-space: nowrap; flex: 1;
+      transition: opacity 0.12s;
+    }
+    .search-wrap.expanded .search-label { opacity: 0; pointer-events: none; position: absolute; }
     .search-field {
       display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--border);
@@ -413,7 +401,6 @@
       <div class="filter-dot" style="background:var(--purple)"></div>Inne
     </div>
   </div>
-  <button class="filter-fab-toggle" id="filterFabToggle" onclick="toggleFilterFab()">▲</button>
 </div>
 
 <div class="search-wrap" id="searchWrap">
@@ -421,6 +408,7 @@
     <button class="search-icon-btn" onclick="expandSearch()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
+    <span class="search-label" onclick="expandSearch()">Søk</span>
     <input class="search-input" id="searchInput" type="text" placeholder="Søk etter sted…" autocomplete="off" autocorrect="off" spellcheck="false" />
     <button class="search-close" onclick="collapseSearch()">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

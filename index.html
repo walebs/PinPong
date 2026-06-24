@@ -44,18 +44,17 @@
     }
     .filter-fab.search-active { opacity: 0; pointer-events: none; }
     .filter-pill {
-      width: 44px; height: 44px; border-radius: 13px; border: none;
+      width: 44px; height: 44px; border-radius: 13px;
+      background: var(--surface); border: 1px solid var(--border);
       cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
       display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 0.3px;
-      opacity: 0.28; transition: opacity 0.15s, transform 0.12s;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.3px; color: var(--muted);
+      transition: border-color 0.15s, color 0.15s, transform 0.12s;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     .filter-pill:active { transform: scale(0.91); }
-    #pill-outdoor { background: var(--orange); }
-    #pill-bar     { background: var(--purple); }
-    .filter-pill.active-outdoor,
-    .filter-pill.active-bar { opacity: 1; }
+    .filter-pill.active-outdoor { border-color: var(--orange); color: var(--orange); }
+    .filter-pill.active-bar     { border-color: var(--purple); color: var(--purple); }
     .filter-dot { display: none; }
     .filter-pill-label { pointer-events: none; }
     /* Nearby strip */

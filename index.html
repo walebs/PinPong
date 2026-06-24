@@ -346,16 +346,20 @@
     .leaflet-tile-pane { filter: brightness(1.22) contrast(1.1) saturate(0.5); will-change: transform; }
     .leaflet-map-pane  { will-change: transform; }
     @media (hover: hover) and (pointer: fine) {
-      .leaflet-tile-pane { filter: brightness(0.9) contrast(1.0) saturate(0.08); }
+      .leaflet-tile-pane,
+      .leaflet-zoom-animated { filter: brightness(0.9) contrast(1.0) saturate(0.08) !important; }
     }
     .compass-widget {
-      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
-      z-index: 400; width: 44px; height: 44px;
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 32px + 50px + 10px);
+      right: 16px; z-index: 400;
+      width: 44px; height: 44px;
       background: var(--surface); border: 1px solid var(--border); border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
-    #compassNeedle { transition: transform 0.12s ease-out; }
+    #compassNeedle { transition: transform 0.1s ease-out; }
     @keyframes radar-ping {
       0%   { transform: scale(1); opacity: 0.8; }
       70%  { transform: scale(7); opacity: 0; }
@@ -460,13 +464,13 @@
   </div>
   <div class="search-results" id="searchResults"></div>
 </div>
-<div class="compass-widget">
+<button class="compass-widget" onclick="startCompass()">
   <svg id="compassNeedle" width="20" height="20" viewBox="0 0 20 20">
     <polygon points="10,2 12,10 10,12 8,10" fill="var(--orange)"/>
     <polygon points="10,18 12,10 10,12 8,10" fill="var(--muted)"/>
     <circle cx="10" cy="10" r="1.5" fill="var(--text)"/>
   </svg>
-</div>
+</button>
 <div class="zoom-btns">
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
@@ -1019,7 +1023,6 @@ function setUserMarker(lat, lng) {
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
-  startCompass();
   if (userLat !== null) {
     map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);

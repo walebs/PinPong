@@ -865,26 +865,71 @@ function selectNearby(idx) {
   setTimeout(() => openSheet(idx), 600);
 }
 
-// Continuous location watch
-const geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
+// ── Continuous location watch ────────────────────────────
+// maximumAge:0 = never serve a cached position (important while moving)
+const geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
 let locationWatchId = null;
 let firstFix = true;
+let _lastNearbyLat = null, _lastNearbyLng = null;
+
+// Smooth dot animation between GPS fixes
+function _animateMarker(marker, toLat, toLng) {
+  const from = marker.getLatLng();
+  const dist  = haversine(from.lat, from.lng, toLat, toLng);
+  // Large jumps (GPS correction) snap instantly; small movements glide
+  if (dist > 150) { marker.setLatLng([toLat, toLng]); return; }
+  const duration = 1200; // ms — matches typical GPS update interval
+  const start    = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
+    marker.setLatLng([from.lat + (toLat - from.lat)*e, from.lng + (toLng - from.lng)*e]);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 function onPositionUpdate(pos) {
   const lat = pos.coords.latitude;
-  const lng = pos.coords.longitude;
+  const lng  = pos.coords.longitude;
   userLat = lat; userLng = lng;
-  setUserMarker(lat, lng);
+
+  if (userMarker) {
+    _animateMarker(userMarker, lat, lng);
+  } else {
+    // First ever fix — create marker and fly to it
+    const icon = L.divIcon({
+      html:`<div class="user-dot">
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-core"></div>
+      </div>`,
+      className:'', iconSize:[10,10], iconAnchor:[5,5],
+    });
+    userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
+  }
+
   if (firstFix) {
     firstFix = false;
     map.flyTo([lat, lng], 14, { duration: 1.2 });
+    showNearbyStrip(lat, lng);
+    _lastNearbyLat = lat; _lastNearbyLng = lng;
+    return;
+  }
+
+  // Refresh nearby strip only when moved >50 m (avoids spamming while stationary)
+  if (_lastNearbyLat === null || haversine(lat, lng, _lastNearbyLat, _lastNearbyLng) > 50) {
+    _lastNearbyLat = lat; _lastNearbyLng = lng;
     showNearbyStrip(lat, lng);
   }
 }
 
 function startLocationWatch() {
   if (!navigator.geolocation) return;
-  if (locationWatchId !== null) return;
+  if (locationWatchId !== null) {
+    navigator.geolocation.clearWatch(locationWatchId);
+    locationWatchId = null;
+  }
   locationWatchId = navigator.geolocation.watchPosition(
     onPositionUpdate,
     err => {
@@ -897,6 +942,11 @@ function startLocationWatch() {
 }
 
 startLocationWatch();
+
+// Restart watch when the page regains focus (iOS pauses GPS on lock/tab-switch)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') startLocationWatch();
+});
 
 // ── Compass widget ───────────────────────────────────────
 let _compassHeading = null;
@@ -1025,22 +1075,6 @@ function shareTable() {
 
 let userLat=null, userLng=null;
 
-function setUserMarker(lat, lng) {
-  if (userMarker) {
-    userMarker.setLatLng([lat, lng]);
-  } else {
-    const icon = L.divIcon({
-      html:`<div class="user-dot">
-        <div class="user-dot-ring"></div>
-        <div class="user-dot-ring"></div>
-
-        <div class="user-dot-core"></div>
-      </div>`,
-      className:'', iconSize:[10,10], iconAnchor:[5,5],
-    });
-    userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
-  }
-}
 
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');

@@ -222,12 +222,17 @@
     .fab-stack.sheet-open { opacity: 0; pointer-events: none; }
     /* Search — single animated container */
     .search-wrap {
-      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 195px);
+      position: fixed;
+      top: calc(100vh - env(safe-area-inset-bottom, 0px) - 240px);
       left: 50%; transform: translateX(-50%); z-index: 402;
       width: 44px;
-      transition: width 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                  top 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: min(280px, calc(100vw - 80px)); }
+    .search-wrap.expanded {
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      width: min(320px, calc(100vw - 32px));
+    }
     .search-field {
       display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--border);
@@ -263,9 +268,7 @@
     }
     .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
     .search-results {
-      position: absolute; bottom: 100%; left: 0; right: 0;
-      margin-bottom: 6px;
-      background: var(--surface);
+      margin-top: 6px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 14px;
       overflow: hidden; display: none;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);

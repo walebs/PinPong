@@ -773,13 +773,6 @@ function makeClusterGroup(color) {
       map.fitBounds(e.layer.getBounds(), { padding: [50, 50] });
     }
   });
-  group.on('animationend', function() {
-    group._featureGroup.eachLayer(function(layer) {
-      if (layer instanceof L.MarkerCluster && layer.getChildCount() <= 3) {
-        layer.spiderfy();
-      }
-    });
-  });
   return group;
 }
 
@@ -967,6 +960,23 @@ function closeSheet() {
 }
 
 map.on('click', closeSheet);
+
+let _spiderTimer;
+function spiderfySmallClusters() {
+  clearTimeout(_spiderTimer);
+  _spiderTimer = setTimeout(function() {
+    [clusterGroup, clusterGroupBar].forEach(function(g) {
+      if (!g) return;
+      g._featureGroup.eachLayer(function(layer) {
+        if (layer instanceof L.MarkerCluster && layer.getChildCount() <= 3) {
+          layer.spiderfy();
+        }
+      });
+    });
+  }, 150);
+}
+map.on('zoomend', spiderfySmallClusters);
+
 let zoomTimer;
 map.on('zoom', () => {
   clearTimeout(zoomTimer);

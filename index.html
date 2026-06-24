@@ -36,52 +36,54 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Filter bubble — left side */
+    /* Filter fab — left side */
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
-      z-index: 401;
-      height: 44px; width: 44px; border-radius: 13px;
-      background: var(--surface); border: 1px solid var(--border);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      display: flex; align-items: center; overflow: hidden;
-      transition: width 0.3s cubic-bezier(0.4,0,0.2,1),
-                  border-radius 0.3s cubic-bezier(0.4,0,0.2,1),
-                  opacity 0.18s ease;
-      cursor: pointer;
+      z-index: 401; transition: opacity 0.18s ease;
     }
-    .filter-fab.open { width: 158px; border-radius: 22px; }
     .filter-fab.search-active { opacity: 0; pointer-events: none; }
     .filter-fab-btn {
-      width: 44px; height: 44px; flex-shrink: 0;
-      background: none; border: none; color: var(--muted);
+      width: 44px; height: 44px; border-radius: 13px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: background 0.12s;
     }
-    .filter-options {
-      display: flex; align-items: center; gap: 6px;
-      padding-right: 10px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.15s ease 0s;
-      white-space: nowrap;
+    .filter-fab-btn:active { background: var(--s2); }
+    .filter-dropdown {
+      position: absolute; top: calc(100% + 8px); left: 0;
+      background: rgba(18,18,22,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 14px;
+      min-width: 148px; overflow: hidden;
+      opacity: 0; transform: translateY(-6px); pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.4,0,0.2,1);
     }
-    .filter-fab.open .filter-options {
-      opacity: 1; pointer-events: auto;
-      transition: opacity 0.2s ease 0.15s;
+    .filter-fab.open .filter-dropdown { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .filter-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s;
     }
-    .filter-pill {
-      height: 30px; padding: 0 11px; border-radius: 8px; border: none;
-      font-size: 12px; font-weight: 700; cursor: pointer;
-      -webkit-tap-highlight-color: transparent; user-select: none;
-      transition: opacity 0.15s, transform 0.12s;
-      opacity: 0.35;
+    .filter-row:not(:last-child) { border-bottom: 1px solid rgba(42,42,53,0.5); }
+    .filter-row:active { background: rgba(255,255,255,0.04); }
+    .filter-row-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; opacity: 0.3;
+      transition: opacity 0.15s;
     }
-    .filter-pill:active { transform: scale(0.91); }
-    #pill-outdoor { background: var(--orange); color: #fff; }
-    #pill-bar     { background: var(--purple); color: #fff; }
-    .filter-pill.active-outdoor,
-    .filter-pill.active-bar { opacity: 1; }
-    .filter-dot { display: none; }
-    .filter-pill-label { pointer-events: none; }
+    .filter-row.active .filter-row-dot { opacity: 1; }
+    .filter-row-label {
+      font-size: 13px; font-weight: 500; color: var(--muted); flex: 1;
+      transition: color 0.15s;
+    }
+    .filter-row.active .filter-row-label { color: var(--text); }
+    .filter-row-check {
+      font-size: 13px; color: var(--orange); opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .filter-row.active .filter-row-check { opacity: 1; }
+    /* legacy — keep IDs working */
+    .filter-pill { display: none; }
+    .filter-dot  { display: none; }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -423,7 +425,7 @@
   </style>
 </head>
 <body>
-<!-- Filter bubble — left side -->
+<!-- Filter fab — left side -->
 <div class="filter-fab" id="filterFab">
   <button class="filter-fab-btn" onclick="toggleFilterFab()">
     <svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -432,9 +434,27 @@
       <line x1="5.5" y1="11.5" x2="10.5" y2="11.5"/>
     </svg>
   </button>
-  <div class="filter-options">
-    <div class="filter-pill active-outdoor" id="pill-outdoor" onclick="toggleFilter('outdoor')">Ute</div>
-    <div class="filter-pill active-bar"     id="pill-bar"     onclick="toggleFilter('bar')">Inne</div>
+  <div class="filter-dropdown" id="filterDropdown">
+    <div class="filter-row active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
+      <div class="filter-row-dot" style="background:var(--orange)"></div>
+      <span class="filter-row-label">Ute</span>
+      <span class="filter-row-check">✓</span>
+    </div>
+    <div class="filter-row active" id="pill-bar" onclick="toggleFilter('bar')">
+      <div class="filter-row-dot" style="background:var(--purple)"></div>
+      <span class="filter-row-label">Inne</span>
+      <span class="filter-row-check">✓</span>
+    </div>
+    <div class="filter-row active" id="pill-belysning" onclick="toggleFilter('belysning')">
+      <div class="filter-row-dot" style="background:#F5C518"></div>
+      <span class="filter-row-label">Belysning</span>
+      <span class="filter-row-check">✓</span>
+    </div>
+    <div class="filter-row active" id="pill-tak" onclick="toggleFilter('tak')">
+      <div class="filter-row-dot" style="background:#4fc3f7"></div>
+      <span class="filter-row-label">Under tak</span>
+      <span class="filter-row-check">✓</span>
+    </div>
   </div>
 </div>
 
@@ -549,8 +569,6 @@ const _logoMeta        = null;
 const _progressRow     = null;
 const _mapsOverlay     = document.getElementById('mapsOverlay');
 const _mapsModal       = document.getElementById('mapsModal');
-const _pillOutdoor     = document.getElementById('pill-outdoor');
-const _pillBar         = document.getElementById('pill-bar');
 
 const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
@@ -750,7 +768,7 @@ function makeIcon(t, highlighted=false) {
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
-let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let showOutdoor=true, showBar=true, showBelysning=false, showTak=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
 
 function makeClusterGroup(color) {
   const group = L.markerClusterGroup({
@@ -771,7 +789,7 @@ function makeClusterGroup(color) {
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);
     const zoom = Math.min(14, map.getBoundsZoom(bounds));
-    map.setView(bounds.getCenter(), zoom, { animate: true });
+    map.flyTo(bounds.getCenter(), zoom, { duration: 0.6, easeLinearity: 0.4 });
   });
   return group;
 }
@@ -785,6 +803,8 @@ function renderMarkers() {
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
+    if (showBelysning && !( t.belysning && /ja|yes/i.test(t.belysning) )) return;
+    if (showTak       && !( t.under_tak && /ja|yes|tak/i.test(t.under_tak) )) return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -1254,13 +1274,18 @@ document.addEventListener('click', e => {
 
 
 function toggleFilter(type) {
-  if (type==='outdoor') {
-    showOutdoor=!showOutdoor;
-    _pillOutdoor.classList.toggle('active-outdoor', showOutdoor);
-  } else {
-    showBar=!showBar;
-    _pillBar.classList.toggle('active-bar', showBar);
-  }
+  const row = document.getElementById(
+    type==='outdoor' ? 'pill-outdoor' :
+    type==='bar'     ? 'pill-bar'     :
+    type==='belysning' ? 'pill-belysning' : 'pill-tak'
+  );
+  if (type==='outdoor')   showOutdoor   = !showOutdoor;
+  else if (type==='bar')  showBar       = !showBar;
+  else if (type==='belysning') showBelysning = !showBelysning;
+  else if (type==='tak')  showTak       = !showTak;
+  const isOn = type==='outdoor' ? showOutdoor : type==='bar' ? showBar :
+               type==='belysning' ? showBelysning : showTak;
+  row.classList.toggle('active', isOn);
   renderMarkers(); closeSheet();
 }
 

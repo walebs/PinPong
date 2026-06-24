@@ -542,6 +542,26 @@ function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// ── Cached DOM references (looked up once, reused everywhere) ──
+const _needle          = document.getElementById('compassNeedle');
+const _nearbyStrip     = document.getElementById('nearbyStrip');
+const _nearbyContainer = document.getElementById('nearbyContainer');
+const _fabStack        = document.querySelector('.fab-stack');
+const _bottomSheet     = document.getElementById('bottomSheet');
+const _sheetPhoto      = document.getElementById('sheetPhoto');
+const _sheetType       = document.getElementById('sheetType');
+const _sheetName       = document.getElementById('sheetName');
+const _sheetStats      = document.getElementById('sheetStats');
+const _sheetNote       = document.getElementById('sheetNote');
+const _progressFill    = document.getElementById('progressFill');
+const _progressLabel   = document.getElementById('progressLabel');
+const _logoMeta        = document.getElementById('logoMeta');
+const _progressRow     = document.getElementById('progressRow');
+const _mapsOverlay     = document.getElementById('mapsOverlay');
+const _mapsModal       = document.getElementById('mapsModal');
+const _pillOutdoor     = document.getElementById('pill-outdoor');
+const _pillBar         = document.getElementById('pill-bar');
+
 const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
 const STATIC = [
@@ -646,7 +666,7 @@ function resolveImage(url) {
 async function loadSheetData() {
   if (!SHEETS_CSV_URL) {
     updateProgress();
-    document.getElementById('logoMeta').textContent = `${TABLES.length} steder`;
+    _logoMeta.textContent = `${TABLES.length} steder`;
     return;
   }
   try {
@@ -690,7 +710,7 @@ async function loadSheetData() {
     if (userLat !== null) showNearbyStrip(userLat, userLng);
   } catch(e) {
     console.warn("Sheet-feil:", e);
-    document.getElementById('logoMeta').textContent = `${TABLES.length} steder`;
+    _logoMeta.textContent = `${TABLES.length} steder`;
     updateProgress();
   }
 }
@@ -698,10 +718,10 @@ async function loadSheetData() {
 function updateProgress() {
   const verified = TABLES.filter(t => t.verifisert === "ja").length;
   const total = TABLES.length;
-  document.getElementById('progressFill').style.width = Math.round((verified/total)*100) + "%";
-  document.getElementById('progressLabel').textContent = `${verified} / ${total} verifisert`;
-  document.getElementById('logoMeta').textContent = `${total} steder`;
-  document.getElementById('progressRow').style.display = verified > 0 ? 'flex' : 'none';
+  _progressFill.style.width = Math.round((verified/total)*100) + "%";
+  _progressLabel.textContent = `${verified} / ${total} verifisert`;
+  _logoMeta.textContent = `${total} steder`;
+  _progressRow.style.display = verified > 0 ? 'flex' : 'none';
 }
 
 const map = L.map('map', {
@@ -804,13 +824,12 @@ loadSheetData().then(() => {
 
 // ── Nearby strip ────────────────────────────────────────
 function showNearbyStrip(lat, lng) {
-  const strip = document.getElementById('nearbyStrip');
   const nearest = TABLES
     .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
     .sort((a, b) => a.d - b.d)
     .slice(0, 3);
 
-  strip.innerHTML = nearest.map(({ t, i, d }, idx) => {
+  _nearbyStrip.innerHTML = nearest.map(({ t, i, d }, idx) => {
     const color = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
     const dist  = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
     const check = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
@@ -821,8 +840,8 @@ function showNearbyStrip(lat, lng) {
     </div>`;
   }).join('');
 
-  document.getElementById('nearbyContainer').classList.add('visible');
-  document.querySelector('.fab-stack').classList.add('strip-visible');
+  _nearbyContainer.classList.add('visible');
+  _fabStack.classList.add('strip-visible');
 }
 
 function selectNearby(idx) {
@@ -873,8 +892,7 @@ function _onCompass(e) {
   if (h === null) return;
   if (_compassHeading !== null && Math.abs(h - _compassHeading) < 1.5) return;
   _compassHeading = h;
-  const needle = document.getElementById('compassNeedle');
-  if (needle) needle.style.transform = `rotate(${-h}deg)`;
+  if (_needle) _needle.style.transform = `rotate(${-h}deg)`;
 }
 
 async function startCompass() {
@@ -899,54 +917,46 @@ function openSheet(idx) {
   selectedIdx = idx;
   closeMapsPicker();
   history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`);
-  const photo = document.getElementById('sheetPhoto');
   if (t.bilde_url) {
-    photo.src = t.bilde_url;
-    photo.className = 'sheet-photo visible';
-    photo.onerror = () => { photo.className = 'sheet-photo'; };
+    _sheetPhoto.src = t.bilde_url;
+    _sheetPhoto.className = 'sheet-photo visible';
+    _sheetPhoto.onerror = () => { _sheetPhoto.className = 'sheet-photo'; };
   } else {
-    photo.src = ''; photo.className = 'sheet-photo';
+    _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
-  document.getElementById('sheetType').textContent = t.type==='outdoor' ? '🏓 Utebord' : `🍺 ${t.label || 'Innendørs'}`;
-  document.getElementById('sheetType').style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
-  document.getElementById('sheetName').textContent = t.navn;
-  const stats = document.getElementById('sheetStats');
+  _sheetType.textContent = t.type==='outdoor' ? '🏓 Utebord' : `🍺 ${t.label || 'Innendørs'}`;
+  _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
+  _sheetName.textContent = t.navn;
   const si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
-  stats.innerHTML = '';
-  if (t.verifisert==='ja')       stats.innerHTML += si({ label:'Status', val:'Verifisert', cls:' verified' });
-  else if (t.verifisert==='nei') stats.innerHTML += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
-  else                           stats.innerHTML += si({ label:'Status', val:'Ikke besøkt' });
-  if (t.antall)    stats.innerHTML += si({ label:'Antall',    val: esc(t.antall) });
-  if (t.tilstand)  stats.innerHTML += si({ label:'Tilstand',  val: esc(t.tilstand) });
-  if (t.belysning) stats.innerHTML += si({ label:'Belysning', val: esc(t.belysning) });
-  const notesEl = document.getElementById('sheetNote');
-  notesEl.innerHTML = '';
+  let statsHtml = '';
+  if (t.verifisert==='ja')       statsHtml += si({ label:'Status', val:'Verifisert', cls:' verified' });
+  else if (t.verifisert==='nei') statsHtml += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
+  else                           statsHtml += si({ label:'Status', val:'Ikke besøkt' });
+  if (t.antall)    statsHtml += si({ label:'Antall',    val: esc(t.antall) });
+  if (t.tilstand)  statsHtml += si({ label:'Tilstand',  val: esc(t.tilstand) });
+  if (t.belysning) statsHtml += si({ label:'Belysning', val: esc(t.belysning) });
+  _sheetStats.innerHTML = statsHtml;
+  let notesHtml = '';
   if (t.notater) {
     const lines = t.notater.split(/[.\n]/).filter(l => l.trim());
     if (lines.length) {
-      notesEl.innerHTML = `<div class="notes-label">Notater</div>`;
-      lines.forEach(line => {
-        notesEl.innerHTML += `<div class="note-line">· ${esc(line.trim())}</div>`;
-      });
+      notesHtml = `<div class="notes-label">Notater</div>` +
+        lines.map(line => `<div class="note-line">· ${esc(line.trim())}</div>`).join('');
     }
   }
-  const sheet = document.getElementById('bottomSheet');
-  const alreadyOpen = sheet.classList.contains('open');
-  sheet.classList.add('open');
-  document.getElementById('nearbyContainer').classList.add('sheet-open');
-  document.querySelector('.fab-stack').classList.add('sheet-open');
+  _sheetNote.innerHTML = notesHtml;
+  const alreadyOpen = _bottomSheet.classList.contains('open');
+  _bottomSheet.classList.add('open');
+  _nearbyContainer.classList.add('sheet-open');
+  _fabStack.classList.add('sheet-open');
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index===idx)));
-  if (!alreadyOpen) {
-    map.panTo([t.lat, t.lng], { animate:true, duration:0.35 });
-  } else {
-    map.panTo([t.lat, t.lng], { animate:true, duration:0.2 });
-  }
+  map.panTo([t.lat, t.lng], { animate:true, duration: alreadyOpen ? 0.2 : 0.35 });
 }
 
 function closeSheet() {
-  document.getElementById('bottomSheet').classList.remove('open');
-  document.getElementById('nearbyContainer').classList.remove('sheet-open');
-  document.querySelector('.fab-stack').classList.remove('sheet-open');
+  _bottomSheet.classList.remove('open');
+  _nearbyContainer.classList.remove('sheet-open');
+  _fabStack.classList.remove('sheet-open');
   closeMapsPicker();
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
   selectedIdx = null;
@@ -964,12 +974,12 @@ map.on('zoom', () => {
 });
 
 function toggleMapsPicker() {
-  document.getElementById('mapsOverlay').classList.add('open');
-  document.getElementById('mapsModal').classList.add('open');
+  _mapsOverlay.classList.add('open');
+  _mapsModal.classList.add('open');
 }
 function closeMapsPicker() {
-  document.getElementById('mapsOverlay').classList.remove('open');
-  document.getElementById('mapsModal').classList.remove('open');
+  _mapsOverlay.classList.remove('open');
+  _mapsModal.classList.remove('open');
 }
 function openGoogleMaps() {
   if (selectedIdx===null) return;
@@ -1049,8 +1059,7 @@ function findNearest() {
     map.flyTo([TABLES[nearestIdx].lat,TABLES[nearestIdx].lng], 15, { duration:1.1 });
     setTimeout(() => {
       openSheet(nearestIdx);
-      const n=document.getElementById('sheetNote');
-      n.textContent=(n.textContent?n.textContent+'  ·  ':'')+' 📍 '+dist;
+      _sheetNote.textContent=(_sheetNote.textContent?_sheetNote.textContent+'  ·  ':'')+' 📍 '+dist;
     }, 700);
   }
 }
@@ -1147,14 +1156,12 @@ function showHeader() {
 function toggleFilter(type) {
   if (type==='outdoor') {
     showOutdoor=!showOutdoor;
-    const p=document.getElementById('pill-outdoor');
-    p.className='filter-pill'+(showOutdoor?' active-outdoor':'');
-    p.style.opacity=showOutdoor?'1':'0.4';
+    _pillOutdoor.className='filter-pill'+(showOutdoor?' active-outdoor':'');
+    _pillOutdoor.style.opacity=showOutdoor?'1':'0.4';
   } else {
     showBar=!showBar;
-    const p=document.getElementById('pill-bar');
-    p.className='filter-pill'+(showBar?' active-bar':'');
-    p.style.opacity=showBar?'1':'0.4';
+    _pillBar.className='filter-pill'+(showBar?' active-bar':'');
+    _pillBar.style.opacity=showBar?'1':'0.4';
   }
   renderMarkers(); closeSheet();
 }

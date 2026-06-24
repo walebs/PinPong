@@ -781,7 +781,7 @@ function makeClusterGroup(color) {
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
       });
     },
-    maxClusterRadius: 35,
+    maxClusterRadius: 55,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: false,
     disableClusteringAtZoom: 14,
@@ -790,7 +790,7 @@ function makeClusterGroup(color) {
     removeOutsideVisibleBounds: false,
   });
   group.on('clusterclick', function(e) {
-    map.flyToBounds(e.layer.getBounds().pad(0.3), { maxZoom: 14, duration: 0.4 });
+    map.fitBounds(e.layer.getBounds().pad(0.3), { maxZoom: 14, animate: true });
   });
   return group;
 }

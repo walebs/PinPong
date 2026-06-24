@@ -56,16 +56,19 @@
     }
     .filter-fab-toggle:active { background: var(--s2); }
     .filter-pill {
-      display: flex; align-items: center; gap: 6px;
-      padding: 7px 14px; border-radius: 20px;
-      border: 1.5px solid var(--border); background: var(--s2);
-      font-size: 12.5px; font-weight: 600; color: #888;
-      cursor: pointer; transition: all 0.15s; user-select: none;
+      padding: 7px 14px; border-radius: 20px; border: none;
+      font-size: 12px; font-weight: 700; color: #fff;
+      cursor: pointer; transition: opacity 0.15s, transform 0.12s; user-select: none;
       -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      opacity: 0.35;
     }
-    .filter-pill.active-outdoor { border-color: var(--orange); background: rgba(255,107,0,0.12); color: var(--orange); }
-    .filter-pill.active-bar     { border-color: var(--purple); background: rgba(124,58,237,0.12); color: var(--purple); }
-    .filter-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .filter-pill:active { transform: scale(0.93); }
+    #pill-outdoor { background: var(--orange); }
+    #pill-bar     { background: var(--purple); }
+    .filter-pill.active-outdoor,
+    .filter-pill.active-bar { opacity: 1; }
+    .filter-dot { display: none; }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -188,14 +191,12 @@
     /* Search — single animated container */
     .search-wrap {
       position: fixed;
-      top: 70vh;
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
       left: 50%; transform: translateX(-50%); z-index: 402;
       width: 44px;
-      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-                  top 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .search-wrap.expanded {
-      top: calc(env(safe-area-inset-top, 0px) + 14px);
       width: min(320px, calc(100vw - 32px));
     }
     .search-field {
@@ -1214,12 +1215,10 @@ function toggleFilterFab() {
 function toggleFilter(type) {
   if (type==='outdoor') {
     showOutdoor=!showOutdoor;
-    _pillOutdoor.className='filter-pill'+(showOutdoor?' active-outdoor':'');
-    _pillOutdoor.style.opacity=showOutdoor?'1':'0.4';
+    _pillOutdoor.classList.toggle('active-outdoor', showOutdoor);
   } else {
     showBar=!showBar;
-    _pillBar.className='filter-pill'+(showBar?' active-bar':'');
-    _pillBar.style.opacity=showBar?'1':'0.4';
+    _pillBar.classList.toggle('active-bar', showBar);
   }
   renderMarkers(); closeSheet();
 }

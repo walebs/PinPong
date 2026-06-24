@@ -790,8 +790,7 @@ function makeClusterGroup(color) {
     removeOutsideVisibleBounds: false,
   });
   group.on('clusterclick', function(e) {
-    map.panTo(e.layer.getLatLng(), { animate: true, duration: 0.25 });
-    e.layer.spiderfy();
+    map.flyToBounds(e.layer.getBounds().pad(0.3), { maxZoom: 14, duration: 0.4 });
   });
   return group;
 }
@@ -1194,28 +1193,28 @@ map.scrollWheelZoom.disable();
     e.preventDefault();
     pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
 
-    let dz;
     if (e.ctrlKey) {
-      // Mac trackpad pinch-to-zoom — deltaY is a tiny scale factor, not pixels
-      dz = -e.deltaY * 0.025;
+      // Mac trackpad pinch — apply immediately per frame, no animation lag
+      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - e.deltaY * 0.025));
+      if (!raf) {
+        raf = requestAnimationFrame(() => {
+          map.setZoomAround(pt, targetZoom, { animate: false });
+          raf = null;
+        });
+      }
     } else {
-      // Two-finger scroll or physical mouse wheel
+      // Two-finger scroll or mouse wheel — smooth CSS-animated zoom
       const px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
-      dz = -px / 150;
-    }
-
-    targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom + dz));
-
-    if (!raf) {
-      raf = requestAnimationFrame(() => {
-        // animate:true → Leaflet uses CSS scale (no tile reload = no blink)
-        map.setZoomAround(pt, targetZoom);
-        raf = null;
-      });
+      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - px / 150));
+      if (!raf) {
+        raf = requestAnimationFrame(() => {
+          map.setZoomAround(pt, targetZoom); // animate:true → CSS scale, no tile blink
+          raf = null;
+        });
+      }
     }
   }, { passive: false });
 
-  // Stay in sync when zoom changes via buttons, URL param, etc.
   map.on('zoomend', () => { if (!raf) targetZoom = map.getZoom(); });
 })();
 </script>

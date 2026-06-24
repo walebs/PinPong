@@ -764,11 +764,8 @@ function makeClusterGroup(color) {
     spiderfyOnMaxZoom: true,
   });
   group.on('clusterclick', function(e) {
-    if (e.layer.getChildCount() <= 3) {
-      e.layer.spiderfy();
-    } else {
-      map.flyTo(e.layer.getLatLng(), map.getZoom() + 2, { duration: 0.4 });
-    }
+    map.panTo(e.layer.getLatLng(), { animate: true, duration: 0.25 });
+    e.layer.spiderfy();
   });
   return group;
 }

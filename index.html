@@ -361,6 +361,18 @@
       box-shadow: 0 0 6px rgba(52,199,89,0.8);
       position: relative; z-index: 2;
     }
+    .user-dot-dir {
+      position: absolute;
+      width: 2px; height: 14px;
+      background: rgba(255,255,255,0.85);
+      border-radius: 1px;
+      bottom: 50%; left: calc(50% - 1px);
+      transform-origin: bottom center;
+      transform: rotate(0deg);
+      opacity: 0;
+      z-index: 3;
+    }
+    .user-dot-dir.visible { opacity: 1; }
     .user-dot-ring {
       position: absolute; width: 10px; height: 10px;
       border-radius: 50%; background: rgba(52,199,89,0.5);
@@ -846,6 +858,41 @@ function startLocationWatch() {
 
 startLocationWatch();
 
+// ── Directional line on user dot ────────────────────────
+let _lastDirHeading = null;
+
+function _getHeading(e) {
+  if (typeof e.webkitCompassHeading === 'number') return e.webkitCompassHeading;
+  if (e.alpha != null) return (360 - e.alpha) % 360;
+  return null;
+}
+
+function _onOrientation(e) {
+  const h = _getHeading(e);
+  if (h === null) return;
+  if (_lastDirHeading !== null && Math.abs(h - _lastDirHeading) < 2) return;
+  _lastDirHeading = h;
+  const dir = document.getElementById('userDotDir');
+  if (dir) { dir.style.transform = `rotate(${h}deg)`; dir.classList.add('visible'); }
+}
+
+async function startDirectionWatch() {
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    try {
+      const p = await DeviceOrientationEvent.requestPermission();
+      if (p !== 'granted') return;
+    } catch(e) { return; }
+  }
+  window.addEventListener('deviceorientation', _onOrientation, true);
+}
+
+// Auto-start on Android (no permission barrier)
+if (!(typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function')) {
+  window.addEventListener('deviceorientation', _onOrientation, true);
+}
+
 function openSheet(idx) {
   const t = TABLES[idx];
   selectedIdx = idx;
@@ -958,7 +1005,7 @@ function setUserMarker(lat, lng) {
       html:`<div class="user-dot">
         <div class="user-dot-ring"></div>
         <div class="user-dot-ring"></div>
-        <div class="user-dot-ring"></div>
+        <div class="user-dot-dir" id="userDotDir"></div>
         <div class="user-dot-core"></div>
       </div>`,
       className:'', iconSize:[10,10], iconAnchor:[5,5],
@@ -970,6 +1017,7 @@ function setUserMarker(lat, lng) {
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
+  startDirectionWatch();
   if (userLat !== null) {
     map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);

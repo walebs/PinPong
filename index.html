@@ -110,7 +110,7 @@
     .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-header {
       display: flex; align-items: flex-end; justify-content: space-between;
-      padding: 0 16px 8px 16px;
+      padding: 0 16px 8px 0;
     }
     .nearby-label {
       flex: 1; text-align: center;
@@ -139,7 +139,7 @@
     }
     .nearby-divider {
       height: 1px; background: var(--border);
-      margin: 0 19px 0 3px;
+      margin: 0 16px 0 0;
     }
     .nearby-strip {
       display: flex; gap: 9px; padding: 10px 16px 4px 0;
@@ -1027,6 +1027,7 @@ function setUserMarker(lat, lng) {
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
+  startCompass();
   if (userLat !== null) {
     map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);

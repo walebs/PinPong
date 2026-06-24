@@ -198,7 +198,6 @@
       .sheet-name { font-size: 17px; margin-bottom: 6px; }
       .sheet-content { gap: 10px; min-height: 80px; }
       .stat-val { font-size: 12px; }
-      .note-line { font-size: 10px; }
       .btn-directions { padding: 11px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
@@ -280,17 +279,23 @@
     .sheet-type { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
     .sheet-name { font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 12px; }
     .sheet-content {
-      display: flex; gap: 14px; margin-bottom: 16px; min-height: 90px;
+      display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px;
     }
-    .sheet-stats-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-    .sheet-notes-col { flex: 0 0 38%; }
+    .sheet-stats-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+    .sheet-notes-col { /* full width in column layout */ }
     .stat-item { display: flex; flex-direction: column; gap: 2px; }
     .stat-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
     .stat-val { font-size: 13px; font-weight: 600; color: var(--text); }
     .stat-val.verified  { color: var(--green); }
     .stat-val.not-found { color: #FF3B30; }
-    .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-    .note-line { font-size: 11px; color: var(--muted); line-height: 1.45; margin-bottom: 3px; }
+    .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .note-line {
+      font-size: 12px; color: var(--text); line-height: 1.55;
+      padding: 3px 0 3px 10px;
+      border-left: 2px solid var(--border);
+      margin-bottom: 5px;
+    }
+    .note-line:last-child { margin-bottom: 0; }
     .sheet-actions { display: flex; gap: 10px; }
     .btn-directions {
       flex: 1; padding: 14px; color: white;
@@ -947,7 +952,7 @@ function openSheet(idx) {
     const lines = t.notater.split(/[.\n]/).filter(l => l.trim());
     if (lines.length) {
       notesHtml = `<div class="notes-label">Notater</div>` +
-        lines.map(line => `<div class="note-line">· ${esc(line.trim())}</div>`).join('');
+        lines.map(line => `<div class="note-line">${esc(line.trim())}</div>`).join('');
     }
   }
   _sheetNote.innerHTML = notesHtml;

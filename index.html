@@ -110,32 +110,24 @@
     .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-header {
       display: flex; align-items: flex-end; justify-content: space-between;
-      padding: 0 16px 8px 0;
+      padding: 0 16px 5px 0;
     }
     .nearby-label {
       flex: 1; text-align: center;
       font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
       color: var(--orange); text-transform: uppercase;
-      padding-bottom: 4px;
+      padding-bottom: 0;
     }
-    .nearby-compass-btn {
-      width: 44px; height: 44px; background: var(--surface);
+    .nearby-compass-btn, .nearby-locate-btn {
+      width: 48px; height: 48px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 50%;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: transform 0.12s; -webkit-tap-highlight-color: transparent;
       flex-shrink: 0;
     }
-    .nearby-compass-btn:active { transform: scale(0.92); }
-    .nearby-locate-btn {
-      width: 44px; height: 44px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 50%;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: transform 0.12s; -webkit-tap-highlight-color: transparent;
-      flex-shrink: 0;
-    }
-    .nearby-locate-btn:active { transform: scale(0.92); }
+    .nearby-compass-btn:active, .nearby-locate-btn:active { transform: scale(0.92); }
     .nearby-card-dist.nearest-glow {
-      text-shadow: 0 0 8px rgba(255,107,0,0.9), 0 0 16px rgba(255,107,0,0.5);
+      text-shadow: 0 0 6px rgba(255,107,0,0.55), 0 0 12px rgba(255,107,0,0.2);
     }
     .nearby-divider {
       height: 1px; background: var(--border);

@@ -355,6 +355,8 @@
     /* Prevent tile seam flicker on zoom (sub-pixel anti-aliasing gaps) */
     .leaflet-tile { outline: 1px solid transparent; }
     #map { background: var(--bg); }
+    /* Snappier zoom animation — follows trackpad more closely */
+    .leaflet-zoom-anim .leaflet-zoom-animated { transition-duration: 0.12s !important; }
     /* Desktop: desaturate tiles only — NOT the marker/overlay panes */
     @media (hover: hover) and (pointer: fine) {
       .leaflet-tile-pane { filter: brightness(0.9) contrast(1.0) saturate(0.08) !important; }
@@ -735,7 +737,7 @@ const map = L.map('map', {
   minZoom: 5, maxZoom: 19,
   rotate: true, rotateControl: false, bearing: 0,
   inertia: true,
-  inertiaDeceleration: 280,
+  inertiaDeceleration: 500,
   inertiaMaxSpeed: Infinity,
   easeLinearity: 0.2,
 });
@@ -785,6 +787,7 @@ function makeClusterGroup(color) {
     disableClusteringAtZoom: 14,
     animate: true,
     spiderfyOnMaxZoom: true,
+    removeOutsideVisibleBounds: false,
   });
   group.on('clusterclick', function(e) {
     map.panTo(e.layer.getLatLng(), { animate: true, duration: 0.25 });
@@ -1179,29 +1182,41 @@ document.addEventListener('gesturechange', e => e.preventDefault(), { passive: f
 document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
 
 // ── Smooth trackpad / mouse-wheel zoom ───────────────────
-// Replace Leaflet's debounced scroll handler with a per-frame approach
-// that follows the trackpad directly with no queued animations.
+// Uses Leaflet's CSS-transition animation (no tile blink) with per-frame
+// delta accumulation. Pinch (ctrlKey) and scroll use separate sensitivities.
 map.scrollWheelZoom.disable();
 (function () {
-  let zoom = map.getZoom();
-  let raf  = null;
-  let pt   = null;
+  let targetZoom = map.getZoom();
+  let pt  = null;
+  let raf = null;
 
   map.getContainer().addEventListener('wheel', e => {
     e.preventDefault();
-    pt = map.mouseEventToLatLng(e);
-    // Normalize: deltaMode 0=px (trackpad), 1=line (~20px), 2=page (~300px)
-    const px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
-    zoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), zoom - px / 150));
-    if (raf) cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(() => {
-      map.setZoomAround(pt, zoom, { animate: false });
-      raf = null;
-    });
+    pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+
+    let dz;
+    if (e.ctrlKey) {
+      // Mac trackpad pinch-to-zoom — deltaY is a tiny scale factor, not pixels
+      dz = -e.deltaY * 0.025;
+    } else {
+      // Two-finger scroll or physical mouse wheel
+      const px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
+      dz = -px / 150;
+    }
+
+    targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom + dz));
+
+    if (!raf) {
+      raf = requestAnimationFrame(() => {
+        // animate:true → Leaflet uses CSS scale (no tile reload = no blink)
+        map.setZoomAround(pt, targetZoom);
+        raf = null;
+      });
+    }
   }, { passive: false });
 
-  // Keep zoom in sync when changed by buttons, URL param, etc.
-  map.on('zoomend', () => { if (!raf) zoom = map.getZoom(); });
+  // Stay in sync when zoom changes via buttons, URL param, etc.
+  map.on('zoomend', () => { if (!raf) targetZoom = map.getZoom(); });
 })();
 </script>
 </body>

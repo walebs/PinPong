@@ -992,7 +992,7 @@ function openSheet(idx) {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
   const typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
-  const typeLabel = t.label ? ` <span style="color:var(--text-muted,#888);font-weight:400"> – ${esc(t.label)}</span>` : '';
+  const typeLabel = t.label ? `<span style="font-size:10px;font-weight:400;opacity:0.45;margin-left:5px;letter-spacing:0.3px">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   _sheetName.textContent = t.navn;
@@ -1002,7 +1002,7 @@ function openSheet(idx) {
   else if (t.verifisert==='nei') statsHtml += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
   else                           statsHtml += si({ label:'Status', val:'Ikke besøkt' });
   if (t.antall)    statsHtml += si({ label:'Antall',    val: esc(t.antall) });
-  if (t.tilstand)  statsHtml += si({ label:'Tilstand',  val: esc(t.tilstand) });
+  if (t.tilstand)  statsHtml += si({ label:'Tilstand',  val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
   if (t.belysning) statsHtml += si({ label:'Belysning', val: esc(t.belysning) });
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';

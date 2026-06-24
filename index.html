@@ -345,16 +345,25 @@
     .btn-close:active { background: var(--border); }
     .leaflet-tile-pane { filter: brightness(1.22) contrast(1.1) saturate(0.5); will-change: transform; }
     .leaflet-map-pane  { will-change: transform; }
+    @media (hover: hover) and (pointer: fine) {
+      .leaflet-tile-pane { filter: brightness(0.9) contrast(1.0) saturate(0.08); }
+    }
+    .compass-widget {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
+      z-index: 400; width: 44px; height: 44px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    }
+    #compassNeedle { transition: transform 0.12s ease-out; }
     @keyframes radar-ping {
       0%   { transform: scale(1); opacity: 0.8; }
       70%  { transform: scale(7); opacity: 0; }
       100% { transform: scale(7); opacity: 0; }
     }
-    .leaflet-marker-icon { overflow: visible !important; }
     .user-dot {
       width: 10px; height: 10px; position: relative;
       display: flex; align-items: center; justify-content: center;
-      overflow: visible;
     }
     .user-dot-core {
       width: 10px; height: 10px;
@@ -363,18 +372,6 @@
       box-shadow: 0 0 6px rgba(52,199,89,0.8);
       position: relative; z-index: 2;
     }
-    .user-dot-dir {
-      position: absolute;
-      width: 2px; height: 14px;
-      background: rgba(255,255,255,0.85);
-      border-radius: 1px;
-      bottom: 50%; left: calc(50% - 1px);
-      transform-origin: bottom center;
-      transform: rotate(0deg);
-      opacity: 0;
-      z-index: 3;
-    }
-    .user-dot-dir.visible { opacity: 1; }
     .user-dot-ring {
       position: absolute; width: 10px; height: 10px;
       border-radius: 50%; background: rgba(52,199,89,0.5);
@@ -462,6 +459,13 @@
     </button>
   </div>
   <div class="search-results" id="searchResults"></div>
+</div>
+<div class="compass-widget">
+  <svg id="compassNeedle" width="20" height="20" viewBox="0 0 20 20">
+    <polygon points="10,2 12,10 10,12 8,10" fill="var(--orange)"/>
+    <polygon points="10,18 12,10 10,12 8,10" fill="var(--muted)"/>
+    <circle cx="10" cy="10" r="1.5" fill="var(--text)"/>
+  </svg>
 </div>
 <div class="zoom-btns">
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
@@ -860,25 +864,21 @@ function startLocationWatch() {
 
 startLocationWatch();
 
-// ── Directional line on user dot ────────────────────────
-let _lastDirHeading = null;
+// ── Compass widget ───────────────────────────────────────
+let _compassHeading = null;
 
-function _getHeading(e) {
-  if (typeof e.webkitCompassHeading === 'number') return e.webkitCompassHeading;
-  if (e.alpha != null) return (360 - e.alpha) % 360;
-  return null;
-}
-
-function _onOrientation(e) {
-  const h = _getHeading(e);
+function _onCompass(e) {
+  const h = typeof e.webkitCompassHeading === 'number'
+    ? e.webkitCompassHeading
+    : e.alpha != null ? (360 - e.alpha) % 360 : null;
   if (h === null) return;
-  if (_lastDirHeading !== null && Math.abs(h - _lastDirHeading) < 2) return;
-  _lastDirHeading = h;
-  const dir = document.getElementById('userDotDir');
-  if (dir) { dir.style.transform = `rotate(${h}deg)`; dir.classList.add('visible'); }
+  if (_compassHeading !== null && Math.abs(h - _compassHeading) < 1.5) return;
+  _compassHeading = h;
+  const needle = document.getElementById('compassNeedle');
+  if (needle) needle.style.transform = `rotate(${-h}deg)`;
 }
 
-async function startDirectionWatch() {
+async function startCompass() {
   if (typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
@@ -886,13 +886,13 @@ async function startDirectionWatch() {
       if (p !== 'granted') return;
     } catch(e) { return; }
   }
-  window.addEventListener('deviceorientation', _onOrientation, true);
+  window.addEventListener('deviceorientation', _onCompass, true);
 }
 
-// Auto-start on Android (no permission barrier)
+// Auto-start on Android
 if (!(typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function')) {
-  window.addEventListener('deviceorientation', _onOrientation, true);
+  window.addEventListener('deviceorientation', _onCompass, true);
 }
 
 function openSheet(idx) {
@@ -1007,7 +1007,7 @@ function setUserMarker(lat, lng) {
       html:`<div class="user-dot">
         <div class="user-dot-ring"></div>
         <div class="user-dot-ring"></div>
-        <div class="user-dot-dir" id="userDotDir"></div>
+
         <div class="user-dot-core"></div>
       </div>`,
       className:'', iconSize:[10,10], iconAnchor:[5,5],
@@ -1019,7 +1019,7 @@ function setUserMarker(lat, lng) {
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
-  startDirectionWatch();
+  startCompass();
   if (userLat !== null) {
     map.flyTo([userLat, userLng], 15, { duration: 1 });
     showNearbyStrip(userLat, userLng);

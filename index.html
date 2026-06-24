@@ -667,15 +667,16 @@ function parseCSV(text) {
 
 function resolveImage(url) {
   if (!url) return "";
+  url = url.trim();
   if (url.includes('imgur.com')) {
-    // Trekk ut Imgur-ID — alltid siste alfanumeriske segment
     const m = url.match(/([a-zA-Z0-9]+)(?:\?.*)?$/);
     if (m) return `https://i.imgur.com/${m[1]}.jpg`;
   }
-  // Full URL → bruk direkte
   if (url.startsWith("http")) return url;
-  // Bare filnavn → hent fra images/bord/-mappen
-  return `images/bord/${url}`;
+  // Local filename — normalise so sheet entries don't need to be exact:
+  // strip any leading path, lowercase, spaces → dashes
+  const filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-');
+  return `images/bord/${filename}`;
 }
 
 async function loadSheetData() {
@@ -702,7 +703,7 @@ async function loadSheetData() {
         under_tak:  row.under_tak || null,
         belysning:  row.belysning || null,
         notater:    row.notater   || "",
-        bilde_url:  (row.url || row.bilde_url) ? resolveImage(row.url || row.bilde_url) : "",
+        bilde_url:  resolveImage(row.images || row.url || row.bilde_url || row["bilde url"] || row.bilde || row.image || row.img || row.foto || row.photo || ""),
       };
       // Try to match a static entry for coords/type
       let base = STATIC.find(t => t.navn.toLowerCase() === navn.toLowerCase());
@@ -801,7 +802,7 @@ function makeClusterGroup(color) {
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);
     const zoom = Math.min(14, map.getBoundsZoom(bounds));
-    map.flyTo(bounds.getCenter(), zoom, { duration: 0.5, easeLinearity: 0.5 });
+    map.setView(bounds.getCenter(), zoom, { animate: true });
   });
   return group;
 }
@@ -990,7 +991,9 @@ function openSheet(idx) {
   } else {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
-  _sheetType.textContent = t.type==='outdoor' ? '🏓 Utebord' : `🍺 ${t.label || 'Innendørs'}`;
+  const typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
+  const typeLabel = t.label ? ` <span style="color:var(--text-muted,#888);font-weight:400"> – ${esc(t.label)}</span>` : '';
+  _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   _sheetName.textContent = t.navn;
   const si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
@@ -1124,6 +1127,62 @@ function fuzzyScore(name, q) {
   return j === q.length ? j : 0;
 }
 
+// ── Oslo areas / neighbourhoods ──────────────────────────
+const AREAS = [
+  { navn:'Sentrum',        lat:59.9132, lng:10.7396 },
+  { navn:'Grünerløkka',    lat:59.9239, lng:10.7604 },
+  { navn:'Tøyen',          lat:59.9150, lng:10.7730 },
+  { navn:'Grønland',       lat:59.9116, lng:10.7629 },
+  { navn:'Gamlebyen',      lat:59.9085, lng:10.7596 },
+  { navn:'Kampen',         lat:59.9139, lng:10.7831 },
+  { navn:'Vålerenga',      lat:59.9013, lng:10.7845 },
+  { navn:'Frogner',        lat:59.9195, lng:10.7119 },
+  { navn:'Majorstuen',     lat:59.9285, lng:10.7153 },
+  { navn:'St. Hanshaugen', lat:59.9273, lng:10.7428 },
+  { navn:'Bislett',        lat:59.9249, lng:10.7283 },
+  { navn:'Hegdehaugen',    lat:59.9298, lng:10.7215 },
+  { navn:'Uranienborg',    lat:59.9213, lng:10.7197 },
+  { navn:'Briskeby',       lat:59.9242, lng:10.7160 },
+  { navn:'Vika',           lat:59.9119, lng:10.7289 },
+  { navn:'Aker Brygge',    lat:59.9104, lng:10.7255 },
+  { navn:'Filipstad',      lat:59.9085, lng:10.7145 },
+  { navn:'Bjørvika',       lat:59.9070, lng:10.7530 },
+  { navn:'Sagene',         lat:59.9390, lng:10.7510 },
+  { navn:'Torshov',        lat:59.9318, lng:10.7637 },
+  { navn:'Sinsen',         lat:59.9342, lng:10.7838 },
+  { navn:'Løren',          lat:59.9320, lng:10.8041 },
+  { navn:'Hasle',          lat:59.9217, lng:10.7979 },
+  { navn:'Ensjø',          lat:59.9143, lng:10.7918 },
+  { navn:'Helsfyr',        lat:59.9082, lng:10.8000 },
+  { navn:'Nydalen',        lat:59.9509, lng:10.7692 },
+  { navn:'Storo',          lat:59.9451, lng:10.7784 },
+  { navn:'Grefsen',        lat:59.9521, lng:10.7711 },
+  { navn:'Kjelsås',        lat:59.9579, lng:10.7562 },
+  { navn:'Blindern',       lat:59.9397, lng:10.7219 },
+  { navn:'Ullevål',        lat:59.9432, lng:10.7328 },
+  { navn:'Gaustad',        lat:59.9473, lng:10.7198 },
+  { navn:'Nordberg',       lat:59.9578, lng:10.7062 },
+  { navn:'Vinderen',       lat:59.9467, lng:10.6826 },
+  { navn:'Røa',            lat:59.9434, lng:10.6658 },
+  { navn:'Holmenkollen',   lat:59.9646, lng:10.6680 },
+  { navn:'Skøyen',         lat:59.9208, lng:10.6878 },
+  { navn:'Ullern',         lat:59.9122, lng:10.6595 },
+  { navn:'Bygdøy',         lat:59.9039, lng:10.6851 },
+  { navn:'Nordstrand',     lat:59.8870, lng:10.8020 },
+  { navn:'Ekeberg',        lat:59.8950, lng:10.7880 },
+  { navn:'Manglerud',      lat:59.8980, lng:10.8120 },
+  { navn:'Lambertseter',   lat:59.8690, lng:10.8303 },
+  { navn:'Bøler',          lat:59.8947, lng:10.8450 },
+  { navn:'Alna',           lat:59.9330, lng:10.8539 },
+  { navn:'Kalbakken',      lat:59.9527, lng:10.8630 },
+  { navn:'Grorud',         lat:59.9596, lng:10.8854 },
+  { navn:'Romsås',         lat:59.9633, lng:10.8838 },
+  { navn:'Stovner',        lat:59.9700, lng:10.9237 },
+  { navn:'Furuset',        lat:59.9472, lng:10.9134 },
+  { navn:'Lillestrøm',     lat:59.9553, lng:11.0515 },
+  { navn:'Lørenskog',      lat:59.9240, lng:10.9621 },
+];
+
 // ── Search ──────────────────────────────────────────────
 const searchInput  = document.getElementById('searchInput');
 const searchResults= document.getElementById('searchResults');
@@ -1149,18 +1208,34 @@ searchInput.addEventListener('blur', () => {
 searchInput.addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();
   if (!q) { searchResults.style.display = 'none'; return; }
-  const matches = TABLES
-    .map((t, i) => ({ t, i, score: fuzzyScore(t.navn, q) }))
+
+  const tableMatches = TABLES
+    .map((t, i) => ({ kind:'table', t, i, score: fuzzyScore(t.navn, q) }))
     .filter(x => x.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
-  if (!matches.length) { searchResults.style.display = 'none'; return; }
-  searchResults.innerHTML = matches.map(({ t, i }) =>
-    `<div class="search-result-item" onclick="selectSearch(${i})">
-      <span style="font-size:10px;color:${t.type==='outdoor'?'var(--orange)':'var(--purple)'}">●</span>
-      <span>${esc(t.navn)}</span>
-    </div>`
-  ).join('');
+    .slice(0, 3);
+
+  const areaMatches = AREAS
+    .map((a, i) => ({ kind:'area', a, i, score: fuzzyScore(a.navn, q) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+
+  const all = [...tableMatches, ...areaMatches].slice(0, 5);
+  if (!all.length) { searchResults.style.display = 'none'; return; }
+
+  searchResults.innerHTML = all.map(x => {
+    if (x.kind === 'table') {
+      return `<div class="search-result-item" onclick="selectSearch(${x.i})">
+        <span style="font-size:10px;color:${x.t.type==='outdoor'?'var(--orange)':'var(--purple)'}">●</span>
+        <span>${esc(x.t.navn)}</span>
+      </div>`;
+    } else {
+      return `<div class="search-result-item" onclick="selectArea(${x.i})">
+        <span>${esc(x.a.navn)}</span>
+      </div>`;
+    }
+  }).join('');
   searchResults.style.display = 'block';
 });
 
@@ -1168,6 +1243,11 @@ function selectSearch(idx) {
   collapseSearch();
   map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
   setTimeout(() => openSheet(idx), 600);
+}
+
+function selectArea(idx) {
+  collapseSearch();
+  map.flyTo([AREAS[idx].lat, AREAS[idx].lng], 14, { duration: 0.7 });
 }
 
 document.addEventListener('click', e => {

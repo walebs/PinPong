@@ -767,7 +767,7 @@ function makeClusterGroup(color) {
     if (e.layer.getChildCount() <= 3) {
       e.layer.spiderfy();
     } else {
-      map.fitBounds(e.layer.getBounds(), { padding: [50, 50] });
+      map.flyTo(e.layer.getLatLng(), map.getZoom() + 2, { duration: 0.4 });
     }
   });
   return group;

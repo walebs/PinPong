@@ -36,52 +36,35 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Filter fab — left side */
+    /* Filter fab — expands in-place to 2×2 grid */
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
-      z-index: 401; transition: opacity 0.18s ease;
-    }
-    .filter-fab.search-active { opacity: 0; pointer-events: none; }
-    .filter-fab-btn {
-      width: 44px; height: 44px; border-radius: 13px;
+      z-index: 401;
+      width: 44px; height: 44px; overflow: hidden;
       background: var(--surface); border: 1px solid var(--border);
-      color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
+      border-radius: 13px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      transition: width  0.28s cubic-bezier(0.4,0,0.2,1),
+                  height 0.28s cubic-bezier(0.4,0,0.2,1),
+                  border-radius 0.28s, opacity 0.18s;
+    }
+    .filter-fab.open { width: 94px; height: 94px; border-radius: 16px; }
+    .filter-fab.search-active { opacity: 0; pointer-events: none; }
+    .filter-grid {
+      display: grid; grid-template-columns: 44px 44px; grid-template-rows: 44px 44px;
+      gap: 6px; padding: 0; width: 94px; height: 94px;
+    }
+    .filter-cell {
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: background 0.12s;
-    }
-    .filter-fab-btn:active { background: var(--s2); }
-    .filter-dropdown {
-      position: absolute; top: calc(100% + 8px); left: 0;
-      background: rgba(18,18,22,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border); border-radius: 12px;
-      width: 110px; overflow: hidden;
-      opacity: 0; transform: translateY(-6px); pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.4,0,0.2,1);
-    }
-    .filter-fab.open .filter-dropdown { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .filter-row {
-      display: flex; align-items: center; gap: 9px;
-      padding: 10px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      background: var(--surface); border: none; border-radius: 0;
       transition: background 0.1s;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      user-select: none;
     }
-    .filter-row:not(:last-child) { border-bottom: 1px solid rgba(42,42,53,0.4); }
-    .filter-row:active { background: rgba(255,255,255,0.04); }
-    .filter-row-dot {
-      width: 12px; height: 1.5px; border-radius: 1px; flex-shrink: 0;
-      transition: opacity 0.15s;
-    }
-    #pill-outdoor   .filter-row-dot { background: var(--orange); }
-    #pill-bar       .filter-row-dot { background: var(--purple); }
-    #pill-belysning .filter-row-dot { background: #F5C518; }
-    #pill-tak       .filter-row-dot { background: #4fc3f7; }
-    .filter-row-dot { opacity: 0.25; }
-    .filter-row.active .filter-row-dot { opacity: 1; }
-    .filter-row-label {
-      font-size: 12px; font-weight: 500; color: var(--muted);
-      transition: color 0.15s;
-    }
-    .filter-row.active .filter-row-label { color: var(--text); }
-    .filter-row-check { display: none; }
+    .filter-cell:active { background: var(--s2); }
+    .filter-cell-close { color: var(--muted); font-size: 13px; }
+    .filter-cell-outdoor.active { color: var(--orange); }
+    .filter-cell-bar.active     { color: var(--purple); }
     .filter-pill { display: none; }
     .filter-dot  { display: none; }
     /* Nearby strip */
@@ -425,26 +408,19 @@
   </style>
 </head>
 <body>
-<!-- Filter fab — left side -->
+<!-- Filter fab — expands to 2×2 -->
 <div class="filter-fab" id="filterFab">
-  <button class="filter-fab-btn" onclick="toggleFilterFab()">
-    <svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-      <line x1="1" y1="1.5" x2="15" y2="1.5"/>
-      <line x1="3" y1="6.5" x2="13" y2="6.5"/>
-      <line x1="5.5" y1="11.5" x2="10.5" y2="11.5"/>
-    </svg>
-  </button>
-  <div class="filter-dropdown" id="filterDropdown">
-    <div class="filter-row active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-      <div class="filter-row-dot" style="background:var(--orange)"></div>
-      <span class="filter-row-label">Ute</span>
-      <span class="filter-row-check">✓</span>
-    </div>
-    <div class="filter-row active" id="pill-bar" onclick="toggleFilter('bar')">
-      <div class="filter-row-dot" style="background:var(--purple)"></div>
-      <span class="filter-row-label">Inne</span>
-      <span class="filter-row-check">✓</span>
-    </div>
+  <div class="filter-grid">
+    <button class="filter-cell" onclick="toggleFilterFab()">
+      <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <line x1="1" y1="1.5" x2="14" y2="1.5"/>
+        <line x1="3" y1="6"   x2="12" y2="6"/>
+        <line x1="5" y1="10.5" x2="10" y2="10.5"/>
+      </svg>
+    </button>
+    <button class="filter-cell filter-cell-close" onclick="toggleFilterFab()">✕</button>
+    <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">Ute</div>
+    <div class="filter-cell filter-cell-bar active"     id="pill-bar"     onclick="toggleFilter('bar')">Inne</div>
   </div>
 </div>
 
@@ -1262,18 +1238,10 @@ document.addEventListener('click', e => {
 
 
 function toggleFilter(type) {
-  const row = document.getElementById(
-    type==='outdoor' ? 'pill-outdoor' :
-    type==='bar'     ? 'pill-bar'     :
-    type==='belysning' ? 'pill-belysning' : 'pill-tak'
-  );
-  if (type==='outdoor')   showOutdoor   = !showOutdoor;
-  else if (type==='bar')  showBar       = !showBar;
-  else if (type==='belysning') showBelysning = !showBelysning;
-  else if (type==='tak')  showTak       = !showTak;
-  const isOn = type==='outdoor' ? showOutdoor : type==='bar' ? showBar :
-               type==='belysning' ? showBelysning : showTak;
-  row.classList.toggle('active', isOn);
+  if (type==='outdoor') showOutdoor = !showOutdoor;
+  else                  showBar     = !showBar;
+  const el = document.getElementById(type==='outdoor' ? 'pill-outdoor' : 'pill-bar');
+  el.classList.toggle('active', type==='outdoor' ? showOutdoor : showBar);
   renderMarkers(); closeSheet();
 }
 

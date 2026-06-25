@@ -693,7 +693,7 @@ function resolveImage(url) {
   if (url.startsWith("http")) return url;
   // Local filename — normalise so sheet entries don't need to be exact:
   // strip any leading path, lowercase, spaces → dashes
-  const filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-');
+  const filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-').normalize('NFC');
   return `images/bord/${encodeURIComponent(filename)}`;
 }
 
@@ -812,7 +812,7 @@ function makeClusterGroup(color) {
     maxClusterRadius: 42,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: false,
-    disableClusteringAtZoom: 13,
+    disableClusteringAtZoom: 15,
     animate: true,
     spiderfyOnMaxZoom: false,
     removeOutsideVisibleBounds: false,

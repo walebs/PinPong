@@ -302,10 +302,13 @@
     .stat-val.verified  { color: var(--green); }
     .stat-val.not-found { color: #FF3B30; }
     .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .notes-block {
+      border-left: 2px solid var(--border);
+      padding-left: 10px;
+    }
     .note-line {
       font-size: 11px; color: var(--muted); line-height: 1.3;
-      padding: 1px 0 1px 10px;
-      border-left: 2px solid var(--border);
+      padding: 1px 0;
       margin-bottom: 3px;
     }
     .note-line:last-child { margin-bottom: 0; }
@@ -1023,8 +1026,9 @@ function openSheet(idx) {
   if (t.notater) {
     const lines = t.notater.split(/[.\n]/).filter(l => l.trim());
     if (lines.length) {
-      notesHtml = `<div class="notes-label">Notater</div>` +
-        lines.map(line => `<div class="note-line"><span style="opacity:0.35;margin-right:5px">·</span>${esc(line.trim())}</div>`).join('');
+      notesHtml = `<div class="notes-label">Notater</div><div class="notes-block">` +
+        lines.map(line => `<div class="note-line">- ${esc(line.trim())}</div>`).join('') +
+        `</div>`;
     }
   }
   _sheetNote.innerHTML = notesHtml;

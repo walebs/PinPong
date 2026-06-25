@@ -43,6 +43,7 @@
       width: 44px; height: 44px; overflow: hidden;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 13px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      will-change: transform, width, height;
       transition: width  0.28s cubic-bezier(0.4,0,0.2,1),
                   height 0.28s cubic-bezier(0.4,0,0.2,1),
                   border-radius 0.28s, opacity 0.18s;
@@ -83,8 +84,6 @@
     .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
     .filter-cell-progress:active { background: var(--surface); }
     .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
-    .filter-pill { display: none; }
-    .filter-dot  { display: none; }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -152,15 +151,6 @@
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
     .fab-stack.strip-visible { opacity: 0; pointer-events: none; transform: scale(0.85); }
-    .fab-nearest {
-      display: flex; align-items: center; gap: 8px;
-      padding: 13px 18px; background: var(--blue); color: white;
-      border: none; border-radius: 28px; font-size: 13.5px; font-weight: 600;
-      cursor: pointer; box-shadow: 0 4px 24px rgba(59,139,255,0.4);
-      transition: transform 0.12s, opacity 0.12s;
-      -webkit-tap-highlight-color: transparent; letter-spacing: -0.2px;
-    }
-    .fab-nearest:active { transform: scale(0.95); opacity: 0.85; }
     .fab-locate {
       width: 50px; height: 50px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 50%;
@@ -458,7 +448,7 @@
     <button class="search-icon-btn" onclick="expandSearch()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
-    <span class="search-label" onclick="expandSearch()">Søk…</span>
+    <span class="search-label" onclick="expandSearch()">Søk etter bord</span>
     <input class="search-input" id="searchInput" type="text" placeholder="Søk etter sted…" autocomplete="off" autocorrect="off" spellcheck="false" />
     <button class="search-close" onclick="collapseSearch()">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -558,12 +548,10 @@ const _sheetType       = document.getElementById('sheetType');
 const _sheetName       = document.getElementById('sheetName');
 const _sheetStats      = document.getElementById('sheetStats');
 const _sheetNote       = document.getElementById('sheetNote');
-const _progressFill    = null;
-const _progressLabel   = null;
-const _logoMeta        = null;
-const _progressRow     = null;
 const _mapsOverlay     = document.getElementById('mapsOverlay');
 const _mapsModal       = document.getElementById('mapsModal');
+const _progressArc     = document.getElementById('progressArc');
+const _progressFraction= document.getElementById('progressFraction');
 
 const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
@@ -718,13 +706,11 @@ async function loadSheetData() {
 }
 
 function updateProgress() {
-  const arc      = document.getElementById('progressArc');
-  const fraction = document.getElementById('progressFraction');
   const verified = TABLES.filter(t => t.verifisert === 'ja').length;
   const total    = TABLES.length;
   const circ     = 2 * Math.PI * 9; // r=9 → ~56.55
-  if (arc)      arc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
-  if (fraction) fraction.textContent = `${verified}/${total}`;
+  _progressArc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
+  _progressFraction.textContent = `${verified}/${total}`;
 }
 
 const map = L.map('map', {
@@ -769,6 +755,7 @@ function makeIcon(t, highlighted=false) {
 }
 
 let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
   const group = L.markerClusterGroup({
@@ -1063,9 +1050,6 @@ function shareTable() {
   }
 }
 
-let userLat=null, userLng=null;
-
-
 function locateMe() {
   if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
   startLocationWatch();
@@ -1081,27 +1065,6 @@ function haversine(la1,ln1,la2,ln2) {
   const Δφ=(la2-la1)*Math.PI/180, Δλ=(ln2-ln1)*Math.PI/180;
   const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-function findNearest() {
-  if (userLat === null) return;
-  showNearbyStrip(userLat, userLng);
-  let nearestIdx=null, minDist=Infinity;
-  TABLES.forEach((t,i) => {
-    if (t.type==='outdoor' && !showOutdoor) return;
-    if (t.type==='bar'     && !showBar)     return;
-    if (t.verifisert==='nei') return;
-    const d=haversine(userLat,userLng,t.lat,t.lng);
-    if (d<minDist) { minDist=d; nearestIdx=i; }
-  });
-  if (nearestIdx!==null) {
-    const dist=minDist<1000 ? `${Math.round(minDist)} m unna` : `${(minDist/1000).toFixed(1)} km unna`;
-    map.flyTo([TABLES[nearestIdx].lat,TABLES[nearestIdx].lng], 15, { duration:1.1 });
-    setTimeout(() => {
-      openSheet(nearestIdx);
-      _sheetNote.textContent=(_sheetNote.textContent?_sheetNote.textContent+'  ·  ':'')+' 📍 '+dist;
-    }, 700);
-  }
 }
 
 function fuzzyScore(name, q) {
@@ -1169,16 +1132,12 @@ const AREAS = [
   { navn:'Lillestrøm',        lat:59.9553, lng:11.0515 },
   { navn:'Lørenskog',         lat:59.9240, lng:10.9621 },
   { navn:'Nationaltheatret',  lat:59.9143, lng:10.7322 },
-  { navn:'Aker Brygge',       lat:59.9089, lng:10.7261 },
   { navn:'Oslo S',            lat:59.9108, lng:10.7523 },
   { navn:'Vigelandsparken',   lat:59.9274, lng:10.6984 },
-  { navn:'Bislett',           lat:59.9237, lng:10.7202 },
-  { navn:'Majorstuen',        lat:59.9282, lng:10.7150 },
   { navn:'Karl Johan',        lat:59.9127, lng:10.7461 },
   { navn:'Youngstorget',      lat:59.9153, lng:10.7508 },
   { navn:'Rådhusplassen',     lat:59.9117, lng:10.7326 },
   { navn:'Botanisk hage',     lat:59.9141, lng:10.7744 },
-  { navn:'Ullevål',           lat:59.9456, lng:10.7195 },
 ];
 
 // ── Search ──────────────────────────────────────────────

@@ -708,7 +708,7 @@ async function loadSheetData() {
     const rows = parseCSV(text);
     const newTables = [];
     rows.forEach(row => {
-      const navn = (row.navn || "").trim();
+      const navn = (row.navn || "").trim().normalize('NFC');
       if (!navn) return;
       const lat = parseFloat(row.lat), lng = parseFloat(row.lng);
       const data = {
@@ -723,7 +723,8 @@ async function loadSheetData() {
         bilde_url:  resolveImage(row.images || row.url || row.bilde_url || row["bilde url"] || row.bilde || row.image || row.img || row.foto || row.photo || ""),
       };
       // Try to match a static entry for coords/type
-      let base = STATIC.find(t => t.navn.toLowerCase() === navn.toLowerCase());
+      const navnN = navn.toLowerCase().normalize('NFC');
+      let base = STATIC.find(t => t.navn.toLowerCase().normalize('NFC') === navnN);
       if (!base && lat && lng) {
         base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
       }

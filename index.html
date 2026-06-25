@@ -706,9 +706,6 @@ function updateProgress() {
   if (arc)      arc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
   if (fraction) fraction.textContent = `${verified}/${total}`;
 }
-  const verified = TABLES.filter(t => t.verifisert === "ja").length;
-  const total = TABLES.length;
-}
 
 const map = L.map('map', {
   center: [59.926, 10.752], zoom: 13,

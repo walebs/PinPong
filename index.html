@@ -724,7 +724,9 @@ async function loadSheetData() {
       };
       // Try to match a static entry for coords/type
       const navnN = navn.toLowerCase().normalize('NFC');
+      const stripA = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
       let base = STATIC.find(t => t.navn.toLowerCase().normalize('NFC') === navnN);
+      if (!base) base = STATIC.find(t => stripA(t.navn) === stripA(navn));
       if (!base && lat && lng) {
         base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
       }

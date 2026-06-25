@@ -730,6 +730,7 @@ async function loadSheetData() {
       if (!base && lat && lng) {
         base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
       }
+      if (!base) console.warn('[PinPong] ingen match:', JSON.stringify(navn), '| lat:', lat, '| lng:', lng, '| row.lat:', JSON.stringify(row.lat), '| row.lng:', JSON.stringify(row.lng));
       if (base) {
         newTables.push({ ...base, navn, ...data });
       } else {

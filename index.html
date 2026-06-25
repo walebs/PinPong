@@ -805,7 +805,14 @@ function makeClusterGroup(color) {
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);
     const zoom = Math.min(14, map.getBoundsZoom(bounds));
-    map.flyTo(bounds.getCenter(), zoom, { duration: 0.6, easeLinearity: 0.4 });
+    const center = bounds.getCenter();
+    if (map.getBounds().contains(center)) {
+      // Cluster already in view — zoom in place without panning
+      map.setZoomAround(center, zoom, { animate: true });
+    } else {
+      // Far away — fly there
+      map.flyTo(center, zoom, { duration: 0.6, easeLinearity: 0.4 });
+    }
   });
   return group;
 }

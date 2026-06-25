@@ -649,6 +649,18 @@ const STATIC = [
   { navn:"St. Hanshaugen",           lat:59.9272768, lng:10.7424180, type:"outdoor" },
   { navn:"Bygdøy skole",             lat:59.9049487, lng:10.6766785, type:"outdoor" },
   { navn:"Sukkerbiten",              lat:59.9049733, lng:10.7525070, type:"outdoor" },
+  { navn:"Vålerenga skole",          lat:59.9071800, lng:10.7880630, type:"outdoor" },
+  { navn:"Sofienberg skole",         lat:59.9218270, lng:10.7695410, type:"outdoor" },
+  { navn:"Hartvig Nissens Skole",    lat:59.9188610, lng:10.7166110, type:"outdoor" },
+  { navn:"Sofienbergparken 3",       lat:59.9226578, lng:10.7664440, type:"outdoor" },
+  { navn:"Grunerløkka skole",        lat:59.9265681, lng:10.7614293, type:"outdoor" },
+  { navn:"Bentsebrua skole",         lat:59.9370877, lng:10.7613870, type:"outdoor" },
+  { navn:"Arkitekt Rivertz plass",   lat:59.9346269, lng:10.7510169, type:"outdoor" },
+  { navn:"Skur 13",                  lat:59.9091676, lng:10.7210694, type:"outdoor" },
+  { navn:"Trettenparken",            lat:59.9090300, lng:10.7196820, type:"outdoor" },
+  { navn:"Majorstuen skole (Firemanns)", lat:59.9286252, lng:10.7135843, type:"outdoor" },
+  { navn:"Marienlyst skole",         lat:59.9346089, lng:10.7231877, type:"outdoor" },
+  { navn:"Marienlyst",               lat:59.9327184, lng:10.7223750, type:"outdoor" },
   { navn:"Brygg",                    lat:59.9132947, lng:10.7485544, type:"bar", label:"Bryggebar" },
   { navn:"Kulturhuset",              lat:59.9146374, lng:10.7508109, type:"bar", label:"Kulturhus" },
   { navn:"Raadhuset Bar",            lat:59.9136835, lng:10.7337321, type:"bar", label:"Bar" },
@@ -730,8 +742,6 @@ async function loadSheetData() {
       if (!base && lat && lng) {
         base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
       }
-      if (!base) console.warn('[PinPong] ingen match:', JSON.stringify(navn), '| lat:', lat, '| lng:', lng, '| row.lat:', JSON.stringify(row.lat), '| row.lng:', JSON.stringify(row.lng));
-      if (navn.toLowerCase().includes('lensmann')) console.log('[PinPong] Lensmann funnet i CSV: navn=', JSON.stringify(navn), 'base=', !!base, 'lat=', lat, 'lng=', lng);
       if (base) {
         newTables.push({ ...base, navn, ...data });
       } else {
@@ -741,7 +751,6 @@ async function loadSheetData() {
         newTables.push({ navn, lat, lng, type, ...data });
       }
     });
-    console.log('[PinPong] newTables.length:', newTables.length, '| Lensmann i lista:', newTables.some(t => t.navn.toLowerCase().includes('lensmann')));
     // Sheet is sole source of truth — only show what's in the sheet
     if (newTables.length > 0) TABLES = newTables;
     updateProgress();
@@ -845,7 +854,6 @@ function renderMarkers() {
   clusterGroup    = makeClusterGroup('#FF6B00');
   clusterGroupBar = makeClusterGroup('#7C3AED');
   TABLES.forEach((t, i) => {
-    if (t.navn && t.navn.toLowerCase().includes('lensmann')) console.log('[PinPong] render:', t.navn, 'type=', t.type, 'lat=', t.lat, 'lng=', t.lng, 'showOutdoor=', showOutdoor, 'showBar=', showBar);
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t) });

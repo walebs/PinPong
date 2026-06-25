@@ -113,7 +113,7 @@
     .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
     /* Nearby strip */
     .nearby-container {
-      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
       left: 0; right: 0; z-index: 299;
       padding-left: 16px;
       opacity: 0; transform: translateY(10px); pointer-events: none;
@@ -804,14 +804,14 @@ function makeClusterGroup(color) {
   });
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);
-    const zoom = Math.min(14, map.getBoundsZoom(bounds));
+    const targetZoom = Math.min(14, map.getBoundsZoom(bounds));
     const center = bounds.getCenter();
-    if (map.getBounds().contains(center)) {
-      // Cluster already in view — zoom in place without panning
-      map.setZoomAround(center, zoom, { animate: true });
+    if (map.getZoom() >= targetZoom) {
+      // Already zoomed in enough — just pan, no zoom change
+      map.flyTo(center, map.getZoom(), { duration: 0.5, easeLinearity: 0.5 });
     } else {
-      // Far away — fly there
-      map.flyTo(center, zoom, { duration: 0.6, easeLinearity: 0.4 });
+      // Zoomed out — fly and zoom in
+      map.flyTo(center, targetZoom, { duration: 0.7, easeLinearity: 0.4 });
     }
   });
   return group;

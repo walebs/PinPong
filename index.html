@@ -64,16 +64,23 @@
     }
     .filter-cell:active { background: var(--s2); }
     .filter-cell-icon { color: var(--text); }
-    .filter-cell-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      opacity: 0.25; transition: opacity 0.15s;
+    .filter-cell-box {
+      width: 11px; height: 11px; border-radius: 3px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent;
+      transition: background 0.15s, border-color 0.15s;
+      flex-shrink: 0;
     }
-    #pill-outdoor .filter-cell-dot { background: var(--orange); }
-    #pill-bar     .filter-cell-dot { background: var(--purple); }
-    .filter-cell-outdoor.active .filter-cell-dot,
-    .filter-cell-bar.active     .filter-cell-dot { opacity: 1; }
-    .filter-cell-outdoor.active { color: var(--orange); background: rgba(255,107,0,0.07); }
-    .filter-cell-bar.active     { color: var(--purple); background: rgba(124,58,237,0.07); }
+    #pill-outdoor .filter-cell-box { border-color: var(--orange); }
+    #pill-bar     .filter-cell-box { border-color: var(--purple); }
+    .filter-cell-outdoor.active .filter-cell-box { background: var(--orange); border-color: var(--orange); }
+    .filter-cell-bar.active     .filter-cell-box { background: var(--purple); border-color: var(--purple); }
+    .filter-cell-outdoor { color: rgba(255,107,0,0.35); font-size: 10px; }
+    .filter-cell-bar     { color: rgba(124,58,237,0.35); font-size: 10px; }
+    .filter-cell-outdoor.active { color: var(--orange); background: transparent;
+      text-shadow: 0 0 8px rgba(255,107,0,0.6); }
+    .filter-cell-bar.active     { color: var(--purple); background: transparent;
+      text-shadow: 0 0 8px rgba(124,58,237,0.6); }
     .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
     .filter-cell-progress:active { background: var(--surface); }
     .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
@@ -439,10 +446,10 @@
       <span class="progress-fraction" id="progressFraction">0/0</span>
     </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-      <div class="filter-cell-dot"></div>Ute
+      <div class="filter-cell-box"></div>Ute
     </div>
     <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
-      <div class="filter-cell-dot"></div>Inne
+      <div class="filter-cell-box"></div>Inne
     </div>
   </div>
 </div>

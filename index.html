@@ -819,7 +819,7 @@ function makeClusterGroup(color) {
   });
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);
-    const targetZoom = Math.min(14, map.getBoundsZoom(bounds));
+    const targetZoom = Math.min(16, map.getBoundsZoom(bounds));
     const center = bounds.getCenter();
     if (map.getZoom() >= targetZoom) {
       // Already zoomed in enough — just pan, no zoom change

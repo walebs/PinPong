@@ -54,19 +54,29 @@
       gap: 6px; padding: 0; width: 94px; height: 94px;
     }
     .filter-cell {
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       background: var(--surface); border: none; border-radius: 0;
-      transition: background 0.1s;
-      font-size: 12px; font-weight: 600; color: var(--muted);
+      transition: background 0.15s;
+      font-size: 11px; font-weight: 600; color: var(--muted);
       user-select: none;
     }
     .filter-cell:active { background: var(--s2); }
+    .filter-cell-icon { color: var(--text); }
+    .filter-cell-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      opacity: 0.25; transition: opacity 0.15s;
+    }
+    #pill-outdoor .filter-cell-dot { background: var(--orange); }
+    #pill-bar     .filter-cell-dot { background: var(--purple); }
+    .filter-cell-outdoor.active .filter-cell-dot,
+    .filter-cell-bar.active     .filter-cell-dot { opacity: 1; }
+    .filter-cell-outdoor.active { color: var(--orange); background: rgba(255,107,0,0.07); }
+    .filter-cell-bar.active     { color: var(--purple); background: rgba(124,58,237,0.07); }
     .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
     .filter-cell-progress:active { background: var(--surface); }
     .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
-    .filter-cell-outdoor.active { color: var(--orange); }
-    .filter-cell-bar.active     { color: var(--purple); }
     .filter-pill { display: none; }
     .filter-dot  { display: none; }
     /* Nearby strip */
@@ -413,7 +423,7 @@
 <!-- Filter fab — expands to 2×2 -->
 <div class="filter-fab" id="filterFab">
   <div class="filter-grid">
-    <button class="filter-cell" onclick="toggleFilterFab()">
+    <button class="filter-cell filter-cell-icon" onclick="toggleFilterFab()">
       <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
         <line x1="1" y1="1.5" x2="14" y2="1.5"/>
         <line x1="3" y1="6"   x2="12" y2="6"/>
@@ -428,8 +438,12 @@
       </svg>
       <span class="progress-fraction" id="progressFraction">0/0</span>
     </div>
-    <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">Ute</div>
-    <div class="filter-cell filter-cell-bar active"     id="pill-bar"     onclick="toggleFilter('bar')">Inne</div>
+    <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
+      <div class="filter-cell-dot"></div>Ute
+    </div>
+    <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
+      <div class="filter-cell-dot"></div>Inne
+    </div>
   </div>
 </div>
 

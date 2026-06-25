@@ -49,6 +49,33 @@
                   border-radius 0.28s, opacity 0.18s;
     }
     .filter-fab.open { width: 94px; height: 94px; border-radius: 16px; }
+    /* Mini filter indicators — visible below fab when collapsed */
+    .filter-indicators {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 62px);
+      left: 16px; width: 44px;
+      display: flex; justify-content: center; gap: 5px;
+      z-index: 401;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .filter-fab.open + .filter-indicators {
+      opacity: 0; pointer-events: none; transform: translateY(-4px);
+    }
+    .fi-box {
+      width: 9px; height: 9px; border-radius: 2.5px;
+      border: 1.5px solid transparent;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .fi-outdoor { border-color: var(--orange); background: transparent; }
+    .fi-bar     { border-color: var(--purple); background: transparent; }
+    .fi-outdoor.active {
+      background: var(--orange);
+      box-shadow: 0 0 5px rgba(255,107,0,0.8), 0 0 10px rgba(255,107,0,0.35);
+    }
+    .fi-bar.active {
+      background: var(--purple);
+      box-shadow: 0 0 5px rgba(124,58,237,0.8), 0 0 10px rgba(124,58,237,0.35);
+    }
     .filter-grid {
       display: grid; grid-template-columns: 44px 44px; grid-template-rows: 44px 44px;
       gap: 6px; padding: 0; width: 94px; height: 94px;
@@ -438,6 +465,10 @@
     </div>
   </div>
 </div>
+<div class="filter-indicators" id="filterIndicators">
+  <div class="fi-box fi-outdoor active" id="fiOutdoor"></div>
+  <div class="fi-box fi-bar active" id="fiBar"></div>
+</div>
 
 <div class="search-wrap" id="searchWrap">
   <div class="search-field" onclick="expandSearch()">
@@ -548,6 +579,8 @@ const _mapsOverlay     = document.getElementById('mapsOverlay');
 const _mapsModal       = document.getElementById('mapsModal');
 const _progressArc     = document.getElementById('progressArc');
 const _progressFraction= document.getElementById('progressFraction');
+const _fiOutdoor       = document.getElementById('fiOutdoor');
+const _fiBar           = document.getElementById('fiBar');
 
 const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
@@ -1229,6 +1262,8 @@ function toggleFilter(type) {
   else                  showBar     = !showBar;
   const el = document.getElementById(type==='outdoor' ? 'pill-outdoor' : 'pill-bar');
   el.classList.toggle('active', type==='outdoor' ? showOutdoor : showBar);
+  _fiOutdoor.classList.toggle('active', showOutdoor);
+  _fiBar.classList.toggle('active', showBar);
   renderMarkers(); closeSheet();
 }
 

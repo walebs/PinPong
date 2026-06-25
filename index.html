@@ -206,6 +206,13 @@
       .btn-directions { padding: 11px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
     .sheet-close-top {
       position: absolute; top: 12px; right: 12px; z-index: 10;
       width: 40px; height: 40px; border-radius: 50%;
@@ -528,6 +535,7 @@
   </button>
 </div>
 <div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-handle"></div>
   <button class="sheet-close-top" onclick="closeSheet()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
@@ -809,10 +817,10 @@ function makeClusterGroup(color) {
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
       });
     },
-    maxClusterRadius: 55,
+    maxClusterRadius: 30,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: false,
-    disableClusteringAtZoom: 14,
+    disableClusteringAtZoom: 13,
     animate: true,
     spiderfyOnMaxZoom: false,
   });
@@ -1288,6 +1296,52 @@ function toggleFilter(type) {
   _fiBar.classList.toggle('active', showBar);
   renderMarkers(); closeSheet();
 }
+
+// ── Swipe-to-dismiss bottom sheet ───────────────────────
+(function() {
+  let startY = 0, currentY = 0, startTime = 0, dragging = false;
+
+  _bottomSheet.addEventListener('touchstart', e => {
+    if (!_bottomSheet.classList.contains('open')) return;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+    currentY = 0;
+    dragging = true;
+    _bottomSheet.style.transition = 'none';
+  }, { passive: true });
+
+  _bottomSheet.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { _bottomSheet.style.transform = 'translate(-50%, 0)'; return; }
+    currentY = dy;
+    _bottomSheet.style.transform = `translate(-50%, ${dy}px)`;
+  }, { passive: true });
+
+  _bottomSheet.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    const velocity = currentY / Math.max(1, Date.now() - startTime);
+    if (currentY > 80 || velocity > 0.5) {
+      _bottomSheet.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
+      _bottomSheet.style.transform = 'translate(-50%, calc(100% + 40px))';
+      setTimeout(() => {
+        _bottomSheet.style.transition = '';
+        _bottomSheet.classList.remove('open');
+        _bottomSheet.style.transform = '';
+        _nearbyContainer.classList.remove('sheet-open');
+        _fabStack.classList.remove('sheet-open');
+        closeMapsPicker();
+        leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false)));
+        selectedIdx = null;
+        history.replaceState(null, '', location.pathname);
+      }, 320);
+    } else {
+      _bottomSheet.style.transition = '';
+      _bottomSheet.style.transform = '';
+    }
+  });
+})();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});

@@ -731,6 +731,7 @@ async function loadSheetData() {
         base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
       }
       if (!base) console.warn('[PinPong] ingen match:', JSON.stringify(navn), '| lat:', lat, '| lng:', lng, '| row.lat:', JSON.stringify(row.lat), '| row.lng:', JSON.stringify(row.lng));
+      if (navn.toLowerCase().includes('lensmann')) console.log('[PinPong] Lensmann funnet i CSV: navn=', JSON.stringify(navn), 'base=', !!base, 'lat=', lat, 'lng=', lng);
       if (base) {
         newTables.push({ ...base, navn, ...data });
       } else {
@@ -740,6 +741,7 @@ async function loadSheetData() {
         newTables.push({ navn, lat, lng, type, ...data });
       }
     });
+    console.log('[PinPong] newTables.length:', newTables.length, '| Lensmann i lista:', newTables.some(t => t.navn.toLowerCase().includes('lensmann')));
     // Sheet is sole source of truth — only show what's in the sheet
     if (newTables.length > 0) TABLES = newTables;
     updateProgress();

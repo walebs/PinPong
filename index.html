@@ -815,6 +815,7 @@ function makeClusterGroup(color) {
     disableClusteringAtZoom: 13,
     animate: true,
     spiderfyOnMaxZoom: false,
+    removeOutsideVisibleBounds: false,
   });
   group.on('clusterclick', function(e) {
     const bounds = e.layer.getBounds().pad(0.3);

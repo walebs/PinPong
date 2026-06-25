@@ -62,7 +62,9 @@
       user-select: none;
     }
     .filter-cell:active { background: var(--s2); }
-    .filter-cell-close { color: var(--muted); font-size: 13px; }
+    .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
+    .filter-cell-progress:active { background: var(--surface); }
+    .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
     .filter-cell-outdoor.active { color: var(--orange); }
     .filter-cell-bar.active     { color: var(--purple); }
     .filter-pill { display: none; }
@@ -194,7 +196,7 @@
       width: 110px;
       transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .search-wrap.expanded { width: min(260px, calc(100vw - 120px)); }
+    .search-wrap.expanded { width: min(200px, calc(100vw - 160px)); }
     .search-label {
       font-size: 13px; font-weight: 600; color: var(--muted);
       white-space: nowrap; flex: 1;
@@ -418,7 +420,14 @@
         <line x1="5" y1="10.5" x2="10" y2="10.5"/>
       </svg>
     </button>
-    <button class="filter-cell filter-cell-close" onclick="toggleFilterFab()">✕</button>
+    <div class="filter-cell filter-cell-progress" id="filterProgress">
+      <svg width="26" height="26" viewBox="0 0 26 26">
+        <circle cx="13" cy="13" r="9" fill="none" stroke="var(--border)" stroke-width="2.5"/>
+        <circle id="progressArc" cx="13" cy="13" r="9" fill="none" stroke="var(--green)" stroke-width="2.5"
+                stroke-dasharray="0 56.55" stroke-linecap="round" transform="rotate(-90 13 13)"/>
+      </svg>
+      <span class="progress-fraction" id="progressFraction">0/0</span>
+    </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">Ute</div>
     <div class="filter-cell filter-cell-bar active"     id="pill-bar"     onclick="toggleFilter('bar')">Inne</div>
   </div>
@@ -689,6 +698,14 @@ async function loadSheetData() {
 }
 
 function updateProgress() {
+  const arc      = document.getElementById('progressArc');
+  const fraction = document.getElementById('progressFraction');
+  const verified = TABLES.filter(t => t.verifisert === 'ja').length;
+  const total    = TABLES.length;
+  const circ     = 2 * Math.PI * 9; // r=9 → ~56.55
+  if (arc)      arc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
+  if (fraction) fraction.textContent = `${verified}/${total}`;
+}
   const verified = TABLES.filter(t => t.verifisert === "ja").length;
   const total = TABLES.length;
 }

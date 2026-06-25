@@ -206,13 +206,6 @@
       .btn-directions { padding: 11px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
-    .sheet-handle {
-      width: 36px; height: 4px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 2px;
-      margin: 10px auto 0;
-      flex-shrink: 0;
-    }
     .sheet-close-top {
       position: absolute; top: 12px; right: 12px; z-index: 10;
       width: 40px; height: 40px; border-radius: 50%;
@@ -535,7 +528,6 @@
   </button>
 </div>
 <div class="bottom-sheet" id="bottomSheet">
-  <div class="sheet-handle"></div>
   <button class="sheet-close-top" onclick="closeSheet()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
@@ -702,7 +694,7 @@ function resolveImage(url) {
   // Local filename — normalise so sheet entries don't need to be exact:
   // strip any leading path, lowercase, spaces → dashes
   const filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-');
-  return `images/bord/${filename}`;
+  return `images/bord/${encodeURIComponent(filename)}`;
 }
 
 async function loadSheetData() {
@@ -817,7 +809,7 @@ function makeClusterGroup(color) {
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
       });
     },
-    maxClusterRadius: 30,
+    maxClusterRadius: 42,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: false,
     disableClusteringAtZoom: 13,

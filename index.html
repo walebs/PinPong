@@ -845,6 +845,7 @@ function renderMarkers() {
   clusterGroup    = makeClusterGroup('#FF6B00');
   clusterGroupBar = makeClusterGroup('#7C3AED');
   TABLES.forEach((t, i) => {
+    if (t.navn && t.navn.toLowerCase().includes('lensmann')) console.log('[PinPong] render:', t.navn, 'type=', t.type, 'lat=', t.lat, 'lng=', t.lng, 'showOutdoor=', showOutdoor, 'showBar=', showBar);
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t) });

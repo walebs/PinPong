@@ -1,4 +1,4 @@
-const TILE_CACHE = 'pinpong-tiles-v2';
+const TILE_CACHE = 'pinpong-tiles-v3';
 
 // ── Oslo + Lillestrøm bounding box ───────────────────────
 const BOUNDS = { minLat: 59.82, maxLat: 60.02, minLng: 10.55, maxLng: 11.15 };
@@ -25,7 +25,7 @@ function buildTileUrls() {
     for (let x = x0; x <= x1; x++) {
       for (let y = y0; y <= y1; y++) {
         const s = SUBS[(x + y) & 3];
-        const base = `https://${s}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}`;
+        const base = `https://${s}.basemaps.cartocdn.com/dark_matter/${z}/${x}/${y}`;
         urls.push(base + '.png');
         urls.push(base + '@2x.png');
       }

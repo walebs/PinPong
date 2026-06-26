@@ -53,29 +53,25 @@
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 62px);
       left: 16px; width: 44px;
-      display: flex; justify-content: center; gap: 5px;
+      display: flex; justify-content: center; gap: 4px;
       z-index: 401;
       transition: opacity 0.18s ease, transform 0.18s ease;
     }
     .filter-fab.open + .filter-indicators {
       opacity: 0; pointer-events: none; transform: translateY(-4px);
     }
-    .fi-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-    .fi-label { font-size: 7px; color: var(--muted); font-weight: 600; letter-spacing: 0.2px; line-height: 1; }
-    .fi-box {
-      width: 9px; height: 9px; border-radius: 2.5px;
-      border: 1.5px solid transparent;
-      transition: background 0.15s, box-shadow 0.15s;
+    .fi-text {
+      font-size: 8px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+      color: var(--muted); line-height: 1;
+      transition: color 0.15s, text-shadow 0.15s;
     }
-    .fi-outdoor { border-color: var(--orange); background: transparent; }
-    .fi-bar     { border-color: var(--purple); background: transparent; }
-    .fi-outdoor.active {
-      background: var(--orange);
-      box-shadow: 0 0 5px rgba(255,107,0,0.8), 0 0 10px rgba(255,107,0,0.35);
+    .fi-text-outdoor.active {
+      color: var(--orange);
+      text-shadow: 0 0 6px rgba(255,107,0,0.7);
     }
-    .fi-bar.active {
-      background: var(--purple);
-      box-shadow: 0 0 5px rgba(124,58,237,0.8), 0 0 10px rgba(124,58,237,0.35);
+    .fi-text-bar.active {
+      color: var(--purple);
+      text-shadow: 0 0 6px rgba(124,58,237,0.7);
     }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
@@ -161,7 +157,7 @@
     }
     .nearby-strip::-webkit-scrollbar { display: none; }
     .nearby-card {
-      flex-shrink: 0; width: calc((100vw - 50px) / 3);
+      flex-shrink: 0; width: calc((100vw - 40px) / 3);
       scroll-snap-align: start;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px 10px 14px 11px;
@@ -450,16 +446,10 @@
     }
     .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: none !important; }
     .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: none !important; }
-    /* Zoom in (splitting): markers appear at their position, no drift */
+    /* Cluster open/close: markers fade in/out at their actual position, no flying */
     .leaflet-cluster-anim .leaflet-marker-icon,
     .leaflet-cluster-anim .leaflet-marker-shadow {
-      transition: opacity 0.18s ease !important;
-    }
-    /* Zoom out (merging): markers fly toward cluster center */
-    .cluster-merging .leaflet-cluster-anim .leaflet-marker-icon,
-    .cluster-merging .leaflet-cluster-anim .leaflet-marker-shadow {
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.8, 0.6),
-                  opacity  0.22s ease !important;
+      transition: opacity 0.22s ease !important;
     }
     .leaflet-control-attribution {
       background: transparent !important; color: #222 !important;
@@ -503,14 +493,8 @@
   </div>
 </div>
 <div class="filter-indicators" id="filterIndicators">
-  <div class="fi-item">
-    <div class="fi-box fi-outdoor active" id="fiOutdoor"></div>
-    <span class="fi-label">Ute</span>
-  </div>
-  <div class="fi-item">
-    <div class="fi-box fi-bar active" id="fiBar"></div>
-    <span class="fi-label">Inne</span>
-  </div>
+  <span class="fi-text fi-text-outdoor active" id="fiOutdoor">Ute</span>
+  <span class="fi-text fi-text-bar active" id="fiBar">Inne</span>
 </div>
 
 <div class="search-wrap" id="searchWrap">
@@ -1117,15 +1101,11 @@ map.on('zoom', () => {
   // Update clusters dynamically as user zooms (at each integer zoom boundary)
   const z = Math.round(map.getZoom());
   if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
-    const zoomingIn = z > _lastClusterZoom;
     _lastClusterZoom = z;
-    const mc = map.getContainer();
-    mc.classList.toggle('cluster-merging', !zoomingIn);
     cancelAnimationFrame(_clusterRaf);
     _clusterRaf = requestAnimationFrame(() => {
       try { clusterGroup._zoomEnd(); } catch(e) {}
       try { clusterGroupBar._zoomEnd(); } catch(e) {}
-      setTimeout(() => mc.classList.remove('cluster-merging'), 320);
     });
   }
 });

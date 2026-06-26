@@ -43,7 +43,7 @@
       width: 94px; height: 94px;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      clip-path: inset(0 50px 50px 0 round 13px);
+      clip-path: inset(0 50px 50px 0 round 16px);
       will-change: clip-path;
       transition: clip-path 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
     }
@@ -52,7 +52,7 @@
     .filter-indicators {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 62px);
-      left: 16px; width: 44px;
+      left: 22px; width: 44px;
       display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
       z-index: 401;
       transition: opacity 0.6s ease;
@@ -893,7 +893,7 @@ renderMarkers();
 setTimeout(() => {
   const fi = document.getElementById('filterIndicators');
   if (fi) fi.classList.add('faded');
-}, 5000);
+}, 10000);
 
 loadSheetData().then(() => {
   const param = new URLSearchParams(location.search).get('bord');

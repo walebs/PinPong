@@ -446,23 +446,12 @@
     }
     .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: none !important; }
     .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: none !important; }
-    /* Cluster split: inner content pops in with bounce (scale on inner div, not outer,
-       so it doesn't conflict with Leaflet's transform:translate3d positioning) */
-    @keyframes markerPop {
-      0%   { transform: scale(0.25); opacity: 0; }
-      65%  { transform: scale(1.12); }
-      100% { transform: scale(1);    opacity: 1; }
-    }
-    /* Cluster merge: outer fades out, inner shrinks */
-    @keyframes markerShrink {
-      from { transform: scale(1); opacity: 1; }
-      to   { transform: scale(0.25); opacity: 0; }
-    }
-    .leaflet-cluster-anim .leaflet-marker-icon {
-      transition: opacity 0.28s ease !important;
-    }
-    .leaflet-cluster-anim .leaflet-marker-icon > div {
-      animation: markerPop 0.32s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+    /* Cluster split/merge: markers fly from cluster → position (and back).
+       Slight overshoot on the curve so the fly-out feels energetic and visible. */
+    .leaflet-cluster-anim .leaflet-marker-icon,
+    .leaflet-cluster-anim .leaflet-marker-shadow {
+      transition: transform 0.38s cubic-bezier(0.34, 1.05, 0.64, 1),
+                  opacity  0.28s ease !important;
     }
     .leaflet-control-attribution {
       background: transparent !important; color: #222 !important;
@@ -1104,26 +1093,13 @@ function closeSheet() {
 
 map.on('click', closeSheet);
 
-let zoomTimer, _lastClusterZoom = map.getZoom(), _clusterRaf;
+let zoomTimer;
 map.on('zoom', () => {
   // Refresh marker icons (debounced)
   clearTimeout(zoomTimer);
   zoomTimer = setTimeout(() => {
     leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx)));
   }, 80);
-  // Update clusters dynamically as user zooms (at each integer zoom boundary)
-  const z = Math.round(map.getZoom());
-  if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
-    _lastClusterZoom = z;
-    cancelAnimationFrame(_clusterRaf);
-    _clusterRaf = requestAnimationFrame(() => {
-      const mc = map.getContainer();
-      mc.classList.add('leaflet-cluster-anim');
-      try { clusterGroup._zoomEnd(); } catch(e) {}
-      try { clusterGroupBar._zoomEnd(); } catch(e) {}
-      setTimeout(() => mc.classList.remove('leaflet-cluster-anim'), 420);
-    });
-  }
 });
 
 function toggleMapsPicker() {

@@ -41,40 +41,38 @@
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
       z-index: 401;
       width: 94px; height: 94px;
-      background: var(--surface); border: 1px solid var(--border);
+      background: var(--surface);
       border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       clip-path: inset(0 50px 50px 0 round 16px);
       will-change: clip-path;
       transition: clip-path 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
     }
     .filter-fab.open { clip-path: inset(0 0 0 0 round 16px); }
-    /* Mini filter indicators — visible below fab when collapsed */
+    /* Filter indicators — glowing text above search field */
     .filter-indicators {
       position: fixed;
-      top: calc(env(safe-area-inset-top, 0px) + 62px);
-      left: 22px; width: 44px;
-      display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
-      z-index: 401;
-      transition: opacity 0.6s ease;
+      top: calc(env(safe-area-inset-top, 0px) + 44px);
+      left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: row; align-items: center; gap: 14px;
+      z-index: 401; pointer-events: none;
+      transition: opacity 0.8s ease;
+      white-space: nowrap;
     }
     .filter-indicators.faded {
-      opacity: 0; pointer-events: none;
-    }
-    .filter-fab.open ~ .filter-indicators {
-      opacity: 0; pointer-events: none; transition: opacity 0.18s ease;
+      opacity: 0;
     }
     .fi-text {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
-      color: var(--muted); line-height: 1.2;
+      font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      line-height: 1;
       transition: color 0.15s, text-shadow 0.15s;
     }
     .fi-text-outdoor.active {
       color: var(--orange);
-      text-shadow: 0 0 6px rgba(255,107,0,0.7);
+      text-shadow: 0 0 8px rgba(255,107,0,0.9), 0 0 20px rgba(255,107,0,0.4);
     }
     .fi-text-bar.active {
       color: var(--purple);
-      text-shadow: 0 0 6px rgba(124,58,237,0.7);
+      text-shadow: 0 0 8px rgba(124,58,237,0.9), 0 0 20px rgba(124,58,237,0.4);
     }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
@@ -490,17 +488,17 @@
       <span class="progress-fraction" id="progressFraction">0/0</span>
     </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-      <div class="filter-cell-box"></div>Ute
+      <div class="filter-cell-box"></div>UTE
     </div>
     <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
-      <div class="filter-cell-box"></div>Inne
+      <div class="filter-cell-box"></div>INNE
     </div>
   </div>
 </div>
 
 <div class="filter-indicators" id="filterIndicators">
-  <span class="fi-text fi-text-outdoor active" id="fiOutdoor">Ute</span>
-  <span class="fi-text fi-text-bar active" id="fiBar">Inne</span>
+  <span class="fi-text fi-text-outdoor active" id="fiOutdoor">UTE</span>
+  <span class="fi-text fi-text-bar active" id="fiBar">INNE</span>
 </div>
 
 <div class="search-wrap" id="searchWrap">

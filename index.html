@@ -60,6 +60,8 @@
     .filter-fab.open + .filter-indicators {
       opacity: 0; pointer-events: none; transform: translateY(-4px);
     }
+    .fi-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .fi-label { font-size: 7px; color: var(--muted); font-weight: 600; letter-spacing: 0.2px; line-height: 1; }
     .fi-box {
       width: 9px; height: 9px; border-radius: 2.5px;
       border: 1.5px solid transparent;
@@ -74,6 +76,10 @@
     .fi-bar.active {
       background: var(--purple);
       box-shadow: 0 0 5px rgba(124,58,237,0.8), 0 0 10px rgba(124,58,237,0.35);
+    }
+    .filter-icon-label {
+      font-size: 7.5px; font-weight: 700; color: var(--muted);
+      letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
     }
     .filter-grid {
       display: grid; grid-template-columns: 44px 44px; grid-template-rows: 44px 44px;
@@ -151,10 +157,12 @@
     .nearby-strip {
       display: flex; gap: 9px; padding: 10px 16px 10px 0;
       overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      scroll-snap-type: x proximity;
     }
     .nearby-strip::-webkit-scrollbar { display: none; }
     .nearby-card {
       flex-shrink: 0; width: calc((100vw - 50px) / 3);
+      scroll-snap-align: start;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px 10px 14px 11px;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -169,6 +177,10 @@
       font-size: 10px; font-weight: 600; color: var(--text);
       margin-top: 3px; line-height: 1.35;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nearby-card-type {
+      font-size: 9px; color: var(--muted); margin-top: 3px;
+      font-weight: 500; letter-spacing: 0.2px;
     }
     .nearby-card-check { color: var(--green); margin-left: 2px; }
     .fab-stack {
@@ -461,6 +473,7 @@
         <line x1="3" y1="6"   x2="12" y2="6"/>
         <line x1="5" y1="10.5" x2="10" y2="10.5"/>
       </svg>
+      <span class="filter-icon-label">Filter</span>
     </button>
     <div class="filter-cell filter-cell-progress" id="filterProgress">
       <svg width="26" height="26" viewBox="0 0 26 26">
@@ -479,8 +492,14 @@
   </div>
 </div>
 <div class="filter-indicators" id="filterIndicators">
-  <div class="fi-box fi-outdoor active" id="fiOutdoor"></div>
-  <div class="fi-box fi-bar active" id="fiBar"></div>
+  <div class="fi-item">
+    <div class="fi-box fi-outdoor active" id="fiOutdoor"></div>
+    <span class="fi-label">Ute</span>
+  </div>
+  <div class="fi-item">
+    <div class="fi-box fi-bar active" id="fiBar"></div>
+    <span class="fi-label">Inne</span>
+  </div>
 </div>
 
 <div class="search-wrap" id="searchWrap">
@@ -884,16 +903,18 @@ function showNearbyStrip(lat, lng) {
   const nearest = TABLES
     .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
     .sort((a, b) => a.d - b.d)
-    .slice(0, 3);
+    .slice(0, 9);
 
   _nearbyStrip.innerHTML = nearest.map(({ t, i, d }, idx) => {
-    const color = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-    const dist  = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
-    const check = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
-    const glow  = idx === 0 ? ' nearest-glow' : '';
+    const color    = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    const dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
+    const check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
+    const glow     = idx === 0 ? ' nearest-glow' : '';
+    const typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
-      <div class="nearby-card-dist${glow}">${dist}${check}</div>
+      <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
+      <div class="nearby-card-type">${typeLabel}</div>
     </div>`;
   }).join('');
 
@@ -1075,12 +1096,22 @@ function closeSheet() {
 
 map.on('click', closeSheet);
 
-let zoomTimer;
+let zoomTimer, _lastClusterZoom = map.getZoom();
 map.on('zoom', () => {
+  // Refresh marker icons (debounced)
   clearTimeout(zoomTimer);
   zoomTimer = setTimeout(() => {
     leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx)));
   }, 80);
+  // Update clusters dynamically as user zooms (at each integer zoom boundary)
+  const z = Math.round(map.getZoom());
+  if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
+    _lastClusterZoom = z;
+    map.removeLayer(clusterGroup);
+    map.removeLayer(clusterGroupBar);
+    map.addLayer(clusterGroup);
+    map.addLayer(clusterGroupBar);
+  }
 });
 
 function toggleMapsPicker() {

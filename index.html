@@ -1107,10 +1107,9 @@ map.on('zoom', () => {
   const z = Math.round(map.getZoom());
   if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
     _lastClusterZoom = z;
-    map.removeLayer(clusterGroup);
-    map.removeLayer(clusterGroupBar);
-    map.addLayer(clusterGroup);
-    map.addLayer(clusterGroupBar);
+    // Call MarkerCluster's internal zoomEnd — triggers its built-in split/merge animation
+    try { clusterGroup._zoomEnd(); } catch(e) {}
+    try { clusterGroupBar._zoomEnd(); } catch(e) {}
   }
 });
 

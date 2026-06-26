@@ -450,6 +450,12 @@
     }
     .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: none !important; }
     .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: none !important; }
+    /* Faster cluster split/merge animation to prevent pile-up during pinch zoom */
+    .leaflet-cluster-anim .leaflet-marker-icon,
+    .leaflet-cluster-anim .leaflet-marker-shadow {
+      transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  opacity  0.18s ease !important;
+    }
     .leaflet-control-attribution {
       background: transparent !important; color: #222 !important;
       font-size: 9px !important; border-radius: 0 !important;
@@ -1096,7 +1102,7 @@ function closeSheet() {
 
 map.on('click', closeSheet);
 
-let zoomTimer, _lastClusterZoom = map.getZoom();
+let zoomTimer, _lastClusterZoom = map.getZoom(), _clusterRaf;
 map.on('zoom', () => {
   // Refresh marker icons (debounced)
   clearTimeout(zoomTimer);
@@ -1107,9 +1113,12 @@ map.on('zoom', () => {
   const z = Math.round(map.getZoom());
   if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
     _lastClusterZoom = z;
-    // Call MarkerCluster's internal zoomEnd — triggers its built-in split/merge animation
-    try { clusterGroup._zoomEnd(); } catch(e) {}
-    try { clusterGroupBar._zoomEnd(); } catch(e) {}
+    // Defer to next animation frame so it syncs with browser render loop
+    cancelAnimationFrame(_clusterRaf);
+    _clusterRaf = requestAnimationFrame(() => {
+      try { clusterGroup._zoomEnd(); } catch(e) {}
+      try { clusterGroupBar._zoomEnd(); } catch(e) {}
+    });
   }
 });
 

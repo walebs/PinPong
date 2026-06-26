@@ -53,12 +53,15 @@
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 62px);
       left: 16px; width: 44px;
-      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
       z-index: 401;
-      transition: opacity 0.18s ease, transform 0.18s ease;
+      transition: opacity 0.6s ease;
     }
-    .filter-fab.open + .filter-indicators {
-      opacity: 0; pointer-events: none; transform: translateY(-4px);
+    .filter-indicators.faded {
+      opacity: 0; pointer-events: none;
+    }
+    .filter-fab.open ~ .filter-indicators {
+      opacity: 0; pointer-events: none; transition: opacity 0.18s ease;
     }
     .fi-text {
       font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
@@ -236,13 +239,13 @@
       width: 110px;
       contain: layout;
       will-change: width;
-      transition: width 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: width 0.38s cubic-bezier(0.28, 0.84, 0.42, 1);
     }
     .search-wrap.expanded { width: min(200px, calc(100vw - 160px)); }
     .search-label {
       font-size: 13px; font-weight: 600; color: var(--muted);
       white-space: nowrap; flex: 1;
-      transition: opacity 0.12s;
+      transition: opacity 0.18s ease;
     }
     .search-wrap.expanded .search-label { opacity: 0; pointer-events: none; position: absolute; }
     .search-field {
@@ -264,7 +267,7 @@
       color: var(--text); font-size: 14px; outline: none;
       padding: 0; min-width: 0;
       opacity: 0; pointer-events: none;
-      transition: opacity 0.18s ease 0.12s;
+      transition: opacity 0.22s ease 0.22s;
       -webkit-appearance: none;
     }
     .search-wrap.expanded .search-input { opacity: 1; pointer-events: auto; }
@@ -274,8 +277,8 @@
       border-radius: 50%; border: none; background: var(--s2);
       color: var(--muted); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; transform: scale(0.5); pointer-events: none;
-      transition: opacity 0.16s ease 0.16s, transform 0.16s ease 0.16s;
+      opacity: 0; transform: scale(0.72); pointer-events: none;
+      transition: opacity 0.2s ease 0.28s, transform 0.24s cubic-bezier(0.34, 1.3, 0.64, 1) 0.26s;
       -webkit-tap-highlight-color: transparent;
     }
     .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
@@ -494,6 +497,7 @@
     </div>
   </div>
 </div>
+
 <div class="filter-indicators" id="filterIndicators">
   <span class="fi-text fi-text-outdoor active" id="fiOutdoor">Ute</span>
   <span class="fi-text fi-text-bar active" id="fiBar">Inne</span>
@@ -884,6 +888,13 @@ function renderMarkers() {
 }
 
 renderMarkers();
+
+// Fade out UTE/INNE indicators after 5 s
+setTimeout(() => {
+  const fi = document.getElementById('filterIndicators');
+  if (fi) fi.classList.add('faded');
+}, 5000);
+
 loadSheetData().then(() => {
   const param = new URLSearchParams(location.search).get('bord');
   if (param) {

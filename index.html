@@ -52,7 +52,7 @@
     .filter-indicators {
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 62px);
-      left: 16px; width: 44px;
+      left: 16px;
       display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
       z-index: 401;
       transition: opacity 0.18s ease, transform 0.18s ease;
@@ -1105,10 +1105,10 @@ map.on('zoom', () => {
   if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
     _lastClusterZoom = z;
     cancelAnimationFrame(_clusterRaf);
-    _clusterRaf = requestAnimationFrame(() => {
+    _clusterRaf = requestAnimationFrame(() => requestAnimationFrame(() => {
       try { clusterGroup._zoomEnd(); } catch(e) {}
       try { clusterGroupBar._zoomEnd(); } catch(e) {}
-    });
+    }));
   }
 });
 

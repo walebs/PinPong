@@ -53,7 +53,7 @@
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 62px);
       left: 16px; width: 44px;
-      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
       z-index: 401;
       transition: opacity 0.18s ease, transform 0.18s ease;
     }
@@ -854,10 +854,10 @@ function makeClusterGroup(color) {
     const center = bounds.getCenter();
     if (map.getZoom() >= targetZoom) {
       // Already zoomed in enough — just pan, no zoom change
-      map.flyTo(center, map.getZoom(), { duration: 0.5, easeLinearity: 0.5 });
+      map.flyTo(center, map.getZoom(), { duration: 0.28, easeLinearity: 0.6 });
     } else {
       // Zoomed out — fly and zoom in
-      map.flyTo(center, targetZoom, { duration: 0.7, easeLinearity: 0.4 });
+      map.flyTo(center, targetZoom, { duration: 0.38, easeLinearity: 0.55 });
     }
   });
   return group;
@@ -1093,13 +1093,23 @@ function closeSheet() {
 
 map.on('click', closeSheet);
 
-let zoomTimer;
+let zoomTimer, _lastClusterZoom = map.getZoom(), _clusterRaf;
 map.on('zoom', () => {
   // Refresh marker icons (debounced)
   clearTimeout(zoomTimer);
   zoomTimer = setTimeout(() => {
     leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx)));
   }, 80);
+  // Dynamic cluster split/merge during pinch zoom
+  const z = Math.round(map.getZoom());
+  if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
+    _lastClusterZoom = z;
+    cancelAnimationFrame(_clusterRaf);
+    _clusterRaf = requestAnimationFrame(() => {
+      try { clusterGroup._zoomEnd(); } catch(e) {}
+      try { clusterGroupBar._zoomEnd(); } catch(e) {}
+    });
+  }
 });
 
 function toggleMapsPicker() {

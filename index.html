@@ -36,14 +36,14 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Filter fab — expands in-place to 2×2 grid */
+    /* Filter fab — expands in-place to 2×3 grid */
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
       z-index: 401;
-      width: 94px; height: 94px;
+      width: 94px; height: 144px;
       background: var(--surface);
       border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      clip-path: inset(0 50px 50px 0 round 16px);
+      clip-path: inset(0 50px 100px 0 round 16px);
       will-change: clip-path;
       transition: clip-path 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
     }
@@ -79,8 +79,9 @@
       letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
     }
     .filter-grid {
-      display: grid; grid-template-columns: 44px 44px; grid-template-rows: 44px 44px;
-      gap: 6px; padding: 0; width: 94px; height: 94px;
+      display: grid;
+      gap: 6px; padding: 0; width: 94px; height: 144px;
+      grid-template-columns: 44px 44px; grid-template-rows: 44px 44px 44px;
     }
     .filter-cell {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -113,6 +114,10 @@
     .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
     .filter-cell-progress:active { background: var(--surface); }
     .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
+    .filter-cell-fav      { color: rgba(255,59,48,0.35);  font-size: 10px; }
+    .filter-cell-verified { color: rgba(52,199,89,0.35);  font-size: 10px; }
+    .filter-cell-fav.active      { color: #ff3b30; background: transparent; text-shadow: 0 0 8px rgba(255,59,48,0.6); }
+    .filter-cell-verified.active { color: var(--green); background: transparent; text-shadow: 0 0 8px rgba(52,199,89,0.6); }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -248,7 +253,7 @@
     .search-wrap.expanded .search-label { opacity: 0; pointer-events: none; position: absolute; }
     .search-field {
       display: flex; align-items: center;
-      background: rgba(23,23,28,0.32); border: 1px solid rgba(42,42,53,0.35);
+      background: rgba(23,23,28,0.32); border: 1px solid rgba(255,255,255,0.13);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border-radius: 13px; height: 44px; overflow: hidden;
       box-shadow: 0 2px 12px rgba(0,0,0,0.25);
@@ -519,6 +524,14 @@
     </div>
     <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
       <div class="filter-cell-box"></div>INNE
+    </div>
+    <div class="filter-cell filter-cell-fav" id="pill-fav" onclick="toggleFilter('fav')">
+      <svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Likte
+    </div>
+    <div class="filter-cell filter-cell-verified" id="pill-verified" onclick="toggleFilter('verified')">
+      <svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Besøkt
     </div>
   </div>
 </div>
@@ -898,7 +911,7 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
-let showOutdoor=true, showBar=true, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
 let userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
@@ -942,6 +955,8 @@ function renderMarkers() {
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
+    if (showFavOnly     && !FAVORITES.has(i))         return;
+    if (showVerifiedOnly && t.verifisert !== 'ja')    return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -976,7 +991,13 @@ loadSheetData().then(() => {
 function showNearbyStrip(lat, lng) {
   const nearest = TABLES
     .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
-    .filter(({ t }) => t.type === 'outdoor' ? showOutdoor : showBar)
+    .filter(({ t, i }) => {
+      if (t.type === 'outdoor' && !showOutdoor) return false;
+      if (t.type !== 'outdoor' && !showBar) return false;
+      if (showFavOnly && !FAVORITES.has(i)) return false;
+      if (showVerifiedOnly && t.verifisert !== 'ja') return false;
+      return true;
+    })
     .sort((a, b) => a.d - b.d)
     .slice(0, 9);
 
@@ -1411,10 +1432,15 @@ document.addEventListener('click', e => {
 
 
 function toggleFilter(type) {
-  if (type==='outdoor') showOutdoor = !showOutdoor;
-  else                  showBar     = !showBar;
-  const el = document.getElementById(type==='outdoor' ? 'pill-outdoor' : 'pill-bar');
-  el.classList.toggle('active', type==='outdoor' ? showOutdoor : showBar);
+  if      (type==='outdoor')  showOutdoor      = !showOutdoor;
+  else if (type==='bar')      showBar          = !showBar;
+  else if (type==='fav')      showFavOnly      = !showFavOnly;
+  else if (type==='verified') showVerifiedOnly = !showVerifiedOnly;
+
+  const pillMap = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified' };
+  const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly };
+  document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
+
   _fiOutdoor.classList.toggle('active', showOutdoor);
   _fiBar.classList.toggle('active', showBar);
   renderMarkers(); closeSheet();

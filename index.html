@@ -52,7 +52,7 @@
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
     /* Filter ONLY the tile layer in both modes — keeps markers in their true colors */
     .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
-    body.light .leaflet-tile-pane { filter: contrast(1.06) saturate(1.18); }
+    body.light .leaflet-tile-pane { filter: contrast(1.1) saturate(1.35); }
     /* Touch screens (mobile) render tiles much brighter — compensate aggressively */
     @media (hover: none) and (pointer: coarse) {
       body.light .leaflet-tile-pane { filter: brightness(0.9) contrast(1.15) saturate(1.22); }
@@ -758,10 +758,9 @@
       top: calc(env(safe-area-inset-top, 0px) + 22px);
       left: 50%; transform: translateX(-50%);
       font-size: 17px; font-weight: 800; letter-spacing: -0.4px;
-      color: white; pointer-events: none; white-space: nowrap;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.35);
+      color: var(--orange); pointer-events: none; white-space: nowrap;
+      animation: label-glow 4s ease-in-out infinite;
     }
-    body.light .app-wordmark { color: var(--text); text-shadow: 0 1px 4px rgba(0,0,0,0.08); }
     .cluster-icon {
       width: 30px; height: 30px; background: #FF9500;
       border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);

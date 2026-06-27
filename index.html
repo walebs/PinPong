@@ -1157,7 +1157,7 @@ function openSheet(idx, _fromNav) {
   _nearbyContainer.classList.add('sheet-open');
   _fabStack.classList.add('sheet-open');
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index===idx, index)));
-  map.panTo([t.lat, t.lng], { animate:true, duration: alreadyOpen ? 0.2 : 0.35 });
+  if (!_cardAnimating) map.panTo([t.lat, t.lng], { animate:true, duration: alreadyOpen ? 0.2 : 0.35 });
   updateHeartBtn();
 }
 
@@ -1478,7 +1478,7 @@ function buildSwipeList(fromIdx) {
   _swipePos = _swipeList.indexOf(fromIdx);
 }
 
-const _cardEase = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+const _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)'; // iOS spring feel
 let _cardAnimating = false;
 
 function sheetSwipeTo(nextIdx, dir) {
@@ -1488,33 +1488,44 @@ function sheetSwipeTo(nextIdx, dir) {
   const card = document.getElementById('sheetCard');
   if (!card) { openSheet(nextIdx, true); _cardAnimating = false; return; }
 
-  // Clone current card as ghost
+  // 1. Clone current card as ghost with exact pixel height
+  const cardH = card.offsetHeight;
   const ghost = card.cloneNode(true);
   ghost.removeAttribute('id');
   ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-  ghost.style.cssText = `position:absolute;top:0;left:0;right:0;pointer-events:none;z-index:5;background:var(--surface);`;
+  ghost.style.cssText = [
+    'position:absolute', 'top:0', 'left:0', 'right:0',
+    `height:${cardH}px`, 'pointer-events:none', 'z-index:5',
+    'will-change:transform'
+  ].join(';');
   card.parentNode.insertBefore(ghost, card);
 
-  // Place new card offscreen in the incoming direction
-  const fromX = dir > 0 ? '100%' : '-100%';
-  card.style.cssText = `transform:translateX(${fromX});`;
+  // 2. Move new card off-screen (no transition yet)
+  card.style.willChange = 'transform';
+  card.style.transition = 'none';
+  card.style.transform  = `translateX(${dir > 0 ? '100%' : '-100%'})`;
 
-  // Update content
+  // 3. Update content while card is hidden off-screen
   openSheet(nextIdx, true);
 
-  // Animate: ghost exits, card enters
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    ghost.style.transition = `transform 0.3s ${_cardEase}`;
-    ghost.style.transform  = `translateX(${dir > 0 ? '-28%' : '28%'})`;
-    card.style.transition  = `transform 0.3s ${_cardEase}`;
-    card.style.transform   = 'translateX(0)';
-    setTimeout(() => {
-      ghost.remove();
-      card.style.transition = '';
-      card.style.transform  = '';
-      _cardAnimating = false;
-    }, 310);
-  }));
+  // 4. Force reflow — commits both positions to the GPU before transition begins
+  // This is the key: browser renders initial state synchronously, no async gap
+  void card.offsetWidth;
+
+  // 5. Start transition on both simultaneously — zero delay, zero blink
+  const t = `transform 0.38s ${_cardEase}`;
+  ghost.style.transition = t;
+  ghost.style.transform  = `translateX(${dir > 0 ? '-100%' : '100%'})`;
+  card.style.transition  = t;
+  card.style.transform   = 'translateX(0)';
+
+  setTimeout(() => {
+    ghost.remove();
+    card.style.transition  = '';
+    card.style.transform   = '';
+    card.style.willChange  = '';
+    _cardAnimating = false;
+  }, 400);
 }
 
 window.sheetNav = function(dir) {

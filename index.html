@@ -194,10 +194,13 @@
     }
     .nearby-label {
       flex: 1; text-align: center;
-      font-family: 'Russo One', 'Arial Black', sans-serif;
-      font-size: 13px; font-weight: 400; letter-spacing: 3px;
+      font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
       color: var(--orange); text-transform: uppercase;
-      animation: wordmark-glow 3s ease-in-out infinite;
+      animation: nearby-glow 3s ease-in-out infinite;
+    }
+    @keyframes nearby-glow {
+      0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.4), 0 0 12px rgba(255,149,0,0.15); }
+      50%       { text-shadow: 0 0 10px rgba(255,149,0,1), 0 0 22px rgba(255,149,0,0.45); }
     }
     @keyframes wordmark-glow {
       0%, 100% {
@@ -215,7 +218,6 @@
           0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
       }
     }
-    body.light .nearby-label { color: var(--orange); }
 
     /* ── Profile page ───────────────────────────────────── */
     .profile-page {

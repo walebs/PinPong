@@ -470,8 +470,8 @@
       display: flex; flex-direction: column;
     }
     @media (max-width: 480px) {
-      .bottom-sheet { max-height: min(520px, calc(100dvh - 110px)); }
-      .sheet-photo { height: 145px; }
+      .bottom-sheet { max-height: min(580px, calc(100dvh - 100px)); }
+      .sheet-photo { height: 195px; }
       .sheet-body { padding: 10px 14px calc(8px + env(safe-area-inset-bottom, 0px)); }
       .sheet-type { font-size: 10px; margin-bottom: 2px; }
       .sheet-name { font-size: 16px; margin-bottom: 6px; }
@@ -561,7 +561,7 @@
     .search-result-item:last-child { border-bottom: none; }
     .search-result-item:active { background: var(--s2); }
     .sheet-photo-wrap { flex-shrink: 0; }
-    .sheet-photo { width: 100%; height: 165px; object-fit: cover; display: none; background: var(--s2); }
+    .sheet-photo { width: 100%; height: 220px; object-fit: cover; display: none; background: var(--s2); }
     .sheet-photo.visible { display: block; }
     .sheet-body {
       flex: 0 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -2284,7 +2284,14 @@ function buildSwipeList(fromIdx) {
     : { lat: TABLES[fromIdx].lat, lng: TABLES[fromIdx].lng };
   _swipeList = TABLES
     .map((t, i) => ({ i, d: haversine(ref.lat, ref.lng, t.lat, t.lng) }))
-    .filter(({ i }) => { const t = TABLES[i]; return t.type === 'outdoor' ? showOutdoor : showBar; })
+    .filter(({ i }) => {
+      const t = TABLES[i];
+      if (!(t.type === 'outdoor' ? showOutdoor : showBar))              return false;
+      if (showFavOnly      && !FAVORITES.has(i))                        return false;
+      if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
+      if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
+      return true;
+    })
     .sort((a, b) => a.d - b.d)
     .map(({ i }) => i);
   _swipePos = _swipeList.indexOf(fromIdx);

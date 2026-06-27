@@ -293,6 +293,74 @@
       text-align: center; font-size: 13px;
       color: var(--muted); letter-spacing: 0.2px;
     }
+    .profile-item-sub {
+      font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px;
+    }
+    /* ── Settings page ──────────────────────────────────── */
+    .settings-body {
+      padding: 20px 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 40px);
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .settings-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 8px; padding-left: 4px;
+    }
+    .settings-card {
+      background: var(--surface); border-radius: 18px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; gap: 12px;
+    }
+    .settings-row + .settings-row { border-top: 1px solid var(--border); }
+    .settings-row-label {
+      font-size: 15px; font-weight: 500; color: var(--text);
+    }
+    .settings-row-sub {
+      font-size: 11px; color: var(--muted); margin-top: 1px;
+    }
+    .seg-control {
+      display: flex; background: var(--s2); border-radius: 10px;
+      padding: 3px; gap: 3px;
+    }
+    .seg-btn {
+      padding: 6px 14px; border: none; border-radius: 7px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      background: transparent; color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .seg-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+    .ios-toggle {
+      position: relative; width: 51px; height: 31px; flex-shrink: 0;
+    }
+    .ios-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .ios-toggle-track {
+      position: absolute; inset: 0; border-radius: 999px;
+      background: var(--border); transition: background 0.22s;
+      cursor: pointer;
+    }
+    .ios-toggle input:checked + .ios-toggle-track { background: var(--green); }
+    .ios-toggle-track::after {
+      content: ''; position: absolute;
+      top: 3px; left: 3px;
+      width: 25px; height: 25px; border-radius: 50%;
+      background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      transition: transform 0.22s cubic-bezier(0.22,1,0.36,1);
+    }
+    .ios-toggle input:checked + .ios-toggle-track::after { transform: translateX(20px); }
+    .settings-about {
+      text-align: center; color: var(--muted); font-size: 13px;
+      line-height: 1.6; padding: 8px 0 4px;
+    }
     /* ── Rapport page ──────────────────────────────────── */
     .rapport-body {
       padding: 20px 16px;
@@ -967,9 +1035,12 @@
       <button class="profile-item" onclick="profileRapporter()">
         <div class="profile-item-left">
           <span class="profile-item-icon" style="background:rgba(255,149,0,0.12);color:var(--orange)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </span>
-          Rapporter et bord
+          <div>
+            <div data-i18n="profile.tips">Kjenner du et bord? 🏓</div>
+            <div class="profile-item-sub" data-i18n="profile.tips.sub">Tips oss om et sted!</div>
+          </div>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -984,11 +1055,70 @@
     <button class="profile-back" onclick="closeSettings()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span class="fav-header-title">Innstillinger</span>
+    <span class="fav-header-title" data-i18n="settings.title">Innstillinger</span>
     <div style="width:36px"></div>
   </div>
-  <div class="fav-list" style="color:var(--muted);text-align:center;padding-top:60px;font-size:15px">
-    Kommer snart 🏓
+  <div class="settings-body">
+
+    <!-- Utseende -->
+    <div>
+      <div class="settings-section-label" data-i18n="settings.appearance">Utseende</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label" data-i18n="settings.theme">Tema</div>
+            <div class="settings-row-sub" data-i18n="settings.theme.sub">Velg lyst eller mørkt kart</div>
+          </div>
+          <div class="seg-control">
+            <button class="seg-btn" id="seg-light" onclick="setThemeFromSettings(true)" data-i18n="settings.light">☀ Lyst</button>
+            <button class="seg-btn" id="seg-dark"  onclick="setThemeFromSettings(false)" data-i18n="settings.dark">🌙 Mørkt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Språk -->
+    <div>
+      <div class="settings-section-label" data-i18n="settings.language">Språk / Language</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">🇳🇴 / 🇬🇧</div>
+            <div class="settings-row-sub" id="langSubLabel">Velg språk i appen</div>
+          </div>
+          <div class="seg-control">
+            <button class="seg-btn" id="seg-no" onclick="setLang('no')">🇳🇴 Norsk</button>
+            <button class="seg-btn" id="seg-en" onclick="setLang('en')">🇬🇧 English</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kart -->
+    <div>
+      <div class="settings-section-label" data-i18n="settings.map">Kart</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label" data-i18n="settings.hide_visited">Skjul bord jeg har besøkt</div>
+            <div class="settings-row-sub" data-i18n="settings.hide_visited.sub">Vis kun bord du ikke har sett ennå</div>
+          </div>
+          <label class="ios-toggle">
+            <input type="checkbox" id="toggleHideVisited" onchange="applyHideVisited(this.checked)">
+            <div class="ios-toggle-track"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Om appen -->
+    <div class="settings-about">
+      <div style="font-size:24px;margin-bottom:6px">🏓</div>
+      <div style="font-weight:700;font-size:15px;color:var(--text)">PinPong</div>
+      <div style="margin-top:4px" data-i18n="profile.sub">Bordtennis bord i Oslo, Lørenskog og Lillestrøm!</div>
+      <div style="margin-top:10px;font-size:11px">🇳🇴 Designed in Norway · v1.0</div>
+    </div>
+
   </div>
 </div>
 
@@ -1102,7 +1232,7 @@
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
     </button>
-    <div class="nearby-label">Nærmeste</div>
+    <div class="nearby-label" data-i18n="nearby.label">Nærmeste</div>
     <button class="nearby-locate-btn" onclick="locateMe()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
@@ -1142,7 +1272,7 @@
     <div class="sheet-actions">
       <button class="btn-directions" onclick="toggleMapsPicker()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-        Veibeskrivelse
+        <span data-i18n="sheet.directions">Veibeskrivelse</span>
       </button>
       <button class="btn-share" onclick="shareTable()" title="Del">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -1531,6 +1661,7 @@ function renderMarkers() {
     if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
     if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
+    if (hideVisited      && t.verifisert === 'ja')                                       return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -1543,8 +1674,8 @@ function renderMarkers() {
 }
 
 renderMarkers();
-
 updateMiniIndicators();
+applyLang();
 
 loadSheetData().then(() => {
   const param = new URLSearchParams(location.search).get('bord');
@@ -1568,6 +1699,7 @@ function showNearbyStrip(lat, lng) {
       if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                       return false;
+      if (hideVisited      && t.verifisert === 'ja')                                return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -1771,26 +1903,26 @@ function openSheet(idx, _fromNav) {
     let s = ''; for (let i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
   };
   let statsHtml = '';
-  if (t.verifisert==='ja')       statsHtml += si({ label:'Status', val:'✓ Verifisert', cls:' verified' });
-  else if (t.verifisert==='nei') statsHtml += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
-  else                           statsHtml += si({ label:'Status', val:'Ikke besøkt' });
-  if (t.tilstand)  statsHtml += si({ label:'Tilstand', val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
-  if (t.antall)    statsHtml += si({ label:'Antall',   val: esc(t.antall) });
+  if (t.verifisert==='ja')       statsHtml += si({ label:t('stats.status'), val:t('stats.verifisert'), cls:' verified' });
+  else if (t.verifisert==='nei') statsHtml += si({ label:t('stats.status'), val:t('stats.ikke_funnet'), cls:' not-found' });
+  else                           statsHtml += si({ label:t('stats.status'), val:t('stats.ikke_besøkt') });
+  if (t.tilstand)  statsHtml += si({ label:t('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+  if (t.antall)    statsHtml += si({ label:t('stats.antall'),   val: esc(t.antall) });
   if (t.under_tak) {
-    const takVal = /ja/i.test(t.under_tak) ? '☂ Ja' : /nei/i.test(t.under_tak) ? 'Nei' : esc(t.under_tak);
+    const takVal = /ja/i.test(t.under_tak) ? `☂ ${t('stats.ja')}` : /nei/i.test(t.under_tak) ? t('stats.nei') : esc(t.under_tak);
     const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
-    statsHtml += si({ label:'Under tak', val: takVal, cls: takCls });
+    statsHtml += si({ label:t('stats.under_tak'), val: takVal, cls: takCls });
   }
   if (t.belysning) {
-    const lysVal = /ja/i.test(t.belysning) ? '💡 Ja' : /nei/i.test(t.belysning) ? 'Nei' : esc(t.belysning);
+    const lysVal = /ja/i.test(t.belysning) ? `💡 ${t('stats.ja')}` : /nei/i.test(t.belysning) ? t('stats.nei') : esc(t.belysning);
     const lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
-    statsHtml += si({ label:'Belysning', val: lysVal, cls: lysCls });
+    statsHtml += si({ label:t('stats.belysning'), val: lysVal, cls: lysCls });
   }
-  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:'Vibe', val: renderStars(t.vibe), cls:' stars' });
+  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:t('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';
   if (t.notater && t.notater.trim()) {
-    notesHtml = `<div class="notes-inline"><span class="notes-tag">Notater</span>${esc(t.notater.trim())}</div>`;
+    notesHtml = `<div class="notes-inline"><span class="notes-tag">${t('notes.label')}</span>${esc(t.notater.trim())}</div>`;
   }
   _sheetNote.innerHTML = notesHtml;
   const alreadyOpen = _bottomSheet.classList.contains('open');
@@ -1905,7 +2037,7 @@ function profileFavoritter() {
 
     list.innerHTML = sorted.map(({ i, t, d }) => {
       const typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-      const typeLabel = t.type === 'outdoor' ? 'Utebord' : 'Innebord';
+      const typeLabel = t.type === 'outdoor' ? t('type.outdoor') : t('type.bar');
       const distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
       const verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
       const imgHtml = t.bilde_url
@@ -2007,11 +2139,182 @@ addSwipeToDismiss(document.getElementById('profilePage'),  () => document.getEle
 addSwipeToDismiss(document.getElementById('favPage'),      () => document.getElementById('favPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('settingsPage'), () => document.getElementById('settingsPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
+// ── i18n ───────────────────────────────────────────────
+const LANG = {
+  no: {
+    'nearby.label':         'Nærmeste',
+    'sheet.directions':     'Veibeskrivelse',
+    'search.placeholder':   'Søk etter bord…',
+    'search.label':         'Søk…',
+    'stats.status':         'Status',
+    'stats.tilstand':       'Tilstand',
+    'stats.antall':         'Antall',
+    'stats.under_tak':      'Under tak',
+    'stats.belysning':      'Belysning',
+    'stats.vibe':           'Vibe',
+    'stats.verifisert':     '✓ Verifisert',
+    'stats.ikke_funnet':    'Ikke funnet',
+    'stats.ikke_besøkt':    'Ikke besøkt',
+    'stats.ja':             'Ja',
+    'stats.nei':            'Nei',
+    'nav.bord':             'bord',
+    'notes.label':          'Notater',
+    'type.outdoor':         'Utebord',
+    'type.bar':             'Innebord',
+    'filter.ute':           'UTE',
+    'filter.inne':          'INNE',
+    'filter.tak':           'TAK',
+    'filter.likte':         'Likte',
+    'filter.besøkt':        'Besøkt',
+    'filter.lys':           'LYS',
+    'profile.favoritter':   'Favoritter',
+    'profile.innstillinger':'Innstillinger',
+    'profile.tips':         'Kjenner du et bord? 🏓',
+    'profile.tips.sub':     'Tips oss om et sted!',
+    'profile.sub':          'Bordtennis bord i Oslo, Lørenskog og Lillestrøm!',
+    'fav.title':            '❤ Favoritter',
+    'fav.empty':            'Du har ingen favoritter ennå.\nTrykk ❤ på et bord for å lagre det her.',
+    'settings.title':       'Innstillinger',
+    'settings.appearance':  'Utseende',
+    'settings.theme':       'Tema',
+    'settings.theme.sub':   'Velg lyst eller mørkt kart',
+    'settings.light':       '☀ Lyst',
+    'settings.dark':        '🌙 Mørkt',
+    'settings.language':    'Språk / Language',
+    'settings.map':         'Kart',
+    'settings.hide_visited':'Skjul bord jeg har besøkt',
+    'settings.hide_visited.sub':'Vis kun bord du ikke har sett ennå',
+    'lang.sub':             'Velg språk i appen',
+    'rapport.title':        'Tips oss om et bord!',
+  },
+  en: {
+    'nearby.label':         'Nearest',
+    'sheet.directions':     'Directions',
+    'search.placeholder':   'Search tables…',
+    'search.label':         'Search…',
+    'stats.status':         'Status',
+    'stats.tilstand':       'Condition',
+    'stats.antall':         'Tables',
+    'stats.under_tak':      'Covered',
+    'stats.belysning':      'Lighting',
+    'stats.vibe':           'Vibe',
+    'stats.verifisert':     '✓ Verified',
+    'stats.ikke_funnet':    'Not found',
+    'stats.ikke_besøkt':    'Not visited',
+    'stats.ja':             'Yes',
+    'stats.nei':            'No',
+    'nav.bord':             'tables',
+    'notes.label':          'Notes',
+    'type.outdoor':         'Outdoor',
+    'type.bar':             'Indoor',
+    'filter.ute':           'OUT',
+    'filter.inne':          'IN',
+    'filter.tak':           'ROOF',
+    'filter.likte':         'Liked',
+    'filter.besøkt':        'Visited',
+    'filter.lys':           'LIGHT',
+    'profile.favoritter':   'Favorites',
+    'profile.innstillinger':'Settings',
+    'profile.tips':         'Know a table? 🏓',
+    'profile.tips.sub':     'Tip us about a spot!',
+    'profile.sub':          'Ping pong tables in Oslo, Lørenskog and Lillestrøm!',
+    'fav.title':            '❤ Favorites',
+    'fav.empty':            'No favorites yet.\nTap ❤ on a table to save it here.',
+    'settings.title':       'Settings',
+    'settings.appearance':  'Appearance',
+    'settings.theme':       'Theme',
+    'settings.theme.sub':   'Choose light or dark map',
+    'settings.light':       '☀ Light',
+    'settings.dark':        '🌙 Dark',
+    'settings.language':    'Language / Språk',
+    'settings.map':         'Map',
+    'settings.hide_visited':'Hide tables I\'ve visited',
+    'settings.hide_visited.sub':'Show only tables you haven\'t seen yet',
+    'lang.sub':             'Choose app language',
+    'rapport.title':        'Tip us about a table!',
+  }
+};
+
+let currentLang = localStorage.getItem('pinpong-lang') || 'no';
+
+function t(key) {
+  return (LANG[currentLang] && LANG[currentLang][key]) || LANG.no[key] || key;
+}
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+  // Search input placeholder
+  const si = document.getElementById('searchInput');
+  if (si) si.placeholder = t('search.placeholder');
+  const sl = document.querySelector('.search-label');
+  if (sl) sl.textContent = t('search.label');
+  // Segment button active states
+  document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
+  document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
+  document.getElementById('langSubLabel').textContent = t('lang.sub');
+  // Filter cell labels
+  const filterLabels = {
+    'pill-outdoor': 'filter.ute', 'pill-bar': 'filter.inne',
+    'pill-roof': 'filter.tak', 'pill-fav': 'filter.likte',
+    'pill-verified': 'filter.besøkt', 'pill-light': 'filter.lys'
+  };
+  Object.entries(filterLabels).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // update only the text node (last child), not the svg/box child
+    const textNodes = [...el.childNodes].filter(n => n.nodeType === 3);
+    if (textNodes.length) textNodes[textNodes.length-1].textContent = '\n' + t(key);
+  });
+  updateSheetNav();
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('pinpong-lang', lang);
+  applyLang();
+}
+
+// ── Settings: theme from settings page ──────────────────
+function setThemeFromSettings(isLight) {
+  applyTheme(isLight);
+  swapTiles(isLight);
+  localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
+  document.getElementById('seg-light').classList.toggle('active', isLight);
+  document.getElementById('seg-dark').classList.toggle('active', !isLight);
+}
+
+function syncSettingsUI() {
+  const isLight = document.body.classList.contains('light');
+  document.getElementById('seg-light')?.classList.toggle('active', isLight);
+  document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
+  document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
+  document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
+  const hv = localStorage.getItem('pinpong-hide-visited') === 'true';
+  const tog = document.getElementById('toggleHideVisited');
+  if (tog) tog.checked = hv;
+}
+
+// ── Hide visited toggle ──────────────────────────────────
+let hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
+function applyHideVisited(val) {
+  hideVisited = val;
+  localStorage.setItem('pinpong-hide-visited', val);
+  renderMarkers();
+  if (userLat !== null) showNearbyStrip(userLat, userLng);
+}
+
 function profileSettings() {
+  syncSettingsUI();
   document.getElementById('settingsPage').classList.add('open');
 }
 function closeSettings() {
-  document.getElementById('settingsPage').classList.remove('open');
+  const sp = document.getElementById('settingsPage');
+  sp.style.transition = '';
+  sp.style.transform  = '';
+  sp.classList.remove('open');
 }
 // ── Rate limiting: max 3 rapport submissions per 24h ────
 const _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
@@ -2367,6 +2670,7 @@ function buildSwipeList(fromIdx) {
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                      return false;
+      if (hideVisited      && t.verifisert === 'ja')                               return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -2451,7 +2755,7 @@ function updateSheetNav() {
   if (!label) return;
   const total = _swipeList.length;
   const pos   = _swipePos + 1;
-  label.textContent = `${pos} / ${total} bord`;
+  label.textContent = `${pos} / ${total} ${t('nav.bord')}`;
   prev.disabled = _swipePos <= 0;
   next.disabled = _swipePos >= total - 1;
 }

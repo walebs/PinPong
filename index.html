@@ -121,18 +121,18 @@
     .fmi {
       width: 20px; height: 20px;
       display: flex; align-items: center; justify-content: center;
-      color: var(--muted); opacity: 0.2;
+      color: var(--muted); opacity: 0.35;
       transition: color 0.2s, opacity 0.2s, filter 0.2s;
     }
     .fmi svg { width: 15px; height: 15px; }
     .fmi.on { opacity: 1; }
-    .fmi-ute.on   { color: var(--orange); filter: drop-shadow(0 0 4px rgba(255,149,0,0.8)); }
-    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 4px rgba(139,92,246,0.8)); }
-    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 4px rgba(100,160,255,0.8)); }
-    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 4px rgba(255,55,95,0.8)); }
-    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
-    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
-    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 4px rgba(255,214,0,0.9)); }
+    .fmi-ute.on   { color: var(--orange); filter: drop-shadow(0 0 5px rgba(255,149,0,1))   drop-shadow(0 0 12px rgba(255,149,0,0.55)); }
+    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 5px rgba(139,92,246,1))  drop-shadow(0 0 12px rgba(139,92,246,0.55)); }
+    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 5px rgba(100,160,255,1)) drop-shadow(0 0 12px rgba(100,160,255,0.55)); }
+    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 5px rgba(255,55,95,1))   drop-shadow(0 0 12px rgba(255,55,95,0.55)); }
+    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 12px rgba(52,199,89,0.55)); }
+    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 12px rgba(52,199,89,0.55)); }
+    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 5px rgba(255,214,0,1))   drop-shadow(0 0 12px rgba(255,214,0,0.6)); }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
       letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
@@ -2145,16 +2145,6 @@ function closeSettings() {
   sp.style.transition = ''; sp.style.transform = '';
   sp.classList.remove('open');
 }
-function syncSettingsUI() {
-  const isLight = document.body.classList.contains('light');
-  document.getElementById('seg-light')?.classList.toggle('active', isLight);
-  document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
-}
-function setThemeFromSettings(isLight) {
-  applyTheme(isLight); swapTiles(isLight);
-  localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
-  syncSettingsUI();
-}
 // ── i18n (stub — full implementation coming) ───────────
 const LANG = {
   no: {
@@ -2288,24 +2278,20 @@ function setLang(lang) {
   applyLang();
 }
 
-// ── Settings: theme from settings page ──────────────────
+// ── Settings: theme + sync ──────────────────────────────
 function setThemeFromSettings(isLight) {
   applyTheme(isLight);
   swapTiles(isLight);
   localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
-  document.getElementById('seg-light').classList.toggle('active', isLight);
-  document.getElementById('seg-dark').classList.toggle('active', !isLight);
+  syncSettingsUI();
 }
 
 function syncSettingsUI() {
   const isLight = document.body.classList.contains('light');
   document.getElementById('seg-light')?.classList.toggle('active', isLight);
   document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
-  document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
-  document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
-  const hv = localStorage.getItem('pinpong-hide-visited') === 'true';
   const tog = document.getElementById('toggleHideVisited');
-  if (tog) tog.checked = hv;
+  if (tog) tog.checked = hideVisited;
 }
 
 // ── Hide visited toggle ──────────────────────────────────

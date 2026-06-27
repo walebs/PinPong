@@ -50,8 +50,14 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Filter applied via JS in applyTileFilter() to avoid CSS cascade issues */
-    .leaflet-tile-pane { transition: filter 0.4s ease; }
+    /* Dark mode: filter only tile pane so markers stay vivid */
+    .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
+    /* Light mode: filter whole map — saturate/contrast don't shift marker hue */
+    body.light #map { filter: brightness(0.96) contrast(1.12) saturate(1.65); }
+    body.light .leaflet-tile-pane { filter: none; }
+    @media (hover: none) and (pointer: coarse) {
+      body.light #map { filter: brightness(0.88) contrast(1.15) saturate(1.65); }
+    }
     /* Light mode: white search field */
     body.light .search-field {
       background: rgba(255,255,255,0.92);
@@ -2322,20 +2328,6 @@ window.resetSheetHistory = () => {}; // kept for compat
   const MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
   const SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
-  function applyTileFilter(light) {
-    // Apply directly via JS — bypasses CSS cascade/specificity issues
-    const pane = document.querySelector('.leaflet-tile-pane');
-    if (!pane) return;
-    const isMobile = window.matchMedia('(hover:none) and (pointer:coarse)').matches;
-    if (light) {
-      pane.style.filter = isMobile
-        ? 'brightness(0.88) contrast(1.15) saturate(1.65)'
-        : 'brightness(0.96) contrast(1.12) saturate(1.65)';
-    } else {
-      pane.style.filter = 'brightness(1.45) contrast(1.12)';
-    }
-  }
-
   function applyTheme(light) {
     document.body.classList.toggle('light', light);
     const icon = document.getElementById('themeIcon');
@@ -2343,7 +2335,6 @@ window.resetSheetHistory = () => {}; // kept for compat
     const tc = document.getElementById('metaThemeColor');
     if (tc) tc.content = light ? '#f2f2f7' : '#0c0c0f';
     document.documentElement.style.background = light ? '#f2f2f7' : '#0c0c0f';
-    applyTileFilter(light);
   }
 
   function swapTiles(light) {
@@ -2366,7 +2357,7 @@ window.resetSheetHistory = () => {}; // kept for compat
   const savedLight = localStorage.getItem('pinpong-theme') === 'light';
   applyTheme(savedLight);
   // Tiles swap after map is ready
-  if (savedLight) setTimeout(() => { swapTiles(true); applyTileFilter(true); }, 0);
+  if (savedLight) setTimeout(() => swapTiles(true), 0);
 })();
 
 if ('serviceWorker' in navigator) {

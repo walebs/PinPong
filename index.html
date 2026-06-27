@@ -1224,7 +1224,6 @@
   </button>
 </div>
 <div id="map"></div>
-<div style="position:fixed;top:4px;right:4px;z-index:9999;background:red;color:white;font-size:11px;padding:2px 6px;border-radius:4px;pointer-events:none">v2706</div>
 <div class="nearby-container" id="nearbyContainer">
   <div class="nearby-header">
     <button class="nearby-profile-btn" onclick="openProfile()">
@@ -1325,15 +1324,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
-<script>
-window.onerror = function(msg, src, line, col, err) {
-  const el = document.getElementById('_errbox');
-  if (el) el.innerHTML += '<br>' + line + ': ' + msg;
-  return false;
-};
-</script>
-<div id="_errbox" style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:rgba(200,0,0,0.92);color:#fff;font-size:11px;padding:6px 8px;pointer-events:none;display:none"></div>
-<script>document.getElementById('_errbox').style.display='block';</script>
 <script>
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -1687,7 +1677,6 @@ function renderMarkers() {
 
 renderMarkers();
 updateMiniIndicators();
-applyLang();
 
 loadSheetData().then(() => {
   const param = new URLSearchParams(location.search).get('bord');
@@ -2283,6 +2272,9 @@ function setLang(lang) {
   localStorage.setItem('pinpong-lang', lang);
   applyLang();
 }
+
+// Apply language now that LANG is defined
+applyLang();
 
 // ── Settings: theme from settings page ──────────────────
 function setThemeFromSettings(isLight) {

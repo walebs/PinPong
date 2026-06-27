@@ -21,8 +21,8 @@
       --text:    #f0f0f5;
       --muted:   #606070;
       --blue:    #3B8BFF;
-      --orange:  #FF6B00;
-      --purple:  #7C3AED;
+      --orange:  #FF9500;
+      --purple:  #8B5CF6;
       --green:   #34C759;
       --yellow:  #FFD60A;
     }
@@ -539,7 +539,7 @@
     .theme-btn:active { background: var(--s2); }
     body.light .theme-btn { transform: rotate(180deg); }
     .cluster-icon {
-      width: 30px; height: 30px; background: #FF6B00;
+      width: 30px; height: 30px; background: #FF9500;
       border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);
       display: flex; align-items: center; justify-content: center;
       font-size: 13px; font-weight: 800; color: white;
@@ -985,10 +985,7 @@ function updateHeartBtn() {
 }
 
 function makeIcon(t, highlighted=false, tableIdx=-1) {
-  const isLightMode = document.body.classList.contains('light');
-  const color = t.type==='outdoor'
-    ? (isLightMode ? '#FF9500' : '#FF6B00')
-    : (isLightMode ? '#9333EA' : '#7C3AED');
+  const color = t.type==='outdoor' ? '#FF9500' : '#8B5CF6';
   const size  = iconSize(highlighted);
   const glow  = highlighted ? `filter:drop-shadow(0 0 8px ${color}99);` : '';
   const opacity = t.verifisert==="nei" ? 0.35 : 1;
@@ -1047,9 +1044,8 @@ function renderMarkers() {
   if (clusterGroup)    map.removeLayer(clusterGroup);
   if (clusterGroupBar) map.removeLayer(clusterGroupBar);
   leafletMarkers = [];
-  const _lm = document.body.classList.contains('light');
-  clusterGroup    = makeClusterGroup(_lm ? '#FF9500' : '#FF6B00');
-  clusterGroupBar = makeClusterGroup(_lm ? '#9333EA' : '#7C3AED');
+  clusterGroup    = makeClusterGroup('#FF9500');
+  clusterGroupBar = makeClusterGroup('#8B5CF6');
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;

@@ -124,15 +124,15 @@
       color: var(--text); opacity: 0.45;
       transition: color 0.2s, opacity 0.2s, filter 0.2s;
     }
-    .fmi svg { width: 18px; height: 18px; stroke-width: 2; }
+    .fmi svg { width: 18px; height: 18px; }
     .fmi.on { opacity: 1; }
-    .fmi-ute.on   { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 12px rgba(52,199,89,0.55)); }
-    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 5px rgba(139,92,246,1))  drop-shadow(0 0 12px rgba(139,92,246,0.55)); }
-    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 5px rgba(100,160,255,1)) drop-shadow(0 0 12px rgba(100,160,255,0.55)); }
-    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 5px rgba(255,55,95,1))   drop-shadow(0 0 12px rgba(255,55,95,0.55)); }
-    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 12px rgba(52,199,89,0.55)); }
-    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 12px rgba(52,199,89,0.55)); }
-    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 5px rgba(255,214,0,1))   drop-shadow(0 0 12px rgba(255,214,0,0.6)); }
+    .fmi-ute.on   { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 10px rgba(52,199,89,0.5)); }
+    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 5px rgba(139,92,246,1))  drop-shadow(0 0 10px rgba(139,92,246,0.5)); }
+    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 5px rgba(100,160,255,1)) drop-shadow(0 0 10px rgba(100,160,255,0.5)); }
+    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 5px rgba(255,55,95,1))   drop-shadow(0 0 10px rgba(255,55,95,0.5)); }
+    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 10px rgba(52,199,89,0.5)); }
+    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 10px rgba(52,199,89,0.5)); }
+    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 5px rgba(255,214,0,1))   drop-shadow(0 0 10px rgba(255,214,0,0.5)); }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
       letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
@@ -196,11 +196,7 @@
       flex: 1; text-align: center;
       font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
       color: var(--orange); text-transform: uppercase;
-      animation: nearby-glow 3s ease-in-out infinite;
-    }
-    @keyframes nearby-glow {
-      0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.4), 0 0 12px rgba(255,149,0,0.15); }
-      50%       { text-shadow: 0 0 10px rgba(255,149,0,1), 0 0 22px rgba(255,149,0,0.45); }
+      animation: label-glow 4s ease-in-out infinite;
     }
     @keyframes wordmark-glow {
       0%, 100% {
@@ -218,6 +214,11 @@
           0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
       }
     }
+    @keyframes label-glow {
+      0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.15); }
+      50%       { text-shadow: 0 0 10px rgba(255,149,0,0.6), 0 0 20px rgba(255,149,0,0.2); }
+    }
+    body.light .nearby-label { font-weight: 800; }
 
     /* ── Profile page ───────────────────────────────────── */
     .profile-page {
@@ -935,10 +936,12 @@
       <span class="progress-fraction" id="progressFraction">0/0</span>
     </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" style="margin-right:3px;flex-shrink:0"><polygon points="12,3 20,15 4,15"/><polygon points="12,8 19,19 5,19"/><line x1="12" y1="19" x2="12" y2="22"/></svg>UTE
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,3 20,15 4,15"/><polygon points="12,8 19,19 5,19"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      UTE
     </div>
     <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" style="margin-right:3px;flex-shrink:0"><path d="M3 11.5L12 4l9 7.5"/><rect x="5" y="11.5" width="14" height="9.5" rx="1"/><rect x="9.5" y="15" width="5" height="6" rx="0.5"/></svg>INNE
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11L12 4l9 7"/><rect x="5" y="11" width="14" height="10" rx="1"/><rect x="9.5" y="15" width="5" height="6" rx="0.5"/></svg>
+      INNE
     </div>
     <div class="filter-cell filter-cell-roof" id="pill-roof" onclick="toggleFilter('roof')">
       <svg width="14" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M9 21V12h6v9"/><path d="M3 9.5v11.5h18V9.5"/></svg>
@@ -963,17 +966,14 @@
   <div class="filter-mini-grid" id="filterMiniGrid">
     <!-- Row 1 -->
     <div class="fmi fmi-ute on" id="fmi-ute">
-      <!-- Tree -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,3 20,15 4,15"/><polygon points="12,8 19,19 5,19"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
     </div>
     <div class="fmi fmi-inne on" id="fmi-inne">
-      <!-- House with door (distinct from TAK) -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12 4l9 7.5"/><rect x="5" y="11.5" width="14" height="9.5" rx="1"/><rect x="9.5" y="15" width="5" height="6" rx="0.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11L12 4l9 7"/><rect x="5" y="11" width="14" height="10" rx="1"/><rect x="9.5" y="15" width="5" height="6" rx="0.5"/></svg>
     </div>
     <!-- Row 2 -->
     <div class="fmi fmi-tak" id="fmi-tak">
-      <!-- Roof / overhang only — no walls -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13L12 4l10 9"/><line x1="1" y1="13" x2="23" y2="13"/><line x1="5" y1="13" x2="5" y2="20"/><line x1="19" y1="13" x2="19" y2="20"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12L12 4l10 8"/><line x1="1" y1="12" x2="23" y2="12"/><line x1="5" y1="12" x2="5" y2="20"/><line x1="19" y1="12" x2="19" y2="20"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
     </div>
     <div class="fmi fmi-fav" id="fmi-fav">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -1616,6 +1616,8 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
 }
 
 let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
+let currentLang = localStorage.getItem('pinpong-lang') || 'no';
 let userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
@@ -1663,6 +1665,7 @@ function renderMarkers() {
     if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
     if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
+    if (hideVisited      && t.verifisert === 'ja')                                       return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -1676,6 +1679,7 @@ function renderMarkers() {
 
 renderMarkers();
 updateMiniIndicators();
+applyLang();
 
 loadSheetData().then(() => {
   const param = new URLSearchParams(location.search).get('bord');
@@ -1699,6 +1703,7 @@ function showNearbyStrip(lat, lng) {
       if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                       return false;
+      if (hideVisited      && t.verifisert === 'ja')                                return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -1709,7 +1714,7 @@ function showNearbyStrip(lat, lng) {
     const dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
     const check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     const glow     = idx === 0 ? ' nearest-glow' : '';
-    const typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : (t.label || tr('type.bar'));
+    const typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
     const roofBadge = (t.under_tak && /ja/i.test(t.under_tak)) ? ' <span title="Under tak" style="font-size:11px">☂️</span>' : '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
@@ -1892,7 +1897,7 @@ function openSheet(idx, _fromNav) {
   } else {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
-  const typeMain = t.type==='outdoor' ? '🏓 ' + tr('type.outdoor') : '🍺 ' + tr('type.bar');
+  const typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
   const typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
@@ -1908,12 +1913,12 @@ function openSheet(idx, _fromNav) {
   if (t.tilstand)  statsHtml += si({ label:tr('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
   if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall) });
   if (t.under_tak) {
-    const takVal = /ja/i.test(t.under_tak) ? '☂ ' + tr('stats.ja') : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
+    const takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
     const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
     statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
   }
   if (t.belysning) {
-    const lysVal = /ja/i.test(t.belysning) ? '💡 ' + tr('stats.ja') : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
+    const lysVal = /ja/i.test(t.belysning) ? `💡 ${tr('stats.ja')}` : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
     const lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
     statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
   }
@@ -2036,7 +2041,7 @@ function profileFavoritter() {
 
     list.innerHTML = sorted.map(({ i, t, d }) => {
       const typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-      const typeLabel = t.type === 'outdoor' ? 'Utebord' : 'Innebord';
+      const typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : tr('type.bar');
       const distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
       const verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
       const imgHtml = t.bilde_url
@@ -2138,16 +2143,7 @@ addSwipeToDismiss(document.getElementById('profilePage'),  () => document.getEle
 addSwipeToDismiss(document.getElementById('favPage'),      () => document.getElementById('favPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('settingsPage'), () => document.getElementById('settingsPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
-function profileSettings() {
-  syncSettingsUI();
-  document.getElementById('settingsPage').classList.add('open');
-}
-function closeSettings() {
-  const sp = document.getElementById('settingsPage');
-  sp.style.transition = ''; sp.style.transform = '';
-  sp.classList.remove('open');
-}
-// ── i18n (stub — full implementation coming) ───────────
+// ── i18n ───────────────────────────────────────────────
 const LANG = {
   no: {
     'nearby.label':         'Nærmeste',
@@ -2280,24 +2276,27 @@ function setLang(lang) {
   applyLang();
 }
 
-// ── Settings: theme + sync ──────────────────────────────
+// ── Settings: theme from settings page ──────────────────
 function setThemeFromSettings(isLight) {
   applyTheme(isLight);
   swapTiles(isLight);
   localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
-  syncSettingsUI();
+  document.getElementById('seg-light').classList.toggle('active', isLight);
+  document.getElementById('seg-dark').classList.toggle('active', !isLight);
 }
 
 function syncSettingsUI() {
   const isLight = document.body.classList.contains('light');
   document.getElementById('seg-light')?.classList.toggle('active', isLight);
   document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
+  document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
+  document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
+  const hv = localStorage.getItem('pinpong-hide-visited') === 'true';
   const tog = document.getElementById('toggleHideVisited');
-  if (tog) tog.checked = hideVisited;
+  if (tog) tog.checked = hv;
 }
 
 // ── Hide visited toggle ──────────────────────────────────
-let hideVisited = false;
 function applyHideVisited(val) {
   hideVisited = val;
   localStorage.setItem('pinpong-hide-visited', val);
@@ -2305,6 +2304,16 @@ function applyHideVisited(val) {
   if (userLat !== null) showNearbyStrip(userLat, userLng);
 }
 
+function profileSettings() {
+  syncSettingsUI();
+  document.getElementById('settingsPage').classList.add('open');
+}
+function closeSettings() {
+  const sp = document.getElementById('settingsPage');
+  sp.style.transition = '';
+  sp.style.transform  = '';
+  sp.classList.remove('open');
+}
 // ── Rate limiting: max 3 rapport submissions per 24h ────
 const _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
 function _rapportCanSubmit() {
@@ -2659,6 +2668,7 @@ function buildSwipeList(fromIdx) {
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                      return false;
+      if (hideVisited      && t.verifisert === 'ja')                               return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -2743,7 +2753,7 @@ function updateSheetNav() {
   if (!label) return;
   const total = _swipeList.length;
   const pos   = _swipePos + 1;
-  label.textContent = `${pos} / ${total} bord`;
+  label.textContent = `${pos} / ${total} ${tr('nav.bord')}`;
   prev.disabled = _swipePos <= 0;
   next.disabled = _swipePos >= total - 1;
 }
@@ -2875,15 +2885,15 @@ window.resetSheetHistory = () => {}; // kept for compat
   window.toggleTheme = function() {
     const isLight = !document.body.classList.contains('light');
     localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
-    window.applyTheme(isLight);
-    window.swapTiles(isLight);
+    applyTheme(isLight);
+    swapTiles(isLight);
   };
 
   // Apply saved preference on load — default is light mode
   const savedLight = localStorage.getItem('pinpong-theme') !== 'dark';
-  window.applyTheme(savedLight);
+  applyTheme(savedLight);
   // Tiles swap after map is ready
-  if (savedLight) setTimeout(() => window.swapTiles(true), 0);
+  if (savedLight) setTimeout(() => swapTiles(true), 0);
 })();
 
 if ('serviceWorker' in navigator) {

@@ -178,14 +178,14 @@
       50%       { text-shadow: 0 0 10px rgba(255,149,0,0.6), 0 0 20px rgba(255,149,0,0.2); }
     }
     body.light .nearby-label { font-weight: 800; }
-    .nearby-compass-btn, .nearby-locate-btn {
+    .nearby-profile-btn, .nearby-locate-btn {
       width: 48px; height: 48px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 50%;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: transform 0.12s; -webkit-tap-highlight-color: transparent;
       flex-shrink: 0;
     }
-    .nearby-compass-btn:active, .nearby-locate-btn:active { transform: scale(0.92); }
+    .nearby-profile-btn:active, .nearby-locate-btn:active { transform: scale(0.92); }
     .nearby-card-dist.nearest-glow {
       text-shadow: 0 0 6px rgba(255,107,0,0.55), 0 0 12px rgba(255,107,0,0.2);
     }
@@ -496,7 +496,19 @@
     @media (hover: hover) and (pointer: fine) {
       .leaflet-tile-pane { filter: brightness(0.9) contrast(1.0) saturate(0.08) !important; }
     }
-    #compassNeedle { transition: transform 0.1s ease-out; }
+    .user-dot-beam {
+      position: absolute;
+      width: 14px; height: 22px;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      background: rgba(0,200,83,0.45);
+      bottom: 50%; left: 50%;
+      margin-left: -7px; margin-bottom: -2px;
+      transform-origin: bottom center;
+      transform: rotate(0deg);
+      transition: transform 0.15s ease-out;
+      display: none; pointer-events: none;
+    }
+    .user-dot-beam.active { display: block; }
     @keyframes radar-ping {
       0%   { transform: scale(1); opacity: 0.8; }
       70%  { transform: scale(7); opacity: 0; }
@@ -647,11 +659,10 @@
 <div id="map"></div>
 <div class="nearby-container" id="nearbyContainer">
   <div class="nearby-header">
-    <button class="nearby-compass-btn" onclick="startCompass()">
-      <svg id="compassNeedle" width="26" height="26" viewBox="0 0 20 20">
-        <polygon points="10,2 12,10 10,12 8,10" fill="var(--orange)"/>
-        <polygon points="10,18 12,10 10,12 8,10" fill="var(--muted)"/>
-        <circle cx="10" cy="10" r="1.5" fill="var(--text)"/>
+    <button class="nearby-profile-btn" onclick="openProfile()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
     </button>
     <div class="nearby-label">Nærmeste</div>
@@ -748,7 +759,6 @@ function esc(s) {
 }
 
 // ── Cached DOM references (looked up once, reused everywhere) ──
-const _needle          = document.getElementById('compassNeedle');
 const _nearbyStrip     = document.getElementById('nearbyStrip');
 const _nearbyContainer = document.getElementById('nearbyContainer');
 const _fabStack        = document.querySelector('.fab-stack');
@@ -1161,11 +1171,12 @@ function onPositionUpdate(pos) {
     // First ever fix — create marker and fly to it
     const icon = L.divIcon({
       html:`<div class="user-dot">
+        <div class="user-dot-beam" id="userBeam"></div>
         <div class="user-dot-ring"></div>
         <div class="user-dot-ring"></div>
         <div class="user-dot-core"></div>
       </div>`,
-      className:'', iconSize:[10,10], iconAnchor:[5,5],
+      className:'', iconSize:[40,40], iconAnchor:[20,20],
     });
     userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
   }
@@ -1256,7 +1267,8 @@ function _onCompass(e) {
   if (h === null) return;
   if (_compassHeading !== null && Math.abs(h - _compassHeading) < 1.5) return;
   _compassHeading = h;
-  if (_needle) _needle.style.transform = `rotate(${-h}deg)`;
+  const beam = document.getElementById('userBeam');
+  if (beam) { beam.classList.add('active'); beam.style.transform = `rotate(${h}deg)`; }
 }
 
 async function startCompass() {
@@ -1391,6 +1403,10 @@ function shareTable() {
       setTimeout(() => btn.innerHTML = orig, 1800);
     });
   }
+}
+
+function openProfile() {
+  showLocToast('Profil', 'Profil-siden kommer snart 🏓');
 }
 
 function locateMe() {

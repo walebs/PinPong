@@ -253,6 +253,74 @@
       text-align: center; font-size: 13px;
       color: var(--muted); letter-spacing: 0.2px;
     }
+    /* ── Rapport page ──────────────────────────────────── */
+    .rapport-body {
+      padding: 20px 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 32px);
+      display: flex; flex-direction: column; gap: 14px;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .rapport-photo-wrap {
+      border-radius: 16px; overflow: hidden;
+      background: var(--surface); border: 1.5px dashed var(--border);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      min-height: 160px; position: relative;
+    }
+    .rapport-photo-preview {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; min-height: 160px;
+      color: var(--muted); font-size: 13px; font-weight: 500;
+    }
+    .rapport-photo-preview img {
+      width: 100%; height: 200px; object-fit: cover;
+      display: block;
+    }
+    .rapport-card {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .rapport-field {
+      display: flex; flex-direction: column; gap: 4px; padding: 13px 16px;
+    }
+    .rapport-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .rapport-input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 100%; resize: none;
+    }
+    .rapport-input::placeholder { color: var(--muted); }
+    .rapport-textarea { padding-top: 4px; line-height: 1.5; }
+    .rapport-divider { height: 1px; background: var(--border); margin: 0 16px; }
+    .rapport-seg {
+      display: flex; background: var(--s2); border-radius: 9px;
+      padding: 3px; gap: 2px;
+    }
+    .rapport-seg-btn {
+      border: none; background: none; border-radius: 7px;
+      padding: 6px 14px; font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rapport-seg-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .rapport-submit {
+      width: 100%; padding: 16px; border-radius: 16px; border: none;
+      background: var(--orange); color: white;
+      font-size: 16px; font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.12s, transform 0.12s;
+      box-shadow: 0 4px 16px rgba(255,149,0,0.35);
+    }
+    .rapport-submit:active { opacity: 0.82; transform: scale(0.98); }
     /* ── Favoritter page ────────────────────────────────── */
     .fav-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -804,6 +872,76 @@
       </button>
     </div>
     <div class="profile-footer">🇳🇴 Designed in Norway</div>
+  </div>
+</div>
+
+<!-- Innstillinger Page -->
+<div class="profile-page" id="settingsPage">
+  <div class="fav-header">
+    <button class="profile-back" onclick="closeSettings()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title">Innstillinger</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="fav-list" style="color:var(--muted);text-align:center;padding-top:60px;font-size:15px">
+    Kommer snart 🏓
+  </div>
+</div>
+
+<!-- Rapporter Page -->
+<div class="profile-page" id="rapportPage">
+  <div class="fav-header">
+    <button class="profile-back" onclick="closeRapport()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title">Rapporter et bord</span>
+    <div style="width:36px"></div>
+  </div>
+
+  <div class="rapport-body">
+
+    <!-- Photo capture -->
+    <div class="rapport-photo-wrap" onclick="document.getElementById('rapportPhotoInput').click()">
+      <input type="file" id="rapportPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="rapportPhotoChosen(this)">
+      <div class="rapport-photo-preview" id="rapportPhotoPreview">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Ta bilde av bordet</span>
+      </div>
+    </div>
+
+    <!-- Form fields -->
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Navn / Sted</label>
+        <input class="rapport-input" id="rNavn" type="text" placeholder="f.eks. Grünerløkka park" autocomplete="off"/>
+      </div>
+      <div class="rapport-divider"></div>
+      <div class="rapport-field">
+        <label class="rapport-label">Adresse</label>
+        <input class="rapport-input" id="rAdresse" type="text" placeholder="Gateadresse eller område" autocomplete="off"/>
+      </div>
+    </div>
+
+    <div class="rapport-card">
+      <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between">
+        <label class="rapport-label" style="margin-bottom:0">Type</label>
+        <div class="rapport-seg" id="rTypeSeg">
+          <button class="rapport-seg-btn active" data-val="ute" onclick="rapportSegPick(this)">🌳 Ute</button>
+          <button class="rapport-seg-btn" data-val="inne" onclick="rapportSegPick(this)">🍺 Inne</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Kommentar</label>
+        <textarea class="rapport-input rapport-textarea" id="rKommentar" placeholder="Tilgjengelighet, åpningstider, tilstand på bordet…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <button class="rapport-submit" onclick="submitRapport()">Send inn 🏓</button>
+
   </div>
 </div>
 
@@ -1648,12 +1786,113 @@ function profileFavoritter() {
 function closeFavPage() {
   document.getElementById('favPage').classList.remove('open');
 }
+
+// ── Swipe-to-dismiss for slide-in pages ─────────────────
+function addSwipeToDismiss(el, dismissFn) {
+  let startX = 0, startY = 0, lastX = 0, lastT = 0;
+  let curX = 0, isHoriz = null, active = false;
+  const EASE = 'transform 0.38s cubic-bezier(0.22,1,0.36,1)';
+
+  el.addEventListener('touchstart', e => {
+    if (!el.classList.contains('open')) return;
+    startX = lastX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    lastT  = Date.now();
+    curX   = 0; isHoriz = null; active = true;
+    el.style.transition = 'none';
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    if (!active) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    if (isHoriz === null) {
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6)
+        isHoriz = Math.abs(dx) > Math.abs(dy);
+      return;
+    }
+    if (!isHoriz) return;
+
+    curX = Math.max(0, dx); // only allow rightward drag
+    lastX = e.touches[0].clientX;
+    lastT = Date.now();
+    el.style.transform = `translateX(${curX}px)`;
+    e.preventDefault();
+  }, { passive: false });
+
+  const onEnd = e => {
+    if (!active) return;
+    active = false;
+    if (!isHoriz) { el.style.transition = ''; return; }
+
+    const velX = (e.changedTouches[0].clientX - lastX) / Math.max(1, Date.now() - lastT); // px/ms
+    const dismiss = curX > window.innerWidth * 0.35 || velX > 0.55;
+
+    if (dismiss) {
+      el.style.transition = EASE;
+      el.style.transform  = 'translateX(100%)';
+      setTimeout(() => {
+        el.style.transition = '';
+        el.style.transform  = '';
+        dismissFn();
+      }, 380);
+    } else {
+      el.style.transition = EASE;
+      el.style.transform  = 'translateX(0)';
+      el.addEventListener('transitionend', () => { el.style.transition = ''; }, { once: true });
+    }
+  };
+  el.addEventListener('touchend',    onEnd, { passive: true });
+  el.addEventListener('touchcancel', onEnd, { passive: true });
+}
+
+addSwipeToDismiss(document.getElementById('profilePage'),  () => document.getElementById('profilePage').classList.remove('open'));
+addSwipeToDismiss(document.getElementById('favPage'),      () => document.getElementById('favPage').classList.remove('open'));
+addSwipeToDismiss(document.getElementById('settingsPage'), () => document.getElementById('settingsPage').classList.remove('open'));
+addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
 function profileSettings() {
-  closeProfile();
-  toggleTheme();
+  document.getElementById('settingsPage').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settingsPage').classList.remove('open');
 }
 function profileRapporter() {
-  window.open('mailto:belal.jan@hotmail.com?subject=PinPong – Rapporter bord', '_blank');
+  // Reset form
+  ['rNavn','rAdresse','rKommentar'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
+  document.getElementById('rapportPhotoPreview').innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Ta bilde av bordet</span>`;
+  document.getElementById('rapportPage').classList.add('open');
+}
+function closeRapport() {
+  document.getElementById('rapportPage').classList.remove('open');
+}
+function rapportSegPick(btn) {
+  document.querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function rapportPhotoChosen(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('rapportPhotoPreview').innerHTML = `<img src="${url}" alt="Bilde"/>`;
+}
+function submitRapport() {
+  const navn     = document.getElementById('rNavn').value.trim();
+  const adresse  = document.getElementById('rAdresse').value.trim();
+  const type     = document.querySelector('.rapport-seg-btn.active')?.dataset.val || 'ute';
+  const kommentar = document.getElementById('rKommentar').value.trim();
+  if (!navn) { document.getElementById('rNavn').focus(); return; }
+  const body = [
+    `Navn: ${navn}`,
+    `Adresse: ${adresse || '–'}`,
+    `Type: ${type === 'ute' ? 'Utebord' : 'Innebord'}`,
+    `Kommentar: ${kommentar || '–'}`,
+    '',
+    '(Husk å legge ved bilde som vedlegg)'
+  ].join('\n');
+  window.open(`mailto:belal.jan@hotmail.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`, '_blank');
+  closeRapport();
 }
 
 function locateMe() {

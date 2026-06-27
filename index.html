@@ -112,7 +112,7 @@
       position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
       display: grid;
       grid-template-columns: repeat(2, 20px);
-      grid-template-rows: repeat(3, 20px);
+      grid-template-rows: repeat(4, 20px);
       gap: 6px;
       pointer-events: none;
       transition: opacity 0.15s ease;
@@ -132,6 +132,7 @@
     .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 4px rgba(255,55,95,0.8)); }
     .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
     .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
+    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 4px rgba(255,214,0,0.9)); }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
       letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
@@ -175,6 +176,9 @@
     .filter-cell-fav.active svg  { fill: #ff3b30; stroke: #ff3b30; }
     .filter-cell-verified.active { color: var(--green); background: transparent; text-shadow: 0 0 8px rgba(52,199,89,0.6); }
     .filter-cell-roof.active     { color: #64a0ff; background: transparent; text-shadow: 0 0 8px rgba(100,160,255,0.7); }
+    .filter-cell-light     { color: rgba(255,214,0,0.35);  font-size: 10px; }
+    .filter-cell-light.active     { color: #FFD600; background: transparent; text-shadow: 0 0 8px rgba(255,214,0,0.7); }
+    .filter-cell-light.active svg { stroke: #FFD600; }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -881,7 +885,10 @@
       <svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       Besøkt
     </div>
-    <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
+    <div class="filter-cell filter-cell-light" id="pill-light" onclick="toggleFilter('light')">
+      <svg width="13" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z"/></svg>
+      LYS
+    </div>
     <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
     <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
   </div>
@@ -908,6 +915,11 @@
     <div class="fmi fmi-prog on" id="fmi-prog">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="9 12 11 14 15 10"/></svg>
     </div>
+    <!-- Row 4 -->
+    <div class="fmi fmi-light" id="fmi-light">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z"/></svg>
+    </div>
+    <div class="fmi" style="opacity:0"></div>
   </div>
 </div>
 
@@ -1046,7 +1058,7 @@
     <button class="profile-back" onclick="closeFavPage()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span class="fav-header-title">Favoritter</span>
+    <span class="fav-header-title">❤ Favoritter</span>
     <div style="width:36px"></div>
   </div>
   <div class="fav-list" id="favList"></div>
@@ -1207,6 +1219,7 @@ const _fmiTak          = document.getElementById('fmi-tak');
 const _fmiFav          = document.getElementById('fmi-fav');
 const _fmiBesok        = document.getElementById('fmi-besok');
 const _fmiProg         = document.getElementById('fmi-prog');
+const _fmiLight        = document.getElementById('fmi-light');
 
 function updateMiniIndicators() {
   _fmiUte  .classList.toggle('on', showOutdoor);
@@ -1214,7 +1227,7 @@ function updateMiniIndicators() {
   _fmiTak  .classList.toggle('on', showRoofOnly);
   _fmiFav  .classList.toggle('on', showFavOnly);
   _fmiBesok.classList.toggle('on', showVerifiedOnly);
-  // prog glows if any tables are verified
+  _fmiLight.classList.toggle('on', showLightOnly);
   const anyVerified = TABLES.some(t => t.verifisert === 'ja');
   _fmiProg.classList.toggle('on', anyVerified);
 }
@@ -1470,7 +1483,7 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
-let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
 let userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
@@ -1517,6 +1530,7 @@ function renderMarkers() {
     if (showFavOnly      && !FAVORITES.has(i))                                           return;
     if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
+    if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -1553,6 +1567,7 @@ function showNearbyStrip(lat, lng) {
       if (showFavOnly      && !FAVORITES.has(i))                                    return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
+      if (showLightOnly    && !/ja/i.test(t.belysning || ''))                       return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -1766,6 +1781,11 @@ function openSheet(idx, _fromNav) {
     const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
     statsHtml += si({ label:'Under tak', val: takVal, cls: takCls });
   }
+  if (t.belysning) {
+    const lysVal = /ja/i.test(t.belysning) ? '💡 Ja' : /nei/i.test(t.belysning) ? 'Nei' : esc(t.belysning);
+    const lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
+    statsHtml += si({ label:'Belysning', val: lysVal, cls: lysCls });
+  }
   if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:'Vibe', val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';
@@ -1891,7 +1911,7 @@ function profileFavoritter() {
       const imgHtml = t.bilde_url
         ? `<img src="${t.bilde_url}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover"/>`
         : `🏓`;
-      return `<div class="fav-card" onclick="closeFavPage();closeProfile();setTimeout(()=>openSheet(${i}),420)">
+      return `<div class="fav-card" data-idx="${i}">
         <div class="fav-card-img">${imgHtml}</div>
         <div class="fav-card-info">
           <div class="fav-card-type" style="color:${typeColor}">${typeLabel}</div>
@@ -1903,11 +1923,24 @@ function profileFavoritter() {
         </div>
       </div>`;
     }).join('');
+
+    // Event delegation — reliable on all mobile browsers
+    list.onclick = e => {
+      const card = e.target.closest('.fav-card');
+      if (!card) return;
+      const idx = parseInt(card.dataset.idx, 10);
+      closeFavPage();
+      closeProfile();
+      setTimeout(() => openSheet(idx), 480);
+    };
   }
   document.getElementById('favPage').classList.add('open');
 }
 function closeFavPage() {
-  document.getElementById('favPage').classList.remove('open');
+  const fp = document.getElementById('favPage');
+  fp.style.transition = '';
+  fp.style.transform  = '';
+  fp.classList.remove('open');
 }
 
 // ── Swipe-to-dismiss for slide-in pages ─────────────────
@@ -2256,9 +2289,10 @@ function toggleFilter(type) {
   else if (type==='fav')      showFavOnly      = !showFavOnly;
   else if (type==='verified') showVerifiedOnly = !showVerifiedOnly;
   else if (type==='roof')     showRoofOnly     = !showRoofOnly;
+  else if (type==='light')    showLightOnly    = !showLightOnly;
 
-  const pillMap  = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified', roof:'pill-roof' };
-  const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly };
+  const pillMap  = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified', roof:'pill-roof', light:'pill-light' };
+  const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly, light:showLightOnly };
   document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
 
   renderMarkers(); closeSheet();
@@ -2332,6 +2366,7 @@ function buildSwipeList(fromIdx) {
       if (showFavOnly      && !FAVORITES.has(i))                        return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
+      if (showLightOnly    && !/ja/i.test(t.belysning || ''))                      return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)

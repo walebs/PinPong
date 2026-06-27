@@ -376,6 +376,35 @@
     }
     .btn-heart-inline svg { transition: transform 0.18s cubic-bezier(0.34,1.5,0.64,1); }
     .btn-heart-inline.faved svg { transform: scale(1.2); }
+    /* Location permission toast */
+    .loc-toast {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      left: 50%; transform: translateX(-50%) translateY(120%);
+      width: calc(100% - 32px); max-width: 360px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 16px 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      z-index: 1200;
+      transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
+    }
+    .loc-toast.show { transform: translateX(-50%) translateY(0); }
+    .loc-toast-icon { font-size: 22px; margin-bottom: 6px; }
+    .loc-toast-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .loc-toast-body  { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .loc-toast-body b { color: var(--text); font-weight: 600; }
+    .loc-toast-actions { display: flex; gap: 8px; }
+    .loc-toast-retry {
+      flex: 1; padding: 10px; border-radius: 11px; border: none;
+      background: var(--blue); color: white;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .loc-toast-close {
+      padding: 10px 14px; border-radius: 11px; border: none;
+      background: var(--s2); color: var(--muted);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
     .maps-modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
       z-index: 1100; backdrop-filter: blur(2px);
@@ -626,6 +655,17 @@
 
 <!-- Maps picker modal -->
 <div class="maps-modal-overlay" id="mapsOverlay" onclick="closeMapsPicker()"></div>
+
+<!-- Location permission toast -->
+<div class="loc-toast" id="locToast">
+  <div class="loc-toast-icon">📍</div>
+  <div class="loc-toast-title" id="locToastTitle">Posisjon ikke tilgjengelig</div>
+  <div class="loc-toast-body" id="locToastBody"></div>
+  <div class="loc-toast-actions">
+    <button class="loc-toast-retry" onclick="locToastRetry()">Prøv igjen</button>
+    <button class="loc-toast-close" onclick="closeLocToast()">Lukk</button>
+  </div>
+</div>
 <div class="maps-modal" id="mapsModal">
   <div class="maps-modal-header">
     <span>Åpne veibeskrivelse i</span>
@@ -1082,6 +1122,45 @@ function onPositionUpdate(pos) {
   }
 }
 
+function showLocToast(title, body) {
+  const toast = document.getElementById('locToast');
+  document.getElementById('locToastTitle').textContent = title;
+  document.getElementById('locToastBody').innerHTML = body;
+  toast.classList.add('show');
+}
+function closeLocToast() {
+  document.getElementById('locToast').classList.remove('show');
+}
+function locToastRetry() {
+  closeLocToast();
+  // Check if permission API is available and already denied
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(result => {
+      if (result.state === 'denied') {
+        showLocPermissionDenied();
+      } else {
+        startLocationWatch();
+        if (userLat !== null) map.flyTo([userLat, userLng], 15, { duration: 1 });
+      }
+    });
+  } else {
+    startLocationWatch();
+  }
+}
+function showLocPermissionDenied() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  let body;
+  if (isIOS) {
+    body = `Gå til <b>Innstillinger → Personvern → Lokalisering → Safari</b> og velg <b>«Mens appen brukes»</b>. Kom tilbake hit etterpå.`;
+  } else if (isAndroid) {
+    body = `Trykk på 🔒 i adressefeltet i nettleseren → <b>Tillatelser → Posisjon → Tillat</b>. Last så inn siden på nytt.`;
+  } else {
+    body = `Trykk på 🔒 eller ⓘ i adressefeltet → <b>Stedstjenester</b> → sett til <b>Tillat</b>. Last så inn siden på nytt.`;
+  }
+  showLocToast('Posisjon blokkert', body);
+}
+
 function startLocationWatch() {
   if (!navigator.geolocation) return;
   if (locationWatchId !== null) {
@@ -1091,9 +1170,7 @@ function startLocationWatch() {
   locationWatchId = navigator.geolocation.watchPosition(
     onPositionUpdate,
     err => {
-      if (err.code === 1) {
-        alert('Tilgang til posisjon er blokkert.\n\niPhone: Innstillinger → Personvern → Lokalisering → Safari → «Mens appen brukes»\nMac: Safari → Innstillinger → Nettsteder → Lokalisering → Tillat');
-      }
+      if (err.code === 1) showLocPermissionDenied();
     },
     geoOpts
   );
@@ -1254,12 +1331,26 @@ function shareTable() {
 }
 
 function locateMe() {
-  if (!navigator.geolocation) return alert('Geolokasjon støttes ikke.');
-  startLocationWatch();
-  startCompass();
-  if (userLat !== null) {
-    map.flyTo([userLat, userLng], 15, { duration: 1 });
-    showNearbyStrip(userLat, userLng);
+  if (!navigator.geolocation) {
+    showLocToast('Ikke støttet', 'Nettleseren din støtter ikke stedstjenester.');
+    return;
+  }
+  // Check permission state before calling watchPosition so denied users
+  // get instant feedback instead of a silent no-op
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(result => {
+      if (result.state === 'denied') {
+        showLocPermissionDenied();
+      } else {
+        startLocationWatch();
+        startCompass();
+        if (userLat !== null) { map.flyTo([userLat, userLng], 15, { duration: 1 }); showNearbyStrip(userLat, userLng); }
+      }
+    });
+  } else {
+    startLocationWatch();
+    startCompass();
+    if (userLat !== null) { map.flyTo([userLat, userLng], 15, { duration: 1 }); showNearbyStrip(userLat, userLng); }
   }
 }
 

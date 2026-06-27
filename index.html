@@ -52,10 +52,10 @@
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
     /* Filter ONLY the tile layer in both modes — keeps markers in their true colors */
     .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
-    body.light .leaflet-tile-pane { filter: contrast(1.1) saturate(1.35); }
-    /* Touch screens (mobile) render tiles much brighter — compensate aggressively */
+    body.light .leaflet-tile-pane { filter: brightness(0.96) contrast(1.12) saturate(1.65); }
+    /* Touch screens (mobile) are brighter — compensate slightly more */
     @media (hover: none) and (pointer: coarse) {
-      body.light .leaflet-tile-pane { filter: brightness(0.9) contrast(1.15) saturate(1.22); }
+      body.light .leaflet-tile-pane { filter: brightness(0.88) contrast(1.15) saturate(1.65); }
     }
     /* Light mode: white search field */
     body.light .search-field {
@@ -173,6 +173,10 @@
       font-size: 11px; font-weight: 700; letter-spacing: 1px;
       color: var(--orange); text-transform: uppercase;
       animation: label-glow 4s ease-in-out infinite;
+    }
+    @keyframes wordmark-glow {
+      0%, 100% { text-shadow: 0 0 8px rgba(255,149,0,0.4), 0 0 16px rgba(255,149,0,0.15); }
+      50%       { text-shadow: 0 0 12px rgba(255,149,0,0.9), 0 0 28px rgba(255,149,0,0.45), 0 0 48px rgba(255,149,0,0.15); }
     }
     @keyframes label-glow {
       0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.15); }
@@ -759,7 +763,8 @@
       left: 50%; transform: translateX(-50%);
       font-size: 17px; font-weight: 800; letter-spacing: -0.4px;
       color: var(--orange); pointer-events: none; white-space: nowrap;
-      animation: label-glow 4s ease-in-out infinite;
+      letter-spacing: 2px;
+      animation: wordmark-glow 3s ease-in-out infinite;
     }
     .cluster-icon {
       width: 30px; height: 30px; background: #FF9500;
@@ -988,7 +993,7 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 <div class="zoom-btns">
-  <div class="app-wordmark">PinPong</div>
+  <div class="app-wordmark">PINPONG</div>
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema">

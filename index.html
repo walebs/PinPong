@@ -34,13 +34,6 @@
       --text:    #1c1c1e;
       --muted:   #8e8e93;
     }
-    body.light #map {
-      filter: invert(1) hue-rotate(180deg) brightness(0.96) contrast(0.94) saturate(0.85);
-    }
-    /* Keep marker/cluster colors correct inside the inverted map */
-    body.light .leaflet-marker-icon,
-    body.light .leaflet-marker-shadow,
-    body.light .marker-cluster { filter: invert(1) hue-rotate(180deg); }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
       background: var(--bg);
@@ -51,7 +44,7 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; filter: brightness(1.18) contrast(1.08); transition: filter 0.4s ease; }
-    body.light #map { filter: invert(1) hue-rotate(180deg) brightness(0.96) contrast(0.94) saturate(0.85); }
+    body.light #map { filter: brightness(1.02) contrast(1.02); }
     /* Filter fab — expands in-place to 2×3 grid */
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
@@ -932,14 +925,15 @@ const map = L.map('map', {
   easeLinearity: 0.2,
 });
 map.attributionControl.setPrefix(false);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+const _tileOpts = {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom: 19, subdomains: 'abcd',
-  updateWhenIdle: false,
-  updateWhenZooming: true,
-  keepBuffer: 8,
-  crossOrigin: true,
-}).addTo(map);
+  updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
+};
+let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
+let _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
+_darkTiles.addTo(map);
+let _currentTiles = _darkTiles;
 
 function iconSize(highlighted=false) {
   return highlighted ? 36 : 28;
@@ -1746,14 +1740,27 @@ window.resetSheetHistory = () => {}; // kept for compat
     if (icon) icon.innerHTML = light ? SUN_SVG : MOON_SVG;
   }
 
+  function swapTiles(light) {
+    if (typeof _darkTiles === 'undefined') return;
+    const add = light ? _lightTiles : _darkTiles;
+    const rem = light ? _darkTiles  : _lightTiles;
+    if (!map.hasLayer(add)) map.addLayer(add);
+    if (map.hasLayer(rem)) map.removeLayer(rem);
+    _currentTiles = add;
+  }
+
   window.toggleTheme = function() {
     const isLight = !document.body.classList.contains('light');
     localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
     applyTheme(isLight);
+    swapTiles(isLight);
   };
 
   // Apply saved preference on load
-  applyTheme(localStorage.getItem('pinpong-theme') === 'light');
+  const savedLight = localStorage.getItem('pinpong-theme') === 'light';
+  applyTheme(savedLight);
+  // Tiles swap after map is ready
+  if (savedLight) setTimeout(() => swapTiles(true), 0);
 })();
 
 if ('serviceWorker' in navigator) {

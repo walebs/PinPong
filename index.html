@@ -253,6 +253,59 @@
       text-align: center; font-size: 13px;
       color: var(--muted); letter-spacing: 0.2px;
     }
+    /* ── Favoritter page ────────────────────────────────── */
+    .fav-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0; position: sticky; top: 0;
+      background: var(--bg); z-index: 2;
+    }
+    .fav-header-title {
+      font-size: 17px; font-weight: 700; color: var(--text);
+    }
+    .fav-list {
+      padding: 16px; display: flex; flex-direction: column; gap: 12px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
+    }
+    .fav-card {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      display: flex; gap: 0; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s, opacity 0.12s;
+    }
+    .fav-card:active { transform: scale(0.98); opacity: 0.85; }
+    .fav-card-img {
+      width: 90px; height: 90px; flex-shrink: 0;
+      object-fit: cover; background: var(--s2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 28px;
+    }
+    .fav-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .fav-card-info {
+      flex: 1; padding: 11px 13px; display: flex; flex-direction: column;
+      justify-content: center; gap: 4px; min-width: 0;
+    }
+    .fav-card-type {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .fav-card-name {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fav-card-meta {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--muted); flex-wrap: wrap;
+    }
+    .fav-card-dist { color: var(--orange); font-weight: 700; }
+    .fav-empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-size: 15px; line-height: 1.6;
+    }
+    .fav-empty-icon { font-size: 40px; margin-bottom: 12px; }
     .nearby-profile-btn, .nearby-locate-btn {
       width: 48px; height: 48px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 50%;
@@ -707,15 +760,11 @@
     </button>
     <div class="profile-logo-wrap">
       <div class="profile-logo-circle">
-        <svg width="54" height="54" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <!-- paddle head -->
-          <circle cx="42" cy="38" r="28" fill="white" opacity="0.95"/>
-          <!-- stripe -->
-          <rect x="16" y="34" width="52" height="8" fill="#FF9500" rx="1"/>
-          <!-- handle -->
-          <rect x="55" y="55" width="10" height="30" rx="5" fill="white" opacity="0.95" transform="rotate(45 60 60)"/>
-          <!-- ball -->
-          <circle cx="75" cy="22" r="9" fill="white" opacity="0.7"/>
+        <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- head -->
+          <circle cx="50" cy="32" r="22" fill="white" opacity="0.95"/>
+          <!-- shoulders/body -->
+          <path d="M5 95 C5 65 22 54 50 54 C78 54 95 65 95 95 Z" fill="white" opacity="0.95"/>
         </svg>
       </div>
       <div class="profile-app-name">PinPong</div>
@@ -756,6 +805,18 @@
     </div>
     <div class="profile-footer">🇳🇴 Designed in Norway</div>
   </div>
+</div>
+
+<!-- Favoritter Page -->
+<div class="profile-page" id="favPage">
+  <div class="fav-header">
+    <button class="profile-back" onclick="closeFavPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title">Favoritter</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="fav-list" id="favList"></div>
 </div>
 
 <div class="filter-indicators" id="filterIndicators">
@@ -1546,9 +1607,46 @@ function closeProfile() {
   document.getElementById('profilePage').classList.remove('open');
 }
 function profileFavoritter() {
-  closeProfile();
-  // Activate fav filter and show on map
-  if (!showFavOnly) toggleFilter('fav');
+  // Build and open the Favoritter page
+  const list = document.getElementById('favList');
+  const favIdxs = [...FAVORITES];
+  if (!favIdxs.length) {
+    list.innerHTML = `<div class="fav-empty"><div class="fav-empty-icon">🏓</div>Du har ingen favoritter ennå.<br>Trykk ❤ på et bord for å lagre det her.</div>`;
+  } else {
+    // Sort by distance if we have location, otherwise alphabetically
+    const sorted = favIdxs
+      .filter(i => TABLES[i])
+      .map(i => ({
+        i, t: TABLES[i],
+        d: userLat !== null ? haversine(userLat, userLng, TABLES[i].lat, TABLES[i].lng) : null
+      }))
+      .sort((a, b) => a.d !== null ? a.d - b.d : a.t.navn.localeCompare(b.t.navn));
+
+    list.innerHTML = sorted.map(({ i, t, d }) => {
+      const typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+      const typeLabel = t.type === 'outdoor' ? 'Utebord' : 'Innebord';
+      const distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
+      const verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
+      const imgHtml = t.bilde_url
+        ? `<img src="${t.bilde_url}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover"/>`
+        : `🏓`;
+      return `<div class="fav-card" onclick="closeFavPage();closeProfile();setTimeout(()=>openSheet(${i}),420)">
+        <div class="fav-card-img">${imgHtml}</div>
+        <div class="fav-card-info">
+          <div class="fav-card-type" style="color:${typeColor}">${typeLabel}</div>
+          <div class="fav-card-name">${esc(t.navn)}</div>
+          <div class="fav-card-meta">
+            ${distStr ? `<span class="fav-card-dist">${distStr}</span>` : ''}
+            ${verified}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('favPage').classList.add('open');
+}
+function closeFavPage() {
+  document.getElementById('favPage').classList.remove('open');
 }
 function profileSettings() {
   closeProfile();

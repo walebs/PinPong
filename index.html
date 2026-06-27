@@ -46,7 +46,7 @@
       touch-action: manipulation;
     }
     button { touch-action: manipulation; }
-    #map { position: fixed; inset: 0; z-index: 0; touch-action: none; filter: brightness(1.18) contrast(1.08); transition: filter 0.4s ease; }
+    #map { position: fixed; inset: 0; z-index: 0; touch-action: none; filter: brightness(1.08) contrast(1.22); transition: filter 0.4s ease; }
     /* Light mode: filter ONLY the tile layer, not markers */
     body.light #map { filter: none; }
     body.light .leaflet-tile-pane { filter: brightness(0.88) contrast(1.25) saturate(1.2); }
@@ -171,8 +171,8 @@
       animation: label-glow 4s ease-in-out infinite;
     }
     @keyframes label-glow {
-      0%, 100% { text-shadow: 0 0 6px rgba(255,107,0,0.15); }
-      50%       { text-shadow: 0 0 10px rgba(255,107,0,0.6), 0 0 20px rgba(255,107,0,0.2); }
+      0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.15); }
+      50%       { text-shadow: 0 0 10px rgba(255,149,0,0.6), 0 0 20px rgba(255,149,0,0.2); }
     }
     .nearby-compass-btn, .nearby-locate-btn {
       width: 48px; height: 48px; background: var(--surface);

@@ -12,6 +12,9 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
   <title>PinPong</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin="anonymous" />
@@ -76,10 +79,10 @@
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
       z-index: 401;
-      width: 94px; height: 144px;
+      width: 130px; height: 130px;
       background: var(--surface);
       border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      clip-path: inset(0 50px 100px 0 round 16px);
+      clip-path: inset(0 90px 90px 0 round 16px);
       will-change: clip-path;
       transition: clip-path 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
     }
@@ -116,8 +119,8 @@
     }
     .filter-grid {
       display: grid;
-      gap: 6px; padding: 0; width: 94px; height: 144px;
-      grid-template-columns: 44px 44px; grid-template-rows: 44px 44px 44px;
+      gap: 5px; padding: 0; width: 130px; height: 130px;
+      grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px);
     }
     .filter-cell {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -152,9 +155,11 @@
     .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
     .filter-cell-fav      { color: rgba(255,59,48,0.35);  font-size: 10px; }
     .filter-cell-verified { color: rgba(52,199,89,0.35);  font-size: 10px; }
+    .filter-cell-roof     { color: rgba(100,160,255,0.35); font-size: 10px; }
     .filter-cell-fav.active      { color: #ff3b30; background: transparent; text-shadow: 0 0 8px rgba(255,59,48,0.6); }
     .filter-cell-fav.active svg  { fill: #ff3b30; stroke: #ff3b30; }
     .filter-cell-verified.active { color: var(--green); background: transparent; text-shadow: 0 0 8px rgba(52,199,89,0.6); }
+    .filter-cell-roof.active     { color: #64a0ff; background: transparent; text-shadow: 0 0 8px rgba(100,160,255,0.7); }
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -439,22 +444,24 @@
     .bottom-sheet {
       position: fixed; bottom: 24px; left: 50%; z-index: 500;
       width: calc(100% - 32px); max-width: 400px;
-      max-height: calc(100dvh - 150px);
+      height: min(530px, calc(100dvh - 130px));
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
       transform: translate(-50%, calc(100% + 40px));
       transition: transform 0.52s cubic-bezier(0.32, 0.72, 0, 1);
       overflow: hidden;
       will-change: transform;
+      display: flex; flex-direction: column;
     }
     @media (max-width: 480px) {
-      .sheet-photo { height: 130px; }
-      .sheet-body { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
+      .bottom-sheet { height: min(480px, calc(100dvh - 120px)); }
+      .sheet-photo { height: 110px; }
+      .sheet-body { padding: 10px 14px calc(8px + env(safe-area-inset-bottom, 0px)); }
       .sheet-type { font-size: 10px; margin-bottom: 2px; }
-      .sheet-name { font-size: 17px; margin-bottom: 6px; }
-      .sheet-content { gap: 10px; min-height: 80px; }
+      .sheet-name { font-size: 16px; margin-bottom: 6px; }
+      .sheet-content { gap: 8px; }
       .stat-val { font-size: 12px; }
-      .btn-directions { padding: 11px; font-size: 13px; }
+      .btn-directions { padding: 10px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
     .sheet-close-top {
@@ -537,22 +544,26 @@
     }
     .search-result-item:last-child { border-bottom: none; }
     .search-result-item:active { background: var(--s2); }
-    .sheet-photo { width: 100%; height: 220px; object-fit: cover; display: none; background: var(--s2); }
+    .sheet-photo-wrap { flex-shrink: 0; }
+    .sheet-photo { width: 100%; height: 160px; object-fit: cover; display: none; background: var(--s2); }
     .sheet-photo.visible { display: block; }
-    .sheet-body { padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
-    .sheet-type { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
-    .sheet-name { font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 12px; }
-    .sheet-content {
-      display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px;
+    .sheet-body {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px 16px calc(10px + env(safe-area-inset-bottom, 0px));
     }
-    .sheet-stats-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+    .sheet-type { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
+    .sheet-name { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; line-height: 1.15; margin-bottom: 8px; }
+    .sheet-content {
+      display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;
+    }
+    .sheet-stats-col { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
     .sheet-notes-col { /* full width in column layout */ }
-    .stat-item { display: flex; flex-direction: column; gap: 2px; }
+    .stat-item { display: flex; flex-direction: column; gap: 1px; }
     .stat-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
-    .stat-val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .stat-val { font-size: 12px; font-weight: 600; color: var(--text); }
     .stat-val.verified  { color: var(--green); }
     .stat-val.not-found { color: #FF3B30; }
-    .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
     .notes-block {
       border-left: 1px solid var(--border);
     }
@@ -560,7 +571,7 @@
       position: relative;
       font-size: 11px; color: var(--muted); line-height: 1.3;
       padding: 1px 0 1px 14px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     .note-line::before {
       content: '';
@@ -572,16 +583,16 @@
     .note-line:last-child { margin-bottom: 0; }
     .sheet-actions { display: flex; gap: 10px; }
     .btn-directions {
-      flex: 1; padding: 14px; color: white;
-      border: none; border-radius: 14px; font-size: 14px; font-weight: 600;
+      flex: 1; padding: 11px; color: white;
+      border: none; border-radius: 12px; font-size: 13px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       gap: 7px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
       background: var(--blue); box-shadow: 0 4px 16px rgba(59,139,255,0.35);
     }
     .btn-directions:active { opacity: 0.8; }
     .btn-share {
-      width: 50px; padding: 14px 0; color: #aaa; background: var(--s2);
-      border: 1px solid var(--border); border-radius: 14px; font-size: 14px; font-weight: 600;
+      width: 46px; padding: 11px 0; color: #aaa; background: var(--s2);
+      border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
@@ -610,7 +621,7 @@
     /* Name row with heart */
     .sheet-name-row {
       display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 8px; margin-bottom: 12px;
+      gap: 8px; margin-bottom: 8px;
     }
     .sheet-name-row .sheet-name { margin-bottom: 0; flex: 1; }
     .btn-heart-inline {
@@ -767,11 +778,12 @@
     body.light .theme-btn { transform: rotate(180deg); }
     .app-wordmark {
       position: fixed; z-index: 402;
-      top: calc(env(safe-area-inset-top, 0px) + 22px);
+      top: calc(env(safe-area-inset-top, 0px) + 16px);
       left: 50%; transform: translateX(-50%);
-      font-size: 17px; font-weight: 800; letter-spacing: -0.4px;
+      font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+      font-size: 26px; font-weight: 400; letter-spacing: 5px;
       color: var(--orange); pointer-events: none; white-space: nowrap;
-      letter-spacing: 2px;
+      -webkit-text-stroke: 0.5px rgba(255,149,0,0.4);
       animation: wordmark-glow 3s ease-in-out infinite;
     }
     .cluster-icon {
@@ -805,7 +817,7 @@
   </style>
 </head>
 <body>
-<!-- Filter fab — expands to 2×2 -->
+<!-- Filter fab — expands to 3×3 -->
 <div class="filter-fab" id="filterFab">
   <div class="filter-grid">
     <button class="filter-cell filter-cell-icon" onclick="toggleFilterFab()">
@@ -817,12 +829,16 @@
       <span class="filter-icon-label">Filter</span>
     </button>
     <div class="filter-cell filter-cell-progress" id="filterProgress">
-      <svg width="26" height="26" viewBox="0 0 26 26">
+      <svg width="24" height="24" viewBox="0 0 26 26">
         <circle cx="13" cy="13" r="9" fill="none" stroke="var(--border)" stroke-width="2.5"/>
         <circle id="progressArc" cx="13" cy="13" r="9" fill="none" stroke="var(--green)" stroke-width="2.5"
                 stroke-dasharray="0 56.55" stroke-linecap="round" transform="rotate(-90 13 13)"/>
       </svg>
       <span class="progress-fraction" id="progressFraction">0/0</span>
+    </div>
+    <div class="filter-cell filter-cell-roof" id="pill-roof" onclick="toggleFilter('roof')">
+      <svg width="14" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M9 21V12h6v9"/><path d="M3 9.5v11.5h18V9.5"/></svg>
+      TAK
     </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
       <div class="filter-cell-box"></div>UTE
@@ -838,6 +854,8 @@
       <svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       Besøkt
     </div>
+    <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
+    <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
   </div>
 </div>
 
@@ -1386,7 +1404,7 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
-let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
 let userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
@@ -1430,8 +1448,9 @@ function renderMarkers() {
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;
-    if (showFavOnly     && !FAVORITES.has(i))         return;
-    if (showVerifiedOnly && t.verifisert !== 'ja')    return;
+    if (showFavOnly      && !FAVORITES.has(i))                                           return;
+    if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
+    if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
     const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -1469,8 +1488,9 @@ function showNearbyStrip(lat, lng) {
     .filter(({ t, i }) => {
       if (t.type === 'outdoor' && !showOutdoor) return false;
       if (t.type !== 'outdoor' && !showBar) return false;
-      if (showFavOnly && !FAVORITES.has(i)) return false;
-      if (showVerifiedOnly && t.verifisert !== 'ja') return false;
+      if (showFavOnly      && !FAVORITES.has(i))                                    return false;
+      if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
+      if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -1668,7 +1688,7 @@ function openSheet(idx, _fromNav) {
   const typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
-  _sheetName.textContent = t.navn;
+  _sheetName.textContent = t.navn || 'Ukjent bord';
   const si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
   let statsHtml = '';
   if (t.verifisert==='ja')       statsHtml += si({ label:'Status', val:'Verifisert', cls:' verified' });
@@ -2168,9 +2188,10 @@ function toggleFilter(type) {
   else if (type==='bar')      showBar          = !showBar;
   else if (type==='fav')      showFavOnly      = !showFavOnly;
   else if (type==='verified') showVerifiedOnly = !showVerifiedOnly;
+  else if (type==='roof')     showRoofOnly     = !showRoofOnly;
 
-  const pillMap = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified' };
-  const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly };
+  const pillMap  = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified', roof:'pill-roof' };
+  const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly };
   document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
 
   _fiOutdoor.classList.toggle('active', showOutdoor);
@@ -2253,10 +2274,6 @@ function sheetSwipeTo(nextIdx, dir) {
     const card = document.getElementById('sheetCard');
     if (!card) { openSheet(nextIdx, true); _cardAnimating = false; return; }
 
-    // Lock the sheet height so different-length content can't cause a jump mid-slide
-    const sheetH = _bottomSheet.offsetHeight;
-    _bottomSheet.style.height = sheetH + 'px';
-
     // Clone ghost at exact current dimensions
     const cardH = card.offsetHeight;
     const ghost  = card.cloneNode(true);
@@ -2288,10 +2305,6 @@ function sheetSwipeTo(nextIdx, dir) {
       card.style.transition = '';
       card.style.transform  = '';
       card.style.willChange = '';
-      // Release height lock with a soft transition so it settles, not jumps
-      _bottomSheet.style.transition = 'height 0.18s ease';
-      _bottomSheet.style.height     = '';
-      setTimeout(() => { _bottomSheet.style.transition = ''; }, 200);
       _cardAnimating = false;
     }, 400);
   }

@@ -1478,54 +1478,74 @@ function buildSwipeList(fromIdx) {
   _swipePos = _swipeList.indexOf(fromIdx);
 }
 
-const _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)'; // iOS spring feel
+const _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
 let _cardAnimating = false;
 
 function sheetSwipeTo(nextIdx, dir) {
   if (_cardAnimating) return;
   _cardAnimating = true;
 
-  const card = document.getElementById('sheetCard');
-  if (!card) { openSheet(nextIdx, true); _cardAnimating = false; return; }
+  const nextTable = TABLES[nextIdx];
 
-  // 1. Clone current card as ghost with exact pixel height
-  const cardH = card.offsetHeight;
-  const ghost = card.cloneNode(true);
-  ghost.removeAttribute('id');
-  ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-  ghost.style.cssText = [
-    'position:absolute', 'top:0', 'left:0', 'right:0',
-    `height:${cardH}px`, 'pointer-events:none', 'z-index:5',
-    'will-change:transform'
-  ].join(';');
-  card.parentNode.insertBefore(ghost, card);
+  function _doSlide() {
+    const card = document.getElementById('sheetCard');
+    if (!card) { openSheet(nextIdx, true); _cardAnimating = false; return; }
 
-  // 2. Move new card off-screen (no transition yet)
-  card.style.willChange = 'transform';
-  card.style.transition = 'none';
-  card.style.transform  = `translateX(${dir > 0 ? '100%' : '-100%'})`;
+    // Lock the sheet height so different-length content can't cause a jump mid-slide
+    const sheetH = _bottomSheet.offsetHeight;
+    _bottomSheet.style.height = sheetH + 'px';
 
-  // 3. Update content while card is hidden off-screen
-  openSheet(nextIdx, true);
+    // Clone ghost at exact current dimensions
+    const cardH = card.offsetHeight;
+    const ghost  = card.cloneNode(true);
+    ghost.removeAttribute('id');
+    ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    ghost.style.cssText = `position:absolute;top:0;left:0;right:0;height:${cardH}px;pointer-events:none;z-index:5;will-change:transform;`;
+    card.parentNode.insertBefore(ghost, card);
 
-  // 4. Force reflow — commits both positions to the GPU before transition begins
-  // This is the key: browser renders initial state synchronously, no async gap
-  void card.offsetWidth;
+    // Place new card off-screen with no transition
+    card.style.willChange = 'transform';
+    card.style.transition = 'none';
+    card.style.transform  = `translateX(${dir > 0 ? '100%' : '-100%'})`;
 
-  // 5. Start transition on both simultaneously — zero delay, zero blink
-  const t = `transform 0.38s ${_cardEase}`;
-  ghost.style.transition = t;
-  ghost.style.transform  = `translateX(${dir > 0 ? '-100%' : '100%'})`;
-  card.style.transition  = t;
-  card.style.transform   = 'translateX(0)';
+    // Load content while new card is off-screen
+    openSheet(nextIdx, true);
 
-  setTimeout(() => {
-    ghost.remove();
-    card.style.transition  = '';
-    card.style.transform   = '';
-    card.style.willChange  = '';
-    _cardAnimating = false;
-  }, 400);
+    // Commit initial positions to GPU synchronously (the key to zero-delay start)
+    void card.offsetWidth;
+
+    // Both cards animate at once
+    const tr = `transform 0.38s ${_cardEase}`;
+    ghost.style.transition = tr;
+    ghost.style.transform  = `translateX(${dir > 0 ? '-100%' : '100%'})`;
+    card.style.transition  = tr;
+    card.style.transform   = 'translateX(0)';
+
+    setTimeout(() => {
+      ghost.remove();
+      card.style.transition = '';
+      card.style.transform  = '';
+      card.style.willChange = '';
+      // Release height lock with a soft transition so it settles, not jumps
+      _bottomSheet.style.transition = 'height 0.18s ease';
+      _bottomSheet.style.height     = '';
+      setTimeout(() => { _bottomSheet.style.transition = ''; }, 200);
+      _cardAnimating = false;
+    }, 400);
+  }
+
+  // Pre-load the incoming image so it's ready before the card slides in
+  if (nextTable.bilde_url) {
+    let done = false;
+    const guard = () => { if (!done) { done = true; _doSlide(); } };
+    const img = new Image();
+    img.onload  = guard;
+    img.onerror = guard;
+    img.src = nextTable.bilde_url;
+    setTimeout(guard, 80); // don't wait longer than 80 ms
+  } else {
+    _doSlide();
+  }
 }
 
 window.sheetNav = function(dir) {

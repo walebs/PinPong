@@ -82,7 +82,7 @@
       width: 116px; height: 116px;
       background: var(--surface);
       border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      clip-path: inset(0 80px 80px 0 round 16px);
+      clip-path: inset(0 80px 80px 0 round 10px);
       will-change: clip-path;
       transition: clip-path 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
     }
@@ -556,13 +556,23 @@
     .sheet-content {
       display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;
     }
-    .sheet-stats-col { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
-    .sheet-notes-col { /* full width in column layout */ }
-    .stat-item { display: flex; flex-direction: column; gap: 1px; }
-    .stat-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
-    .stat-val { font-size: 12px; font-weight: 600; color: var(--text); }
+    .sheet-stats-col {
+      display: flex; flex-direction: row;
+      background: var(--s2); border-radius: 10px; overflow: hidden;
+      margin-bottom: 0;
+    }
+    .sheet-notes-col { /* full width below stats */ }
+    .stat-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 8px 4px; gap: 3px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-label { font-size: 8px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
+    .stat-val { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.2; }
     .stat-val.verified  { color: var(--green); }
     .stat-val.not-found { color: #FF3B30; }
+    .stat-val.stars { color: var(--orange); font-size: 10px; letter-spacing: -1px; }
     .notes-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
     .notes-block {
       border-left: 1px solid var(--border);
@@ -1229,7 +1239,7 @@ const STATIC = [
   { navn:"Røverstaden",              lat:59.9134458, lng:10.7293552, type:"bar", label:"Bar" },
 ];
 
-let TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, notater:"", bilde_url:"", label: s.label || null }));
+let TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, vibe:null, notater:"", bilde_url:"", label: s.label || null }));
 
 function parseCSVLine(line) {
   const vals = [];
@@ -1291,6 +1301,7 @@ async function loadSheetData() {
         tilstand:   row.tilstand  || null,
         under_tak:  row.under_tak || null,
         belysning:  row.belysning || null,
+        vibe:       row.vibe ? parseFloat(row.vibe) : null,
         notater:    row.notater   || "",
         bilde_url:  resolveImage(row.images || row.url || row.bilde_url || row["bilde url"] || row.bilde || row.image || row.img || row.foto || row.photo || ""),
       };
@@ -1690,18 +1701,21 @@ function openSheet(idx, _fromNav) {
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   _sheetName.textContent = t.navn || 'Ukjent bord';
   const si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
+  const renderStars = v => {
+    let s = ''; for (let i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
+  };
   let statsHtml = '';
-  if (t.verifisert==='ja')       statsHtml += si({ label:'Status', val:'Verifisert', cls:' verified' });
+  if (t.verifisert==='ja')       statsHtml += si({ label:'Status', val:'✓ Verifisert', cls:' verified' });
   else if (t.verifisert==='nei') statsHtml += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
   else                           statsHtml += si({ label:'Status', val:'Ikke besøkt' });
-  if (t.antall)    statsHtml += si({ label:'Antall',    val: esc(t.antall) });
-  if (t.tilstand)  statsHtml += si({ label:'Tilstand',  val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
-  if (t.belysning) statsHtml += si({ label:'Belysning', val: esc(t.belysning) });
+  if (t.tilstand)  statsHtml += si({ label:'Tilstand', val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+  if (t.antall)    statsHtml += si({ label:'Antall',   val: esc(t.antall) });
   if (t.under_tak) {
-    const takVal = /ja/i.test(t.under_tak) ? '☂️ Ja' : /nei/i.test(t.under_tak) ? 'Nei' : esc(t.under_tak);
+    const takVal = /ja/i.test(t.under_tak) ? '☂ Ja' : /nei/i.test(t.under_tak) ? 'Nei' : esc(t.under_tak);
     const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
     statsHtml += si({ label:'Under tak', val: takVal, cls: takCls });
   }
+  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:'Vibe', val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';
   if (t.notater) {
@@ -1728,6 +1742,14 @@ function openSheet(idx, _fromNav) {
 }
 
 function closeSheet() {
+  // Always clear any lingering swipe/animation state
+  _hSwipeActive = false;
+  _cardAnimating = false;
+  _bottomSheet.style.transition = '';
+  _bottomSheet.style.transform  = '';
+  const card = document.getElementById('sheetCard');
+  if (card) { card.style.transition = ''; card.style.transform = ''; }
+
   _bottomSheet.classList.remove('open');
   _nearbyContainer.classList.remove('sheet-open');
   _fabStack.classList.remove('sheet-open');
@@ -1735,7 +1757,6 @@ function closeSheet() {
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false, index)));
   selectedIdx = null;
   history.replaceState(null,'', location.pathname);
-  // Reset swipe history
   if (typeof resetSheetHistory === 'function') resetSheetHistory();
 }
 
@@ -2226,7 +2247,9 @@ let _hSwipeActive = false; // set true during horizontal card navigation
   _bottomSheet.addEventListener('touchend', () => {
     if (!dragging) return;
     dragging = false;
-    if (_hSwipeActive) return; // hand off — horizontal nav handles its own end
+    // Always reset sheet inline styles so X button / CSS transitions work correctly
+    _bottomSheet.style.transition = '';
+    if (_hSwipeActive) { _bottomSheet.style.transform = ''; return; }
     const velocity = currentY / Math.max(1, Date.now() - startTime);
     if (currentY > 80 || velocity > 0.5) {
       _bottomSheet.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
@@ -2386,6 +2409,14 @@ window.resetSheetHistory = () => {}; // kept for compat
     card.style.transform  = `translateX(${liveDx}px)`;
   }, { passive: true });
 
+  // Safety: touchcancel clears all state (phone call, scroll lock, etc.)
+  _bottomSheet.addEventListener('touchcancel', () => {
+    if (!active) return;
+    active = false; dirLocked = null; liveDx = 0; _hSwipeActive = false;
+    const card = getCard();
+    if (card) { card.style.transition = ''; card.style.transform = ''; }
+  });
+
   _bottomSheet.addEventListener('touchend', () => {
     if (!active) return;
     active = false;
@@ -2402,6 +2433,7 @@ window.resetSheetHistory = () => {}; // kept for compat
 
     if (commit) {
       _cardAnimating = true;
+      _hSwipeActive  = false; // release immediately so X / dismiss always work
       _swipePos = next;
 
       // Fly current card off-screen from its dragged position
@@ -2422,7 +2454,6 @@ window.resetSheetHistory = () => {}; // kept for compat
         setTimeout(() => {
           if (card) card.style.transition = '';
           _cardAnimating = false;
-          _hSwipeActive  = false;
         }, 360);
       }, 185);
 

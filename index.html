@@ -586,19 +586,27 @@
       transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
     .btn-share:active { opacity: 0.7; }
-    /* Photo wrap + swipe arrows */
+    /* Photo wrap */
     .sheet-photo-wrap { position: relative; overflow: hidden; }
-    .swipe-arrow {
-      position: absolute; top: 50%; transform: translateY(-50%);
-      width: 28px; height: 28px; border-radius: 50%; border: none;
-      background: rgba(0,0,0,0.35); backdrop-filter: blur(6px);
+    /* Table navigation bar — sits below action buttons */
+    .sheet-nav-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 4px 2px; margin-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .sheet-nav-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--s2); color: var(--text);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      opacity: 0.75; transition: opacity 0.12s;
+      transition: background 0.12s, opacity 0.12s; flex-shrink: 0;
     }
-    .swipe-arrow:active { opacity: 1; }
-    .swipe-arrow-left  { left: 10px; }
-    .swipe-arrow-right { right: 10px; }
+    .sheet-nav-btn:active { background: var(--border); }
+    .sheet-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+    .sheet-nav-label {
+      font-size: 12px; color: var(--muted); font-weight: 600;
+      letter-spacing: 0.3px; text-align: center;
+    }
     /* Name row with heart */
     .sheet-name-row {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -780,8 +788,8 @@
        Slight overshoot on the curve so the fly-out feels energetic and visible. */
     .leaflet-cluster-anim .leaflet-marker-icon,
     .leaflet-cluster-anim .leaflet-marker-shadow {
-      transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-                  opacity  0.45s ease !important;
+      transition: transform 0.28s ease-out,
+                  opacity  0.22s ease !important;
     }
     .leaflet-control-attribution {
       background: transparent !important; color: #222 !important;
@@ -1040,12 +1048,6 @@
   <div id="sheetCard">
   <div class="sheet-photo-wrap" id="sheetPhotoWrap">
     <img class="sheet-photo" id="sheetPhoto" src="" alt="" />
-    <button class="swipe-arrow swipe-arrow-left" onclick="sheetNav(-1)" title="Forrige">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <button class="swipe-arrow swipe-arrow-right" onclick="sheetNav(1)" title="Neste">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
   </div>
   <div class="sheet-body">
     <div class="sheet-type" id="sheetType"></div>
@@ -1066,6 +1068,15 @@
       </button>
       <button class="btn-share" onclick="shareTable()" title="Del">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+    </div>
+    <div class="sheet-nav-bar" id="sheetNavBar">
+      <button class="sheet-nav-btn" id="sheetNavPrev" onclick="sheetNav(-1)" title="Forrige bord">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="sheet-nav-label" id="sheetNavLabel">1 / 1 bord</span>
+      <button class="sheet-nav-btn" id="sheetNavNext" onclick="sheetNav(1)" title="Neste bord">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
   </div>
@@ -1471,10 +1482,11 @@ function showNearbyStrip(lat, lng) {
     const check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     const glow     = idx === 0 ? ' nearest-glow' : '';
     const typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
+    const roofBadge = (t.under_tak && /ja/i.test(t.under_tak)) ? ' <span title="Under tak" style="font-size:11px">☂️</span>' : '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
-      <div class="nearby-card-type">${typeLabel}</div>
+      <div class="nearby-card-type">${typeLabel}${roofBadge}</div>
     </div>`;
   }).join('');
 
@@ -1665,6 +1677,11 @@ function openSheet(idx, _fromNav) {
   if (t.antall)    statsHtml += si({ label:'Antall',    val: esc(t.antall) });
   if (t.tilstand)  statsHtml += si({ label:'Tilstand',  val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
   if (t.belysning) statsHtml += si({ label:'Belysning', val: esc(t.belysning) });
+  if (t.under_tak) {
+    const takVal = /ja/i.test(t.under_tak) ? '☂️ Ja' : /nei/i.test(t.under_tak) ? 'Nei' : esc(t.under_tak);
+    const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
+    statsHtml += si({ label:'Under tak', val: takVal, cls: takCls });
+  }
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';
   if (t.notater) {
@@ -1687,6 +1704,7 @@ function openSheet(idx, _fromNav) {
     map.panTo([t.lat, t.lng], { animate:true, duration: alreadyOpen ? 0.2 : 0.35 });
   }
   updateHeartBtn();
+  updateSheetNav();
 }
 
 function closeSheet() {
@@ -2300,6 +2318,18 @@ window.sheetNav = function(dir) {
   sheetSwipeTo(_swipeList[_swipePos], dir);
 };
 
+function updateSheetNav() {
+  const label = document.getElementById('sheetNavLabel');
+  const prev  = document.getElementById('sheetNavPrev');
+  const next  = document.getElementById('sheetNavNext');
+  if (!label) return;
+  const total = _swipeList.length;
+  const pos   = _swipePos + 1;
+  label.textContent = `${pos} / ${total} bord`;
+  prev.disabled = _swipePos <= 0;
+  next.disabled = _swipePos >= total - 1;
+}
+
 window.resetSheetHistory = () => {}; // kept for compat
 
 (function() {
@@ -2352,8 +2382,8 @@ window.resetSheetHistory = () => {}; // kept for compat
     swapTiles(isLight);
   };
 
-  // Apply saved preference on load
-  const savedLight = localStorage.getItem('pinpong-theme') === 'light';
+  // Apply saved preference on load — default is light mode
+  const savedLight = localStorage.getItem('pinpong-theme') !== 'dark';
   applyTheme(savedLight);
   // Tiles swap after map is ready
   if (savedLight) setTimeout(() => swapTiles(true), 0);

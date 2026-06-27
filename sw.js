@@ -71,7 +71,8 @@ self.addEventListener('activate', event => {
 
 // ── Fetch: serve from cache, fall back to network ────────
 self.addEventListener('fetch', event => {
-  if (!event.request.url.includes('cartocdn.com')) return;
+  const url = event.request.url;
+  if (!url.includes('cartocdn.com') && !url.includes('openstreetmap.org')) return;
   event.respondWith(
     caches.open(TILE_CACHE).then(async cache => {
       const cached = await cache.match(event.request);

@@ -52,12 +52,7 @@
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
     /* Dark mode: filter only tile pane so markers stay vivid */
     .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
-    /* Light mode: filter whole map — saturate/contrast don't shift marker hue */
-    body.light #map { filter: brightness(0.96) contrast(1.12) saturate(1.65); }
-    body.light .leaflet-tile-pane { filter: none; }
-    @media (hover: none) and (pointer: coarse) {
-      body.light #map { filter: brightness(0.88) contrast(1.15) saturate(1.65); }
-    }
+    body.light #map { filter: none; }
     /* Light mode: white search field */
     body.light .search-field {
       background: rgba(255,255,255,0.92);
@@ -1323,7 +1318,10 @@ const _tileOpts = {
   updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
 };
 let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
-let _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
+let _lightTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+  maxZoom: 19, updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
+});
 _darkTiles.addTo(map);
 let _currentTiles = _darkTiles;
 

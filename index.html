@@ -1047,8 +1047,9 @@ function renderMarkers() {
   if (clusterGroup)    map.removeLayer(clusterGroup);
   if (clusterGroupBar) map.removeLayer(clusterGroupBar);
   leafletMarkers = [];
-  clusterGroup    = makeClusterGroup('#FF6B00');
-  clusterGroupBar = makeClusterGroup('#7C3AED');
+  const _lm = document.body.classList.contains('light');
+  clusterGroup    = makeClusterGroup(_lm ? '#FF9500' : '#FF6B00');
+  clusterGroupBar = makeClusterGroup(_lm ? '#9333EA' : '#7C3AED');
   TABLES.forEach((t, i) => {
     if (t.type==='outdoor' && !showOutdoor) return;
     if (t.type==='bar'     && !showBar)     return;

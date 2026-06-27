@@ -753,6 +753,15 @@
     }
     .theme-btn:active { background: var(--s2); }
     body.light .theme-btn { transform: rotate(180deg); }
+    .app-wordmark {
+      position: fixed; z-index: 402;
+      top: calc(env(safe-area-inset-top, 0px) + 22px);
+      left: 50%; transform: translateX(-50%);
+      font-size: 17px; font-weight: 800; letter-spacing: -0.4px;
+      color: white; pointer-events: none; white-space: nowrap;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.35);
+    }
+    body.light .app-wordmark { color: var(--text); text-shadow: 0 1px 4px rgba(0,0,0,0.08); }
     .cluster-icon {
       width: 30px; height: 30px; background: #FF9500;
       border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);
@@ -836,7 +845,7 @@
         </svg>
       </div>
       <div class="profile-app-name">PinPong</div>
-      <div class="profile-app-sub">Oslo Bordtennis</div>
+      <div class="profile-app-sub">Bordtennis bord i Oslo, Lørenskog og Lillestrøm!</div>
     </div>
   </div>
   <div class="profile-body">
@@ -980,6 +989,7 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 <div class="zoom-btns">
+  <div class="app-wordmark">PinPong</div>
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema">
@@ -1897,7 +1907,7 @@ function profileRapporter() {
   // Update submit button with remaining count
   const rem = _rapportRemaining();
   const btn = document.querySelector('.rapport-submit');
-  if (btn) btn.textContent = rem > 0 ? `Send inn (${rem} igjen i dag)` : 'Grensen nådd for i dag';
+  if (btn) btn.textContent = 'Send inn';
   document.getElementById('rapportPage').classList.add('open');
 }
 function closeRapport() {
@@ -1916,7 +1926,7 @@ function rapportPhotoChosen(input) {
 }
 function submitRapport() {
   if (!_rapportCanSubmit()) {
-    showLocToast('Grense nådd', 'Du kan rapportere maks 3 bord per dag. Prøv igjen i morgen 🏓');
+    showLocToast('For mange innsendelser', 'Du har sendt inn for mange bord i dag. Prøv igjen om 24t.');
     return;
   }
   const navn     = document.getElementById('rNavn').value.trim();

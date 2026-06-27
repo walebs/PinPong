@@ -119,20 +119,33 @@
     }
     .filter-fab.open .filter-mini-grid { opacity: 0; }
     .fmi {
-      width: 24px; height: 24px;
+      width: 24px; height: 24px; position: relative;
       display: flex; align-items: center; justify-content: center;
       color: var(--text); opacity: 0.45;
-      transition: color 0.2s, opacity 0.2s, filter 0.2s;
+      transition: color 0.2s, opacity 0.2s;
     }
     .fmi svg { width: 18px; height: 18px; }
     .fmi.on { opacity: 1; }
-    .fmi-ute.on   { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 10px rgba(52,199,89,0.5)); }
-    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 5px rgba(139,92,246,1))  drop-shadow(0 0 10px rgba(139,92,246,0.5)); }
-    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 5px rgba(100,160,255,1)) drop-shadow(0 0 10px rgba(100,160,255,0.5)); }
-    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 5px rgba(255,55,95,1))   drop-shadow(0 0 10px rgba(255,55,95,0.5)); }
-    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 10px rgba(52,199,89,0.5)); }
-    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 10px rgba(52,199,89,0.5)); }
-    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 5px rgba(255,214,0,1))   drop-shadow(0 0 10px rgba(255,214,0,0.5)); }
+    /* No CSS filter inside position:fixed — causes iOS Safari to hide other fixed elements */
+    /* Use box-shadow on a pseudo-element background for the glow instead */
+    .fmi.on::before {
+      content: ''; position: absolute; inset: 0; border-radius: 8px; opacity: 0.18;
+      transition: background 0.2s;
+    }
+    .fmi-ute.on   { color: var(--green);  }
+    .fmi-inne.on  { color: var(--purple); }
+    .fmi-tak.on   { color: #64a0ff;       }
+    .fmi-fav.on   { color: #FF375F;       }
+    .fmi-besok.on { color: var(--green);  }
+    .fmi-prog.on  { color: var(--green);  }
+    .fmi-light.on { color: #FFD600;       }
+    .fmi-ute.on::before   { background: rgba(52,199,89,1);   }
+    .fmi-inne.on::before  { background: rgba(139,92,246,1);  }
+    .fmi-tak.on::before   { background: rgba(100,160,255,1); }
+    .fmi-fav.on::before   { background: rgba(255,55,95,1);   }
+    .fmi-besok.on::before { background: rgba(52,199,89,1);   }
+    .fmi-prog.on::before  { background: rgba(52,199,89,1);   }
+    .fmi-light.on::before { background: rgba(255,214,0,1);   }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
       letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;

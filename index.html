@@ -44,10 +44,12 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; filter: brightness(1.18) contrast(1.08); transition: filter 0.4s ease; }
-    body.light #map { filter: brightness(0.88) contrast(1.25) saturate(1.2); }
+    /* Light mode: filter ONLY the tile layer, not markers */
+    body.light #map { filter: none; }
+    body.light .leaflet-tile-pane { filter: brightness(0.88) contrast(1.25) saturate(1.2); }
     /* Touch screens (mobile) render tiles much brighter — compensate aggressively */
     @media (hover: none) and (pointer: coarse) {
-      body.light #map { filter: brightness(0.72) contrast(1.45) saturate(1.35); }
+      body.light .leaflet-tile-pane { filter: brightness(0.72) contrast(1.45) saturate(1.35); }
     }
     /* Light mode: white search field */
     body.light .search-field {
@@ -58,8 +60,6 @@
       background: rgba(255,255,255,0.96);
       border: 1px solid rgba(0,0,0,0.1);
     }
-    /* Light mode: make markers pop against bright map */
-    body.light .leaflet-marker-pane { filter: drop-shadow(0 3px 7px rgba(0,0,0,0.28)); }
     /* Light mode: vivid green location dot */
     body.light .user-dot-core {
       background: #00C853;

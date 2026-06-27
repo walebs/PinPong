@@ -928,7 +928,7 @@
         <label class="rapport-label" style="margin-bottom:0">Type</label>
         <div class="rapport-seg" id="rTypeSeg">
           <button class="rapport-seg-btn active" data-val="ute" onclick="rapportSegPick(this)">🌳 Ute</button>
-          <button class="rapport-seg-btn" data-val="inne" onclick="rapportSegPick(this)">🍺 Inne</button>
+          <button class="rapport-seg-btn" data-val="inne" onclick="rapportSegPick(this)">🏠 Inne</button>
         </div>
       </div>
     </div>
@@ -944,7 +944,7 @@
       </div>
     </div>
 
-    <button class="rapport-submit" onclick="submitRapport()">Send inn 🏓</button>
+    <button class="rapport-submit" onclick="submitRapport()">Send inn</button>
 
   </div>
 </div>
@@ -1897,7 +1897,7 @@ function profileRapporter() {
   // Update submit button with remaining count
   const rem = _rapportRemaining();
   const btn = document.querySelector('.rapport-submit');
-  if (btn) btn.textContent = rem > 0 ? `Send inn 🏓 (${rem} igjen i dag)` : 'Grensen nådd for i dag';
+  if (btn) btn.textContent = rem > 0 ? `Send inn (${rem} igjen i dag)` : 'Grensen nådd for i dag';
   document.getElementById('rapportPage').classList.add('open');
 }
 function closeRapport() {

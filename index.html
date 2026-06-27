@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PinPong" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
   <title>PinPong</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="anonymous" />
@@ -46,9 +49,9 @@
       touch-action: manipulation;
     }
     button { touch-action: manipulation; }
-    #map { position: fixed; inset: 0; z-index: 0; touch-action: none; filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
-    /* Light mode: filter ONLY the tile layer, not markers */
-    body.light #map { filter: none; }
+    #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
+    /* Filter ONLY the tile layer in both modes — keeps markers in their true colors */
+    .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
     body.light .leaflet-tile-pane { filter: brightness(0.88) contrast(1.25) saturate(1.2); }
     /* Touch screens (mobile) render tiles much brighter — compensate aggressively */
     @media (hover: none) and (pointer: coarse) {

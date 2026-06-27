@@ -107,32 +107,33 @@
       opacity: 1; pointer-events: auto;
       transform: scale(1) translateY(0);
     }
-    /* Filter indicators — glowing text above search field */
-    .filter-indicators {
-      position: fixed;
-      top: calc(env(safe-area-inset-top, 0px) + 114px);
-      left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: row; align-items: center; gap: 14px;
-      z-index: 401; pointer-events: none;
-      transition: opacity 0.8s ease;
-      white-space: nowrap;
+    /* Mini filter indicator grid — below the toggle button */
+    .filter-mini-grid {
+      position: absolute; top: 50px; left: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 14px);
+      grid-template-rows: repeat(2, 14px);
+      gap: 5px;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      width: 44px; /* matches toggle button */
+      justify-content: center;
     }
-    .filter-indicators.faded {
-      opacity: 0;
+    .filter-fab.open .filter-mini-grid { opacity: 0; }
+    .fmi {
+      width: 14px; height: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); opacity: 0.2;
+      transition: color 0.2s, opacity 0.2s, filter 0.2s;
     }
-    .fi-text {
-      font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
-      line-height: 1;
-      transition: color 0.15s, text-shadow 0.15s;
-    }
-    .fi-text-outdoor.active {
-      color: var(--orange);
-      text-shadow: 0 0 8px rgba(255,107,0,0.9), 0 0 20px rgba(255,107,0,0.4);
-    }
-    .fi-text-bar.active {
-      color: var(--purple);
-      text-shadow: 0 0 8px rgba(124,58,237,0.9), 0 0 20px rgba(124,58,237,0.4);
-    }
+    .fmi svg { width: 11px; height: 11px; }
+    .fmi.on { opacity: 1; }
+    .fmi-ute.on   { color: var(--orange); filter: drop-shadow(0 0 4px rgba(255,149,0,0.8)); }
+    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 4px rgba(139,92,246,0.8)); }
+    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 4px rgba(100,160,255,0.8)); }
+    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 4px rgba(255,55,95,0.8)); }
+    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
+    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
     .filter-icon-label {
       font-size: 7.5px; font-weight: 700; color: var(--muted);
       letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
@@ -196,8 +197,20 @@
       animation: label-glow 4s ease-in-out infinite;
     }
     @keyframes wordmark-glow {
-      0%, 100% { text-shadow: 0 0 8px rgba(255,149,0,0.4), 0 0 16px rgba(255,149,0,0.15); }
-      50%       { text-shadow: 0 0 12px rgba(255,149,0,0.9), 0 0 28px rgba(255,149,0,0.45), 0 0 48px rgba(255,149,0,0.15); }
+      0%, 100% {
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.55),  1px -1px 0 rgba(0,0,0,0.55),
+          -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
+          0 2px 6px rgba(0,0,0,0.4),
+          0 0 10px rgba(255,149,0,0.35);
+      }
+      50% {
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.55),  1px -1px 0 rgba(0,0,0,0.55),
+          -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
+          0 2px 6px rgba(0,0,0,0.4),
+          0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
+      }
     }
     @keyframes label-glow {
       0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.15); }
@@ -801,6 +814,8 @@
       font-family: 'Russo One', 'Arial Black', sans-serif;
       font-size: 20px; font-weight: 400; letter-spacing: 3px;
       color: var(--orange); pointer-events: none; white-space: nowrap;
+      -webkit-text-stroke: 0.6px rgba(0,0,0,0.5);
+      paint-order: stroke fill;
       animation: wordmark-glow 3s ease-in-out infinite;
     }
     .cluster-icon {
@@ -873,6 +888,29 @@
     <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
     <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
     <div class="filter-cell" style="opacity:0;pointer-events:none"></div>
+  </div>
+  <!-- Mini indicator icons below toggle, hidden when panel open -->
+  <div class="filter-mini-grid" id="filterMiniGrid">
+    <!-- Row 1: progress/verified, UTE, INNE -->
+    <div class="fmi fmi-prog on" id="fmi-prog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="9 12 11 14 15 10"/></svg>
+    </div>
+    <div class="fmi fmi-ute on" id="fmi-ute">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><line x1="12" y1="7.5" x2="12" y2="14"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="9" y1="20" x2="12" y2="14"/><line x1="15" y1="20" x2="12" y2="14"/></svg>
+    </div>
+    <div class="fmi fmi-inne on" id="fmi-inne">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M3 10L12 3l9 7"/></svg>
+    </div>
+    <!-- Row 2: TAK, LIKTE, BESØKT -->
+    <div class="fmi fmi-tak" id="fmi-tak">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M9 21V12h6v9"/><path d="M3 9.5v11.5h18V9.5"/></svg>
+    </div>
+    <div class="fmi fmi-fav" id="fmi-fav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </div>
+    <div class="fmi fmi-besok" id="fmi-besok">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
   </div>
 </div>
 
@@ -1017,10 +1055,6 @@
   <div class="fav-list" id="favList"></div>
 </div>
 
-<div class="filter-indicators" id="filterIndicators">
-  <span class="fi-text fi-text-outdoor active" id="fiOutdoor">UTE</span>
-  <span class="fi-text fi-text-bar active" id="fiBar">INNE</span>
-</div>
 
 <div class="search-wrap" id="searchWrap">
   <div class="search-field" onclick="expandSearch()">
@@ -1170,8 +1204,23 @@ const _mapsOverlay     = document.getElementById('mapsOverlay');
 const _mapsModal       = document.getElementById('mapsModal');
 const _progressArc     = document.getElementById('progressArc');
 const _progressFraction= document.getElementById('progressFraction');
-const _fiOutdoor       = document.getElementById('fiOutdoor');
-const _fiBar           = document.getElementById('fiBar');
+const _fmiUte          = document.getElementById('fmi-ute');
+const _fmiInne         = document.getElementById('fmi-inne');
+const _fmiTak          = document.getElementById('fmi-tak');
+const _fmiFav          = document.getElementById('fmi-fav');
+const _fmiBesok        = document.getElementById('fmi-besok');
+const _fmiProg         = document.getElementById('fmi-prog');
+
+function updateMiniIndicators() {
+  _fmiUte  .classList.toggle('on', showOutdoor);
+  _fmiInne .classList.toggle('on', showBar);
+  _fmiTak  .classList.toggle('on', showRoofOnly);
+  _fmiFav  .classList.toggle('on', showFavOnly);
+  _fmiBesok.classList.toggle('on', showVerifiedOnly);
+  // prog glows if any tables are verified
+  const anyVerified = TABLES.some(t => t.verifisert === 'ja');
+  _fmiProg.classList.toggle('on', anyVerified);
+}
 
 const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
@@ -1347,6 +1396,7 @@ function updateProgress() {
   const circ     = 2 * Math.PI * 9; // r=9 → ~56.55
   _progressArc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
   _progressFraction.textContent = `${verified}/${total}`;
+  updateMiniIndicators();
 }
 
 const map = L.map('map', {
@@ -1483,11 +1533,7 @@ function renderMarkers() {
 
 renderMarkers();
 
-// Fade out UTE/INNE indicators after 5 s
-setTimeout(() => {
-  const fi = document.getElementById('filterIndicators');
-  if (fi) fi.classList.add('faded');
-}, 45000);
+updateMiniIndicators();
 
 loadSheetData().then(() => {
   const param = new URLSearchParams(location.search).get('bord');
@@ -2218,10 +2264,9 @@ function toggleFilter(type) {
   const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly };
   document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
 
-  _fiOutdoor.classList.toggle('active', showOutdoor);
-  _fiBar.classList.toggle('active', showBar);
   renderMarkers(); closeSheet();
   if (userLat !== null) showNearbyStrip(userLat, userLng);
+  updateMiniIndicators();
 }
 
 // ── Swipe-to-dismiss bottom sheet ───────────────────────

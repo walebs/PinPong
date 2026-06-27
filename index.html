@@ -177,14 +177,7 @@
       0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.15); }
       50%       { text-shadow: 0 0 10px rgba(255,149,0,0.6), 0 0 20px rgba(255,149,0,0.2); }
     }
-    @keyframes label-glow-light {
-      0%, 100% { text-shadow: 0 1px 0 rgba(0,0,0,0.08), 0 0 8px rgba(255,149,0,0.4); }
-      50%       { text-shadow: 0 1px 0 rgba(0,0,0,0.08), 0 0 14px rgba(255,149,0,0.85), 0 0 28px rgba(255,149,0,0.3); }
-    }
-    body.light .nearby-label {
-      font-weight: 800;
-      animation: label-glow-light 4s ease-in-out infinite;
-    }
+    body.light .nearby-label { font-weight: 800; }
     .nearby-compass-btn, .nearby-locate-btn {
       width: 48px; height: 48px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 50%;
@@ -951,7 +944,9 @@ const map = L.map('map', {
   center: [59.926, 10.752], zoom: 13,
   zoomControl: false, attributionControl: true,
   tap: true, preferCanvas: true,
-  zoomSnap: 0, zoomDelta: 1,
+  zoomSnap: 0, zoomDelta: 0.5,
+  wheelPxPerZoomLevel: 120,
+  wheelDebounceTime: 20,
   minZoom: 5, maxZoom: 19,
   rotate: true, rotateControl: false, bearing: 0,
   inertia: true,

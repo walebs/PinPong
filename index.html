@@ -1614,6 +1614,8 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
 }
 
 let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+let hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
+let currentLang = localStorage.getItem('pinpong-lang') || 'no';
 let userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
@@ -2235,8 +2237,6 @@ const LANG = {
   }
 };
 
-let currentLang = localStorage.getItem('pinpong-lang') || 'no';
-
 function tr(key) {
   return (LANG[currentLang] && LANG[currentLang][key]) || LANG.no[key] || key;
 }
@@ -2295,7 +2295,6 @@ function syncSettingsUI() {
 }
 
 // ── Hide visited toggle ──────────────────────────────────
-let hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
 function applyHideVisited(val) {
   hideVisited = val;
   localStorage.setItem('pinpong-hide-visited', val);

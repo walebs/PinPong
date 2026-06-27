@@ -934,9 +934,13 @@
     </div>
 
     <div class="rapport-card">
-      <div class="rapport-field">
-        <label class="rapport-label">Kommentar</label>
-        <textarea class="rapport-input rapport-textarea" id="rKommentar" placeholder="Tilgjengelighet, åpningstider, tilstand på bordet…" rows="3"></textarea>
+      <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between">
+        <label class="rapport-label" style="margin-bottom:0">Har bordet belysning?</label>
+        <div class="rapport-seg" id="rBelysingSeg">
+          <button class="rapport-seg-btn active" data-val="ja" onclick="rapportSegPick2(this)">Ja</button>
+          <button class="rapport-seg-btn" data-val="nei" onclick="rapportSegPick2(this)">Nei</button>
+          <button class="rapport-seg-btn" data-val="ukjent" onclick="rapportSegPick2(this)">Vet ikke</button>
+        </div>
       </div>
     </div>
 
@@ -1857,20 +1861,53 @@ function profileSettings() {
 function closeSettings() {
   document.getElementById('settingsPage').classList.remove('open');
 }
+// ── Rate limiting: max 3 rapport submissions per 24h ────
+const _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
+function _rapportCanSubmit() {
+  try {
+    const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    const today = new Date().toDateString();
+    if (d.date !== today) return true;
+    return (d.count || 0) < 3;
+  } catch { return true; }
+}
+function _rapportRecord() {
+  try {
+    const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    const today = new Date().toDateString();
+    const count = d.date === today ? (d.count || 0) + 1 : 1;
+    localStorage.setItem(_RAPPORT_RL_KEY, JSON.stringify({ date: today, count }));
+  } catch {}
+}
+function _rapportRemaining() {
+  try {
+    const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    const today = new Date().toDateString();
+    if (d.date !== today) return 3;
+    return Math.max(0, 3 - (d.count || 0));
+  } catch { return 3; }
+}
+
 function profileRapporter() {
   // Reset form
-  ['rNavn','rAdresse','rKommentar'].forEach(id => document.getElementById(id).value = '');
-  document.querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
+  ['rNavn','rAdresse'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('#rTypeSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
+  document.querySelectorAll('#rBelysingSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ja'));
   document.getElementById('rapportPhotoPreview').innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Ta bilde av bordet</span>`;
+  // Update submit button with remaining count
+  const rem = _rapportRemaining();
+  const btn = document.querySelector('.rapport-submit');
+  if (btn) btn.textContent = rem > 0 ? `Send inn 🏓 (${rem} igjen i dag)` : 'Grensen nådd for i dag';
   document.getElementById('rapportPage').classList.add('open');
 }
 function closeRapport() {
   document.getElementById('rapportPage').classList.remove('open');
 }
 function rapportSegPick(btn) {
-  document.querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
+  btn.closest('.rapport-seg').querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+function rapportSegPick2(btn) { rapportSegPick(btn); }
 function rapportPhotoChosen(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1878,20 +1915,27 @@ function rapportPhotoChosen(input) {
   document.getElementById('rapportPhotoPreview').innerHTML = `<img src="${url}" alt="Bilde"/>`;
 }
 function submitRapport() {
+  if (!_rapportCanSubmit()) {
+    showLocToast('Grense nådd', 'Du kan rapportere maks 3 bord per dag. Prøv igjen i morgen 🏓');
+    return;
+  }
   const navn     = document.getElementById('rNavn').value.trim();
   const adresse  = document.getElementById('rAdresse').value.trim();
-  const type     = document.querySelector('.rapport-seg-btn.active')?.dataset.val || 'ute';
-  const kommentar = document.getElementById('rKommentar').value.trim();
+  const type     = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
+  const belysning = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
   if (!navn) { document.getElementById('rNavn').focus(); return; }
+  const typeLabel = type === 'ute' ? 'Utebord' : 'Innebord';
+  const belysLabel = belysning === 'ja' ? 'Ja' : belysning === 'nei' ? 'Nei' : 'Vet ikke';
   const body = [
-    `Navn: ${navn}`,
+    `Navn / Sted: ${navn}`,
     `Adresse: ${adresse || '–'}`,
-    `Type: ${type === 'ute' ? 'Utebord' : 'Innebord'}`,
-    `Kommentar: ${kommentar || '–'}`,
+    `Type: ${typeLabel}`,
+    `Belysning: ${belysLabel}`,
     '',
-    '(Husk å legge ved bilde som vedlegg)'
+    '⚠️ Husk å legge ved bilde som vedlegg!'
   ].join('\n');
   window.open(`mailto:belal.jan@hotmail.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`, '_blank');
+  _rapportRecord();
   closeRapport();
 }
 

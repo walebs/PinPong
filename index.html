@@ -954,7 +954,7 @@ const _tileOpts = {
   maxZoom: 19, subdomains: 'abcd',
   updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
 };
-let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_matter/{z}/{x}/{y}{r}.png', _tileOpts);
+let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
 let _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
 _darkTiles.addTo(map);
 let _currentTiles = _darkTiles;

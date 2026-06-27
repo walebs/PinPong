@@ -52,10 +52,10 @@
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
     /* Filter ONLY the tile layer in both modes — keeps markers in their true colors */
     .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
-    body.light .leaflet-tile-pane { filter: brightness(0.88) contrast(1.25) saturate(1.2); }
+    body.light .leaflet-tile-pane { filter: contrast(1.06) saturate(1.18); }
     /* Touch screens (mobile) render tiles much brighter — compensate aggressively */
     @media (hover: none) and (pointer: coarse) {
-      body.light .leaflet-tile-pane { filter: brightness(0.72) contrast(1.45) saturate(1.35); }
+      body.light .leaflet-tile-pane { filter: brightness(0.9) contrast(1.15) saturate(1.22); }
     }
     /* Light mode: white search field */
     body.light .search-field {
@@ -176,6 +176,14 @@
     @keyframes label-glow {
       0%, 100% { text-shadow: 0 0 6px rgba(255,149,0,0.15); }
       50%       { text-shadow: 0 0 10px rgba(255,149,0,0.6), 0 0 20px rgba(255,149,0,0.2); }
+    }
+    @keyframes label-glow-light {
+      0%, 100% { text-shadow: 0 1px 0 rgba(0,0,0,0.08), 0 0 8px rgba(255,149,0,0.4); }
+      50%       { text-shadow: 0 1px 0 rgba(0,0,0,0.08), 0 0 14px rgba(255,149,0,0.85), 0 0 28px rgba(255,149,0,0.3); }
+    }
+    body.light .nearby-label {
+      font-weight: 800;
+      animation: label-glow-light 4s ease-in-out infinite;
     }
     .nearby-compass-btn, .nearby-locate-btn {
       width: 48px; height: 48px; background: var(--surface);

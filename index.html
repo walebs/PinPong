@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0c0c0f" />
+  <meta name="theme-color" content="#0c0c0f" id="metaThemeColor" />
+  <meta name="color-scheme" content="dark light" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PinPong" />
@@ -13,6 +14,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin="anonymous" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #0c0c0f; }
+    body.light ~ html, html:has(body.light) { background: #f2f2f7; }
     :root {
       --bg:      #0c0c0f;
       --surface: #17171c;
@@ -951,7 +954,7 @@ const _tileOpts = {
   maxZoom: 19, subdomains: 'abcd',
   updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
 };
-let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
+let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_matter/{z}/{x}/{y}{r}.png', _tileOpts);
 let _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
 _darkTiles.addTo(map);
 let _currentTiles = _darkTiles;
@@ -1762,6 +1765,10 @@ window.resetSheetHistory = () => {}; // kept for compat
     document.body.classList.toggle('light', light);
     const icon = document.getElementById('themeIcon');
     if (icon) icon.innerHTML = light ? SUN_SVG : MOON_SVG;
+    // Sync browser chrome + overscroll background with map theme
+    const tc = document.getElementById('metaThemeColor');
+    if (tc) tc.content = light ? '#f2f2f7' : '#0c0c0f';
+    document.documentElement.style.background = light ? '#f2f2f7' : '#0c0c0f';
   }
 
   function swapTiles(light) {

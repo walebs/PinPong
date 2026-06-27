@@ -1903,26 +1903,26 @@ function openSheet(idx, _fromNav) {
     let s = ''; for (let i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
   };
   let statsHtml = '';
-  if (t.verifisert==='ja')       statsHtml += si({ label:t('stats.status'), val:t('stats.verifisert'), cls:' verified' });
-  else if (t.verifisert==='nei') statsHtml += si({ label:t('stats.status'), val:t('stats.ikke_funnet'), cls:' not-found' });
-  else                           statsHtml += si({ label:t('stats.status'), val:t('stats.ikke_besøkt') });
-  if (t.tilstand)  statsHtml += si({ label:t('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
-  if (t.antall)    statsHtml += si({ label:t('stats.antall'),   val: esc(t.antall) });
+  if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:tr('stats.verifisert'), cls:' verified' });
+  else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_funnet'), cls:' not-found' });
+  else                           statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_besøkt') });
+  if (t.tilstand)  statsHtml += si({ label:tr('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+  if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall) });
   if (t.under_tak) {
-    const takVal = /ja/i.test(t.under_tak) ? `☂ ${t('stats.ja')}` : /nei/i.test(t.under_tak) ? t('stats.nei') : esc(t.under_tak);
+    const takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
     const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
-    statsHtml += si({ label:t('stats.under_tak'), val: takVal, cls: takCls });
+    statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
   }
   if (t.belysning) {
-    const lysVal = /ja/i.test(t.belysning) ? `💡 ${t('stats.ja')}` : /nei/i.test(t.belysning) ? t('stats.nei') : esc(t.belysning);
+    const lysVal = /ja/i.test(t.belysning) ? `💡 ${tr('stats.ja')}` : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
     const lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
-    statsHtml += si({ label:t('stats.belysning'), val: lysVal, cls: lysCls });
+    statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
   }
-  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:t('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
+  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:tr('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';
   if (t.notater && t.notater.trim()) {
-    notesHtml = `<div class="notes-inline"><span class="notes-tag">${t('notes.label')}</span>${esc(t.notater.trim())}</div>`;
+    notesHtml = `<div class="notes-inline"><span class="notes-tag">${tr('notes.label')}</span>${esc(t.notater.trim())}</div>`;
   }
   _sheetNote.innerHTML = notesHtml;
   const alreadyOpen = _bottomSheet.classList.contains('open');
@@ -2037,7 +2037,7 @@ function profileFavoritter() {
 
     list.innerHTML = sorted.map(({ i, t, d }) => {
       const typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-      const typeLabel = t.type === 'outdoor' ? t('type.outdoor') : t('type.bar');
+      const typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : tr('type.bar');
       const distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
       const verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
       const imgHtml = t.bilde_url
@@ -2237,25 +2237,23 @@ const LANG = {
 
 let currentLang = localStorage.getItem('pinpong-lang') || 'no';
 
-function t(key) {
+function tr(key) {
   return (LANG[currentLang] && LANG[currentLang][key]) || LANG.no[key] || key;
 }
 
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
-    el.textContent = t(key);
+    el.textContent = tr(key);
   });
-  // Search input placeholder
   const si = document.getElementById('searchInput');
-  if (si) si.placeholder = t('search.placeholder');
+  if (si) si.placeholder = tr('search.placeholder');
   const sl = document.querySelector('.search-label');
-  if (sl) sl.textContent = t('search.label');
-  // Segment button active states
+  if (sl) sl.textContent = tr('search.label');
   document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
   document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
-  document.getElementById('langSubLabel').textContent = t('lang.sub');
-  // Filter cell labels
+  const lsl = document.getElementById('langSubLabel');
+  if (lsl) lsl.textContent = tr('lang.sub');
   const filterLabels = {
     'pill-outdoor': 'filter.ute', 'pill-bar': 'filter.inne',
     'pill-roof': 'filter.tak', 'pill-fav': 'filter.likte',
@@ -2264,9 +2262,8 @@ function applyLang() {
   Object.entries(filterLabels).forEach(([id, key]) => {
     const el = document.getElementById(id);
     if (!el) return;
-    // update only the text node (last child), not the svg/box child
     const textNodes = [...el.childNodes].filter(n => n.nodeType === 3);
-    if (textNodes.length) textNodes[textNodes.length-1].textContent = '\n' + t(key);
+    if (textNodes.length) textNodes[textNodes.length-1].textContent = '\n' + tr(key);
   });
   updateSheetNav();
 }
@@ -2755,7 +2752,7 @@ function updateSheetNav() {
   if (!label) return;
   const total = _swipeList.length;
   const pos   = _swipePos + 1;
-  label.textContent = `${pos} / ${total} ${t('nav.bord')}`;
+  label.textContent = `${pos} / ${total} ${tr('nav.bord')}`;
   prev.disabled = _swipePos <= 0;
   next.disabled = _swipePos >= total - 1;
 }

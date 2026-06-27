@@ -60,6 +60,12 @@
     }
     /* Light mode: make markers pop against bright map */
     body.light .leaflet-marker-pane { filter: drop-shadow(0 3px 7px rgba(0,0,0,0.28)); }
+    /* Light mode: vivid green location dot */
+    body.light .user-dot-core {
+      background: #00C853;
+      box-shadow: 0 0 8px rgba(0,200,83,0.9);
+    }
+    body.light .user-dot-ring { background: rgba(0,200,83,0.45); }
     /* Filter fab — expands in-place to 2×3 grid */
     .filter-fab {
       position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
@@ -979,7 +985,10 @@ function updateHeartBtn() {
 }
 
 function makeIcon(t, highlighted=false, tableIdx=-1) {
-  const color = t.type==='outdoor' ? '#FF6B00' : '#7C3AED';
+  const isLightMode = document.body.classList.contains('light');
+  const color = t.type==='outdoor'
+    ? (isLightMode ? '#FF9500' : '#FF6B00')
+    : (isLightMode ? '#9333EA' : '#7C3AED');
   const size  = iconSize(highlighted);
   const glow  = highlighted ? `filter:drop-shadow(0 0 8px ${color}99);` : '';
   const opacity = t.verifisert==="nei" ? 0.35 : 1;
@@ -992,7 +1001,7 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
   const checkmark = t.verifisert==="ja" ? `<div style="position:absolute;top:${offset}px;right:${offset}px;width:${cs}px;height:${cs}px;background:#34C759;border:2.5px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
   const isFav = tableIdx >= 0 && FAVORITES.has(tableIdx);
   const heartBadge = isFav ? `<div style="position:absolute;bottom:${offset}px;left:${offset}px;width:${cs}px;height:${cs}px;background:#ff3b30;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(255,59,48,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>` : '';
-  const isLight = document.body.classList.contains('light');
+  const isLight = isLightMode;
   const markerBorder = isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.15)';
   const markerShadow = isLight ? `0 3px 10px ${color}88, 0 1px 3px rgba(0,0,0,0.2)` : `0 3px 12px ${color}55`;
   const html = `<div style="position:relative;display:flex;flex-direction:column;align-items:center;${glow}opacity:${opacity}">${pulse}<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid ${markerBorder};box-shadow:${markerShadow};display:flex;align-items:center;justify-content:center;">${icon}${checkmark}${heartBadge}</div><div style="width:2px;height:6px;background:${color};opacity:0.8;margin-top:-1px;border-radius:0 0 2px 2px;"></div></div>`;

@@ -348,12 +348,13 @@
     .sheet-photo-wrap { position: relative; overflow: hidden; }
     .swipe-arrow {
       position: absolute; top: 50%; transform: translateY(-50%);
-      width: 28px; height: 28px; border-radius: 50%;
+      width: 28px; height: 28px; border-radius: 50%; border: none;
       background: rgba(0,0,0,0.35); backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
-      pointer-events: none;
-      opacity: 0.75;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      opacity: 0.75; transition: opacity 0.12s;
     }
+    .swipe-arrow:active { opacity: 1; }
     .swipe-arrow-left  { left: 10px; }
     .swipe-arrow-right { right: 10px; }
     /* Name row with heart */
@@ -577,12 +578,12 @@
   </button>
   <div class="sheet-photo-wrap" id="sheetPhotoWrap">
     <img class="sheet-photo" id="sheetPhoto" src="" alt="" />
-    <div class="swipe-arrow swipe-arrow-left">
+    <button class="swipe-arrow swipe-arrow-left" onclick="sheetNav(-1)" title="Forrige">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </div>
-    <div class="swipe-arrow swipe-arrow-right">
+    </button>
+    <button class="swipe-arrow swipe-arrow-right" onclick="sheetNav(1)" title="Neste">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
+    </button>
   </div>
   <div class="sheet-body">
     <div class="sheet-type" id="sheetType"></div>
@@ -1112,7 +1113,8 @@ if (!(typeof DeviceOrientationEvent !== 'undefined' &&
   window.addEventListener('deviceorientation', _onCompass, true);
 }
 
-function openSheet(idx) {
+function openSheet(idx, _fromNav) {
+  if (!_fromNav) buildSwipeList(idx);
   const t = TABLES[idx];
   selectedIdx = idx;
   closeMapsPicker();
@@ -1459,22 +1461,47 @@ function toggleFilter(type) {
   });
 })();
 
-// ── Swipe left/right in sheet to navigate tables ─────────
-(function() {
-  let sx = 0, sy = 0, tracking = false, sheetHistory = [];
-  window.resetSheetHistory = () => { sheetHistory = []; };
+// ── Sheet table navigation (swipe + arrow buttons) ───────
+let _swipeList = [], _swipePos = 0;
 
-  function getSortedByDistance(fromIdx) {
-    const from = TABLES[fromIdx];
-    return TABLES
-      .map((t, i) => ({ i, d: haversine(from.lat, from.lng, t.lat, t.lng) }))
-      .filter(({ i }) => {
-        if (i === fromIdx) return false;
-        const t = TABLES[i];
-        return t.type === 'outdoor' ? showOutdoor : showBar;
-      })
-      .sort((a, b) => a.d - b.d);
-  }
+function buildSwipeList(fromIdx) {
+  const ref = (userLat !== null)
+    ? { lat: userLat, lng: userLng }
+    : { lat: TABLES[fromIdx].lat, lng: TABLES[fromIdx].lng };
+  _swipeList = TABLES
+    .map((t, i) => ({ i, d: haversine(ref.lat, ref.lng, t.lat, t.lng) }))
+    .filter(({ i }) => { const t = TABLES[i]; return t.type === 'outdoor' ? showOutdoor : showBar; })
+    .sort((a, b) => a.d - b.d)
+    .map(({ i }) => i);
+  _swipePos = _swipeList.indexOf(fromIdx);
+}
+
+function sheetSwipeTo(nextIdx) {
+  const body     = _bottomSheet.querySelector('.sheet-body');
+  const photoWrap = document.getElementById('sheetPhotoWrap');
+  [body, photoWrap].forEach(el => { if (el) { el.style.transition = 'opacity 0.1s ease'; el.style.opacity = '0'; } });
+  setTimeout(() => {
+    openSheet(nextIdx, true);
+    [body, photoWrap].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.18s ease'; } });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      [body, photoWrap].forEach(el => { if (el) { el.style.opacity = '1'; } });
+      setTimeout(() => { [body, photoWrap].forEach(el => { if (el) { el.style.transition = ''; el.style.opacity = ''; } }); }, 200);
+    }));
+  }, 110);
+}
+
+window.sheetNav = function(dir) {
+  if (selectedIdx === null || !_swipeList.length) return;
+  const next = _swipePos + dir;
+  if (next < 0 || next >= _swipeList.length) return;
+  _swipePos = next;
+  sheetSwipeTo(_swipeList[_swipePos]);
+};
+
+window.resetSheetHistory = () => {}; // kept for compat
+
+(function() {
+  let sx = 0, sy = 0, tracking = false;
 
   _bottomSheet.addEventListener('touchstart', e => {
     if (!_bottomSheet.classList.contains('open')) return;
@@ -1488,34 +1515,8 @@ function toggleFilter(type) {
     tracking = false;
     const dx = e.changedTouches[0].clientX - sx;
     const dy = e.changedTouches[0].clientY - sy;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return; // not horizontal enough
-
-    const body = _bottomSheet.querySelector('.sheet-body');
-    const photoWrap = document.getElementById('sheetPhotoWrap');
-
-    function swipeTo(nextIdx) {
-      // Fade out
-      [body, photoWrap].forEach(el => { if (el) { el.style.transition = 'opacity 0.1s ease'; el.style.opacity = '0'; } });
-      setTimeout(() => {
-        openSheet(nextIdx);
-        // Fade in
-        [body, photoWrap].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.18s ease'; } });
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          [body, photoWrap].forEach(el => { if (el) { el.style.opacity = '1'; } });
-          setTimeout(() => { [body, photoWrap].forEach(el => { if (el) { el.style.transition = ''; el.style.opacity = ''; } }); }, 200);
-        }));
-      }, 110);
-    }
-
-    if (dx < 0) {
-      const list = getSortedByDistance(selectedIdx);
-      if (!list.length) return;
-      sheetHistory.push(selectedIdx);
-      swipeTo(list[0].i);
-    } else {
-      if (!sheetHistory.length) return;
-      swipeTo(sheetHistory.pop());
-    }
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    sheetNav(dx < 0 ? 1 : -1);
   }, { passive: true });
 })();
 

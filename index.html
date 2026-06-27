@@ -121,12 +121,14 @@
     .fmi {
       width: 24px; height: 24px;
       display: flex; align-items: center; justify-content: center;
-      color: var(--muted); opacity: 0.4;
+      color: var(--muted); opacity: 0.55;
       transition: color 0.2s, opacity 0.2s, filter 0.2s;
+      filter: drop-shadow(0 0 1px rgba(0,0,0,0.8)) drop-shadow(0 0 1px rgba(0,0,0,0.5));
     }
+    body.light .fmi { filter: drop-shadow(0 0 1px rgba(255,255,255,0.9)) drop-shadow(0 0 1px rgba(0,0,0,0.15)); }
     .fmi svg { width: 18px; height: 18px; }
     .fmi.on { opacity: 1; }
-    .fmi-ute.on   { color: var(--orange); filter: drop-shadow(0 0 5px rgba(255,149,0,1))   drop-shadow(0 0 12px rgba(255,149,0,0.55)); }
+    .fmi-ute.on   { color: var(--green);  filter: drop-shadow(0 0 5px rgba(52,199,89,1))   drop-shadow(0 0 12px rgba(52,199,89,0.55)); }
     .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 5px rgba(139,92,246,1))  drop-shadow(0 0 12px rgba(139,92,246,0.55)); }
     .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 5px rgba(100,160,255,1)) drop-shadow(0 0 12px rgba(100,160,255,0.55)); }
     .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 5px rgba(255,55,95,1))   drop-shadow(0 0 12px rgba(255,55,95,0.55)); }
@@ -156,14 +158,14 @@
       transition: background 0.15s, border-color 0.15s;
       flex-shrink: 0;
     }
-    #pill-outdoor .filter-cell-box { border-color: var(--orange); }
+    #pill-outdoor .filter-cell-box { border-color: var(--green); }
     #pill-bar     .filter-cell-box { border-color: var(--purple); }
-    .filter-cell-outdoor.active .filter-cell-box { background: var(--orange); border-color: var(--orange); }
+    .filter-cell-outdoor.active .filter-cell-box { background: var(--green); border-color: var(--green); }
     .filter-cell-bar.active     .filter-cell-box { background: var(--purple); border-color: var(--purple); }
-    .filter-cell-outdoor { color: rgba(255,107,0,0.35); font-size: 10px; }
+    .filter-cell-outdoor { color: rgba(52,199,89,0.35); font-size: 10px; }
     .filter-cell-bar     { color: rgba(124,58,237,0.35); font-size: 10px; }
-    .filter-cell-outdoor.active { color: var(--orange); background: transparent;
-      text-shadow: 0 0 8px rgba(255,107,0,0.6); }
+    .filter-cell-outdoor.active { color: var(--green); background: transparent;
+      text-shadow: 0 0 8px rgba(52,199,89,0.6); }
     .filter-cell-bar.active     { color: var(--purple); background: transparent;
       text-shadow: 0 0 8px rgba(124,58,237,0.6); }
     .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
@@ -297,7 +299,7 @@
     }
     /* ── Settings page ──────────────────────────────────── */
     .settings-body {
-      padding: 20px 16px;
+      padding: 48px 16px 20px;
       padding-bottom: calc(env(safe-area-inset-bottom,0px) + 40px);
       display: flex; flex-direction: column; gap: 24px;
     }
@@ -1709,7 +1711,7 @@ function showNearbyStrip(lat, lng) {
     const dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
     const check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     const glow     = idx === 0 ? ' nearest-glow' : '';
-    const typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
+    const typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : (t.label || tr('type.bar'));
     const roofBadge = (t.under_tak && /ja/i.test(t.under_tak)) ? ' <span title="Under tak" style="font-size:11px">☂️</span>' : '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
@@ -1892,7 +1894,7 @@ function openSheet(idx, _fromNav) {
   } else {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
-  const typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
+  const typeMain = t.type==='outdoor' ? '🏓 ' + tr('type.outdoor') : '🍺 ' + tr('type.bar');
   const typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
@@ -1902,26 +1904,26 @@ function openSheet(idx, _fromNav) {
     let s = ''; for (let i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
   };
   let statsHtml = '';
-  if (t.verifisert==='ja')       statsHtml += si({ label:'Status', val:'✓ Verifisert', cls:' verified' });
-  else if (t.verifisert==='nei') statsHtml += si({ label:'Status', val:'Ikke funnet', cls:' not-found' });
-  else                           statsHtml += si({ label:'Status', val:'Ikke besøkt' });
-  if (t.tilstand)  statsHtml += si({ label:'Tilstand', val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
-  if (t.antall)    statsHtml += si({ label:'Antall',   val: esc(t.antall) });
+  if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:tr('stats.verifisert'), cls:' verified' });
+  else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_funnet'), cls:' not-found' });
+  else                           statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_besøkt') });
+  if (t.tilstand)  statsHtml += si({ label:tr('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+  if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall) });
   if (t.under_tak) {
-    const takVal = /ja/i.test(t.under_tak) ? '☂ Ja' : /nei/i.test(t.under_tak) ? 'Nei' : esc(t.under_tak);
+    const takVal = /ja/i.test(t.under_tak) ? '☂ ' + tr('stats.ja') : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
     const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
-    statsHtml += si({ label:'Under tak', val: takVal, cls: takCls });
+    statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
   }
   if (t.belysning) {
-    const lysVal = /ja/i.test(t.belysning) ? '💡 Ja' : /nei/i.test(t.belysning) ? 'Nei' : esc(t.belysning);
+    const lysVal = /ja/i.test(t.belysning) ? '💡 ' + tr('stats.ja') : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
     const lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
-    statsHtml += si({ label:'Belysning', val: lysVal, cls: lysCls });
+    statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
   }
-  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:'Vibe', val: renderStars(t.vibe), cls:' stars' });
+  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:tr('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
   let notesHtml = '';
   if (t.notater && t.notater.trim()) {
-    notesHtml = `<div class="notes-inline"><span class="notes-tag">Notater</span>${esc(t.notater.trim())}</div>`;
+    notesHtml = `<div class="notes-inline"><span class="notes-tag">${tr('notes.label')}</span>${esc(t.notater.trim())}</div>`;
   }
   _sheetNote.innerHTML = notesHtml;
   const alreadyOpen = _bottomSheet.classList.contains('open');
@@ -2215,8 +2217,8 @@ const LANG = {
     'notes.label':          'Notes',
     'type.outdoor':         'Outdoor',
     'type.bar':             'Indoor',
-    'filter.ute':           'OUT',
-    'filter.inne':          'IN',
+    'filter.ute':           'OUTSIDE',
+    'filter.inne':          'INSIDE',
     'filter.tak':           'ROOF',
     'filter.likte':         'Liked',
     'filter.besøkt':        'Visited',
@@ -2854,36 +2856,36 @@ window.resetSheetHistory = () => {}; // kept for compat
   const MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
   const SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
-  function applyTheme(light) {
+  window.applyTheme = function applyTheme(light) {
     document.body.classList.toggle('light', light);
     const icon = document.getElementById('themeIcon');
     if (icon) icon.innerHTML = light ? SUN_SVG : MOON_SVG;
     const tc = document.getElementById('metaThemeColor');
     if (tc) tc.content = light ? '#f2f2f7' : '#0c0c0f';
     document.documentElement.style.background = light ? '#f2f2f7' : '#0c0c0f';
-  }
+  };
 
-  function swapTiles(light) {
+  window.swapTiles = function swapTiles(light) {
     if (typeof _darkTiles === 'undefined') return;
     const add = light ? _lightTiles : _darkTiles;
     const rem = light ? _darkTiles  : _lightTiles;
     if (!map.hasLayer(add)) map.addLayer(add);
     if (map.hasLayer(rem)) map.removeLayer(rem);
     _currentTiles = add;
-  }
+  };
 
   window.toggleTheme = function() {
     const isLight = !document.body.classList.contains('light');
     localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
-    applyTheme(isLight);
-    swapTiles(isLight);
+    window.applyTheme(isLight);
+    window.swapTiles(isLight);
   };
 
   // Apply saved preference on load — default is light mode
   const savedLight = localStorage.getItem('pinpong-theme') !== 'dark';
-  applyTheme(savedLight);
+  window.applyTheme(savedLight);
   // Tiles swap after map is ready
-  if (savedLight) setTimeout(() => swapTiles(true), 0);
+  if (savedLight) setTimeout(() => window.swapTiles(true), 0);
 })();
 
 if ('serviceWorker' in navigator) {

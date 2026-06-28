@@ -91,7 +91,7 @@
     }
     .filter-toggle:active { background: var(--s2); }
     .filter-panel {
-      position: absolute; top: 50px; left: 0;
+      position: absolute; top: 0; left: 0;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
       padding: 3px;
@@ -99,14 +99,22 @@
       grid-template-columns: repeat(3, 34px);
       grid-template-rows: repeat(3, 34px);
       opacity: 0; pointer-events: none;
-      transform: scale(0.88) translateY(-6px);
+      transform: scale(0);
       transform-origin: top left;
       transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .filter-fab.open .filter-panel {
       opacity: 1; pointer-events: auto;
-      transform: scale(1) translateY(0);
+      transform: scale(1);
     }
+    .filter-fab.open .filter-toggle { opacity: 0; pointer-events: none; }
+    .filter-cell-toggle {
+      background: var(--surface); border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .filter-cell-toggle:active { background: var(--s2); }
     /* Mini filter indicator grid — below the toggle button */
     .filter-mini-grid {
       position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
@@ -671,7 +679,12 @@
     .stat-val { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.2; }
     .stat-val.verified  { color: var(--green); }
     .stat-val.not-found { color: #FF3B30; }
-    .stat-val.stars { color: var(--orange); font-size: 10px; letter-spacing: -1px; }
+    .stat-val.stars     { color: var(--orange); font-size: 10px; letter-spacing: -1px; }
+    .stat-val.cond-good { color: var(--green); }
+    .stat-val.cond-mid  { color: #FF9500; }
+    .stat-val.cond-bad  { color: #FF3B30; }
+    .stat-val.big-num   { font-size: 16px; font-weight: 800; line-height: 1; text-align: center; }
+    .stat-val.status-icon { font-size: 18px; line-height: 1; text-align: center; }
     .notes-inline {
       font-size: 11px; color: var(--muted); line-height: 1.4;
       font-style: italic;
@@ -927,6 +940,13 @@
     </svg>
   </button>
   <div class="filter-panel">
+    <div class="filter-cell-toggle" onclick="toggleFilterFab()" title="Close filters">
+      <svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <line x1="1" y1="1.5" x2="15" y2="1.5"/>
+      <line x1="3" y1="6.5" x2="13" y2="6.5"/>
+      <line x1="5" y1="11.5" x2="11" y2="11.5"/>
+    </svg>
+    </div>
     <div class="filter-cell filter-cell-progress" id="filterProgress">
       <svg width="24" height="24" viewBox="0 0 26 26">
         <circle cx="13" cy="13" r="9" fill="none" stroke="var(--border)" stroke-width="2.5"/>
@@ -1909,9 +1929,9 @@ function openSheet(idx, _fromNav) {
     var s = ''; for (var i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
   };
   var statsHtml = '';
-  if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:tr('stats.verifisert'), cls:' verified' });
-  else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_funnet'), cls:' not-found' });
-  else                           statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_besøkt') });
+  if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:'✓', cls:' verified status-icon' });
+  else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:'✗', cls:' not-found status-icon' });
+  else                           statsHtml += si({ label:tr('stats.status'), val:'−', cls:' status-icon' });
   if (t.tilstand) {
     var _condMap = {
       'god':'Good','meget god':'Excellent','veldig god':'Excellent',
@@ -1921,9 +1941,12 @@ function openSheet(idx, _fromNav) {
     };
     var _condVal = currentLang === 'no' ? t.tilstand :
       (_condMap[t.tilstand.toLowerCase()] || t.tilstand);
-    statsHtml += si({ label:tr('stats.tilstand'), val: esc(_condVal), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+    var _condCls = /^(god|meget god|veldig god|excellent|good|ny)/i.test(t.tilstand) ? ' cond-good'
+      : /^(grei|ok|middels|decent|average)/i.test(t.tilstand) ? ' cond-mid'
+      : /^(dårlig|dårleg|poor)/i.test(t.tilstand) ? ' cond-bad' : '';
+    statsHtml += si({ label:tr('stats.tilstand'), val: esc(_condVal), cls: _condCls });
   }
-  if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall) });
+  if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall), cls:' big-num' });
   if (t.under_tak) {
     var takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
     var takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
@@ -1931,13 +1954,13 @@ function openSheet(idx, _fromNav) {
   }
   if (t.belysning) {
     var lysVal = /ja/i.test(t.belysning) ? tr('stats.ja') : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
-    var lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
+    var lysCls = '';
     statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
   }
   if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:tr('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
   var notesHtml = '';
-  if (t.notater && t.notater.trim()) {
+  if (t.notater && t.notater.trim() && currentLang !== 'en') {
     notesHtml = `<div class="notes-inline"><span class="notes-tag">${tr('notes.label')}</span>${esc(t.notater.trim())}</div>`;
   }
   _sheetNote.innerHTML = notesHtml;

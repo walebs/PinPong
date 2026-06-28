@@ -1321,14 +1321,6 @@
     Apple Maps
   </button>
 </div>
-<script>
-window.onerror = function(msg, src, line, col, err) {
-  let el = document.getElementById('_errbox');
-  if (!el) { el = document.createElement('div'); el.id='_errbox'; el.style.cssText='position:fixed;top:60px;left:0;right:0;z-index:99999;background:rgba(180,0,0,0.95);color:#fff;font-size:11px;padding:6px 8px;pointer-events:none;white-space:pre-wrap;'; document.body.appendChild(el); }
-  el.textContent += line + ': ' + msg + '\n';
-  return false;
-};
-</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
@@ -1338,26 +1330,26 @@ function esc(s) {
 }
 
 // ── Cached DOM references (looked up once, reused everywhere) ──
-const _nearbyStrip     = document.getElementById('nearbyStrip');
-const _nearbyContainer = document.getElementById('nearbyContainer');
-const _fabStack        = document.querySelector('.fab-stack');
-const _bottomSheet     = document.getElementById('bottomSheet');
-const _sheetPhoto      = document.getElementById('sheetPhoto');
-const _sheetType       = document.getElementById('sheetType');
-const _sheetName       = document.getElementById('sheetName');
-const _sheetStats      = document.getElementById('sheetStats');
-const _sheetNote       = document.getElementById('sheetNote');
-const _mapsOverlay     = document.getElementById('mapsOverlay');
-const _mapsModal       = document.getElementById('mapsModal');
-const _progressArc     = document.getElementById('progressArc');
-const _progressFraction= document.getElementById('progressFraction');
-const _fmiUte          = document.getElementById('fmi-ute');
-const _fmiInne         = document.getElementById('fmi-inne');
-const _fmiTak          = document.getElementById('fmi-tak');
-const _fmiFav          = document.getElementById('fmi-fav');
-const _fmiBesok        = document.getElementById('fmi-besok');
-const _fmiProg         = document.getElementById('fmi-prog');
-const _fmiLight        = document.getElementById('fmi-light');
+var _nearbyStrip     = document.getElementById('nearbyStrip');
+var _nearbyContainer = document.getElementById('nearbyContainer');
+var _fabStack        = document.querySelector('.fab-stack');
+var _bottomSheet     = document.getElementById('bottomSheet');
+var _sheetPhoto      = document.getElementById('sheetPhoto');
+var _sheetType       = document.getElementById('sheetType');
+var _sheetName       = document.getElementById('sheetName');
+var _sheetStats      = document.getElementById('sheetStats');
+var _sheetNote       = document.getElementById('sheetNote');
+var _mapsOverlay     = document.getElementById('mapsOverlay');
+var _mapsModal       = document.getElementById('mapsModal');
+var _progressArc     = document.getElementById('progressArc');
+var _progressFraction= document.getElementById('progressFraction');
+var _fmiUte          = document.getElementById('fmi-ute');
+var _fmiInne         = document.getElementById('fmi-inne');
+var _fmiTak          = document.getElementById('fmi-tak');
+var _fmiFav          = document.getElementById('fmi-fav');
+var _fmiBesok        = document.getElementById('fmi-besok');
+var _fmiProg         = document.getElementById('fmi-prog');
+var _fmiLight        = document.getElementById('fmi-light');
 
 function updateMiniIndicators() {
   _fmiUte  .classList.toggle('on', showOutdoor);
@@ -1370,9 +1362,9 @@ function updateMiniIndicators() {
   _fmiProg.classList.toggle('on', anyVerified);
 }
 
-const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
+var SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
 
-const STATIC = [
+var STATIC = [
   { navn:"Blindern",                 lat:59.9393882, lng:10.7231652, type:"outdoor" },
   { navn:"Stensparken",              lat:59.9291336, lng:10.7308114, type:"outdoor" },
   { navn:"Lilleborgbanen",           lat:59.9337185, lng:10.7683008, type:"outdoor" },
@@ -1444,7 +1436,7 @@ const STATIC = [
   { navn:"Røverstaden",              lat:59.9134458, lng:10.7293552, type:"bar", label:"Bar" },
 ];
 
-let TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, vibe:null, notater:"", bilde_url:"", label: s.label || null }));
+var TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, vibe:null, notater:"", bilde_url:"", label: s.label || null }));
 
 function parseCSVLine(line) {
   const vals = [];
@@ -1547,7 +1539,7 @@ function updateProgress() {
   updateMiniIndicators();
 }
 
-const map = L.map('map', {
+var map = L.map('map', {
   center: [59.926, 10.752], zoom: 13,
   zoomControl: false, attributionControl: true,
   tap: true, preferCanvas: true,
@@ -1562,22 +1554,22 @@ const map = L.map('map', {
   easeLinearity: 0.2,
 });
 map.attributionControl.setPrefix(false);
-const _tileOpts = {
+var _tileOpts = {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom: 19, subdomains: 'abcd',
   updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
 };
-let _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
-let _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
+var _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
+var _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
 _darkTiles.addTo(map);
-let _currentTiles = _darkTiles;
+var _currentTiles = _darkTiles;
 
 function iconSize(highlighted=false) {
   return highlighted ? 36 : 28;
 }
 
 // ── Favorites ────────────────────────────────────────────
-let FAVORITES = new Set(JSON.parse(localStorage.getItem('pinpong-favs') || '[]'));
+var FAVORITES = new Set(JSON.parse(localStorage.getItem('pinpong-favs') || '[]'));
 function saveFavorites() {
   localStorage.setItem('pinpong-favs', JSON.stringify([...FAVORITES]));
 }
@@ -1621,10 +1613,10 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
-let showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
-let hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
-let currentLang = localStorage.getItem('pinpong-lang') || 'no';
-let userLat=null, userLng=null;
+var showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+var hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
+var currentLang = localStorage.getItem('pinpong-lang') || 'no';
+var userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
   const group = L.markerClusterGroup({
@@ -1739,10 +1731,10 @@ function selectNearby(idx) {
 
 // ── Continuous location watch ────────────────────────────
 // maximumAge:0 = never serve a cached position (important while moving)
-const geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-let locationWatchId = null;
-let firstFix = true;
-let _lastNearbyLat = null, _lastNearbyLng = null;
+var geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+var locationWatchId = null;
+var firstFix = true;
+var _lastNearbyLat = null, _lastNearbyLng = null;
 
 // Smooth dot animation between GPS fixes
 function _animateMarker(marker, toLat, toLng) {
@@ -1859,7 +1851,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ── Compass widget ───────────────────────────────────────
-let _compassHeading = null;
+var _compassHeading = null;
 
 function _onCompass(e) {
   const h = typeof e.webkitCompassHeading === 'number'
@@ -1969,7 +1961,7 @@ function closeSheet() {
 
 map.on('click', closeSheet);
 
-let zoomTimer, _lastClusterZoom = map.getZoom(), _clusterRaf;
+var zoomTimer, _lastClusterZoom = map.getZoom(), _clusterRaf;
 map.on('zoom', () => {
   // Refresh marker icons (debounced)
   clearTimeout(zoomTimer);
@@ -2149,7 +2141,7 @@ addSwipeToDismiss(document.getElementById('favPage'),      () => document.getEle
 addSwipeToDismiss(document.getElementById('settingsPage'), () => document.getElementById('settingsPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
 // ── i18n ───────────────────────────────────────────────
-const LANG = {
+var LANG = {
   no: {
     'nearby.label':         'Nærmeste',
     'sheet.directions':     'Veibeskrivelse',
@@ -2323,7 +2315,7 @@ function closeSettings() {
   sp.classList.remove('open');
 }
 // ── Rate limiting: max 3 rapport submissions per 24h ────
-const _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
+var _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
 function _rapportCanSubmit() {
   try {
     const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
@@ -2442,7 +2434,7 @@ function fuzzyScore(name, q) {
 }
 
 // ── Oslo areas / neighbourhoods ──────────────────────────
-const AREAS = [
+var AREAS = [
   { navn:'Sentrum',        lat:59.9132, lng:10.7396 },
   { navn:'Grünerløkka',    lat:59.9239, lng:10.7604 },
   { navn:'Tøyen',          lat:59.9150, lng:10.7730 },
@@ -2610,7 +2602,7 @@ function toggleFilter(type) {
 }
 
 // ── Swipe-to-dismiss bottom sheet ───────────────────────
-let _hSwipeActive = false; // set true during horizontal card navigation
+var _hSwipeActive = false; // set true during horizontal card navigation
 
 (function() {
   let startY = 0, currentY = 0, startTime = 0, dragging = false;

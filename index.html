@@ -1361,7 +1361,7 @@ function updateMiniIndicators() {
   _fmiFav  .classList.toggle('on', showFavOnly);
   _fmiBesok.classList.toggle('on', showVerifiedOnly);
   _fmiLight.classList.toggle('on', showLightOnly);
-  const anyVerified = TABLES.some(t => t.verifisert === 'ja');
+  var anyVerified = TABLES.some(t => t.verifisert === 'ja');
   _fmiProg.classList.toggle('on', anyVerified);
 }
 
@@ -1442,10 +1442,10 @@ var STATIC = [
 var TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, vibe:null, notater:"", bilde_url:"", label: s.label || null }));
 
 function parseCSVLine(line) {
-  const vals = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
+  var vals = [];
+  var cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
     if (c === '"') { inQ = !inQ; }
     else if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
     else { cur += c; }
@@ -1455,11 +1455,11 @@ function parseCSVLine(line) {
 }
 
 function parseCSV(text) {
-  const lines = text.trim().split("\n");
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+  var lines = text.trim().split("\n");
+  var headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
   return lines.slice(1).map(line => {
-    const vals = parseCSVLine(line);
-    const obj = {};
+    var vals = parseCSVLine(line);
+    var obj = {};
     headers.forEach((h, i) => obj[h] = (vals[i] || "").trim());
     return obj;
   });
@@ -1469,13 +1469,13 @@ function resolveImage(url) {
   if (!url) return "";
   url = url.trim();
   if (url.includes('imgur.com')) {
-    const m = url.match(/([a-zA-Z0-9]+)(?:\?.*)?$/);
+    var m = url.match(/([a-zA-Z0-9]+)(?:\?.*)?$/);
     if (m) return `https://i.imgur.com/${m[1]}.jpg`;
   }
   if (url.startsWith("http")) return url;
   // Local filename — normalise so sheet entries don't need to be exact:
   // strip any leading path, lowercase, spaces → dashes
-  const filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-').normalize('NFC');
+  var filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-').normalize('NFC');
   return `images/bord/${encodeURIComponent(filename)}`;
 }
 
@@ -1485,15 +1485,15 @@ async function loadSheetData() {
     return;
   }
   try {
-    const res = await fetch(SHEETS_CSV_URL + '&t=' + Date.now(), { cache: 'no-store' });
-    const text = await res.text();
-    const rows = parseCSV(text);
-    const newTables = [];
+    var res = await fetch(SHEETS_CSV_URL + '&t=' + Date.now(), { cache: 'no-store' });
+    var text = await res.text();
+    var rows = parseCSV(text);
+    var newTables = [];
     rows.forEach(row => {
-      const navn = (row.navn || "").trim().normalize('NFC');
+      var navn = (row.navn || "").trim().normalize('NFC');
       if (!navn) return;
-      const lat = parseFloat(row.lat), lng = parseFloat(row.lng);
-      const data = {
+      var lat = parseFloat(row.lat), lng = parseFloat(row.lng);
+      var data = {
         verifisert: row.verifisert ? row.verifisert.toLowerCase() : null,
         label:      row.label || null,
         antall:     row.antall    || null,
@@ -1506,9 +1506,9 @@ async function loadSheetData() {
         bilde_url:  resolveImage(row.images || row.url || row.bilde_url || row["bilde url"] || row.bilde || row.image || row.img || row.foto || row.photo || ""),
       };
       // Try to match a static entry for coords/type
-      const navnN = navn.toLowerCase().normalize('NFC');
-      const stripA = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      let base = STATIC.find(t => t.navn.toLowerCase().normalize('NFC') === navnN);
+      var navnN = navn.toLowerCase().normalize('NFC');
+      var stripA = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      var base = STATIC.find(t => t.navn.toLowerCase().normalize('NFC') === navnN);
       if (!base) base = STATIC.find(t => stripA(t.navn) === stripA(navn));
       if (!base && lat && lng) {
         base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
@@ -1517,8 +1517,8 @@ async function loadSheetData() {
         newTables.push({ ...base, navn, ...data });
       } else {
         if (!lat || !lng) return;
-        const rawType = (row.type||"utendørs").toLowerCase();
-        const type = rawType === "utendørs" ? "outdoor" : rawType === "innendørs" ? "bar" : rawType;
+        var rawType = (row.type||"utendørs").toLowerCase();
+        var type = rawType === "utendørs" ? "outdoor" : rawType === "innendørs" ? "bar" : rawType;
         newTables.push({ navn, lat, lng, type, ...data });
       }
     });
@@ -1534,9 +1534,9 @@ async function loadSheetData() {
 }
 
 function updateProgress() {
-  const verified = TABLES.filter(t => t.verifisert === 'ja').length;
-  const total    = TABLES.length;
-  const circ     = 2 * Math.PI * 9; // r=9 → ~56.55
+  var verified = TABLES.filter(t => t.verifisert === 'ja').length;
+  var total    = TABLES.length;
+  var circ     = 2 * Math.PI * 9; // r=9 → ~56.55
   _progressArc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
   _progressFraction.textContent = `${verified}/${total}`;
   updateMiniIndicators();
@@ -1582,37 +1582,37 @@ function toggleFavorite() {
   else FAVORITES.add(selectedIdx);
   saveFavorites();
   updateHeartBtn();
-  const entry = leafletMarkers.find(m => m.index === selectedIdx);
+  var entry = leafletMarkers.find(m => m.index === selectedIdx);
   if (entry) entry.lm.setIcon(makeIcon(TABLES[selectedIdx], true, selectedIdx));
 }
 function updateHeartBtn() {
-  const btn = document.getElementById('btnHeart');
-  const icon = document.getElementById('heartIcon');
+  var btn = document.getElementById('btnHeart');
+  var icon = document.getElementById('heartIcon');
   if (!btn || selectedIdx === null) return;
-  const faved = FAVORITES.has(selectedIdx);
+  var faved = FAVORITES.has(selectedIdx);
   btn.classList.toggle('faved', faved);
   icon.setAttribute('fill', faved ? '#ff3b30' : 'none');
   icon.setAttribute('stroke', faved ? '#ff3b30' : '#ff3b30');
 }
 
 function makeIcon(t, highlighted=false, tableIdx=-1) {
-  const color = t.type==='outdoor' ? '#FF9500' : '#8B5CF6';
-  const size  = iconSize(highlighted);
-  const glow  = highlighted ? `filter:drop-shadow(0 0 8px ${color}99);` : '';
-  const opacity = t.verifisert==="nei" ? 0.35 : 1;
-  const pulse = highlighted ? `<div style="position:absolute;top:50%;left:50%;width:${size}px;height:${size}px;margin:-${size/2}px 0 0 -${size/2}px;border-radius:50%;background:${color};opacity:0.35;animation:pulse 1.3s ease-out infinite;pointer-events:none;"></div>` : '';
-  const icon = t.type==='outdoor'
+  var color = t.type==='outdoor' ? '#FF9500' : '#8B5CF6';
+  var size  = iconSize(highlighted);
+  var glow  = highlighted ? `filter:drop-shadow(0 0 8px ${color}99);` : '';
+  var opacity = t.verifisert==="nei" ? 0.35 : 1;
+  var pulse = highlighted ? `<div style="position:absolute;top:50%;left:50%;width:${size}px;height:${size}px;margin:-${size/2}px 0 0 -${size/2}px;border-radius:50%;background:${color};opacity:0.35;animation:pulse 1.3s ease-out infinite;pointer-events:none;"></div>` : '';
+  var icon = t.type==='outdoor'
     ? `<svg width="${Math.round(size*.42)}" height="${Math.round(size*.42)}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="10" rx="8" ry="8" fill="white" opacity="0.92"/><rect x="15" y="14" width="3" height="7" rx="1.5" fill="white" opacity="0.92" transform="rotate(-40 15 14)"/></svg>`
     : `<svg width="${Math.round(size*.46)}" height="${Math.round(size*.46)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.92" xmlns="http://www.w3.org/2000/svg"><polyline points="3,14 12,4 21,14"/><line x1="6" y1="11" x2="6" y2="20"/><line x1="18" y1="11" x2="18" y2="20"/><line x1="6" y1="20" x2="18" y2="20"/></svg>`;
-  const cs = Math.max(12, Math.round(size * 0.48));
-  const offset = -Math.round(cs * 0.45);
-  const checkmark = t.verifisert==="ja" ? `<div style="position:absolute;top:${offset}px;right:${offset}px;width:${cs}px;height:${cs}px;background:#34C759;border:2.5px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
-  const isFav = tableIdx >= 0 && FAVORITES.has(tableIdx);
-  const heartBadge = isFav ? `<div style="position:absolute;bottom:${offset}px;left:${offset}px;width:${cs}px;height:${cs}px;background:#ff3b30;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(255,59,48,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>` : '';
-  const isLight = document.body.classList.contains('light');
-  const markerBorder = isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.15)';
-  const markerShadow = isLight ? `0 3px 10px ${color}88, 0 1px 3px rgba(0,0,0,0.2)` : `0 3px 12px ${color}55`;
-  const html = `<div style="position:relative;display:flex;flex-direction:column;align-items:center;${glow}opacity:${opacity}">${pulse}<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid ${markerBorder};box-shadow:${markerShadow};display:flex;align-items:center;justify-content:center;">${icon}${checkmark}${heartBadge}</div><div style="width:2px;height:6px;background:${color};opacity:0.8;margin-top:-1px;border-radius:0 0 2px 2px;"></div></div>`;
+  var cs = Math.max(12, Math.round(size * 0.48));
+  var offset = -Math.round(cs * 0.45);
+  var checkmark = t.verifisert==="ja" ? `<div style="position:absolute;top:${offset}px;right:${offset}px;width:${cs}px;height:${cs}px;background:#34C759;border:2.5px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
+  var isFav = tableIdx >= 0 && FAVORITES.has(tableIdx);
+  var heartBadge = isFav ? `<div style="position:absolute;bottom:${offset}px;left:${offset}px;width:${cs}px;height:${cs}px;background:#ff3b30;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(255,59,48,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>` : '';
+  var isLight = document.body.classList.contains('light');
+  var markerBorder = isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.15)';
+  var markerShadow = isLight ? `0 3px 10px ${color}88, 0 1px 3px rgba(0,0,0,0.2)` : `0 3px 12px ${color}55`;
+  var html = `<div style="position:relative;display:flex;flex-direction:column;align-items:center;${glow}opacity:${opacity}">${pulse}<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid ${markerBorder};box-shadow:${markerShadow};display:flex;align-items:center;justify-content:center;">${icon}${checkmark}${heartBadge}</div><div style="width:2px;height:6px;background:${color};opacity:0.8;margin-top:-1px;border-radius:0 0 2px 2px;"></div></div>`;
   return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
 }
 
@@ -1622,9 +1622,9 @@ var currentLang = localStorage.getItem('pinpong-lang') || 'no';
 var userLat=null, userLng=null;
 
 function makeClusterGroup(color) {
-  const group = L.markerClusterGroup({
+  var group = L.markerClusterGroup({
     iconCreateFunction: cluster => {
-      const count = cluster.getChildCount();
+      var count = cluster.getChildCount();
       return L.divIcon({
         html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}</div>`,
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
@@ -1639,9 +1639,9 @@ function makeClusterGroup(color) {
     removeOutsideVisibleBounds: false,
   });
   group.on('clusterclick', function(e) {
-    const bounds = e.layer.getBounds().pad(0.3);
-    const targetZoom = Math.min(16, map.getBoundsZoom(bounds));
-    const center = bounds.getCenter();
+    var bounds = e.layer.getBounds().pad(0.3);
+    var targetZoom = Math.min(16, map.getBoundsZoom(bounds));
+    var center = bounds.getCenter();
     if (map.getZoom() >= targetZoom) {
       // Already zoomed in enough — just pan, no zoom change
       map.flyTo(center, map.getZoom(), { duration: 0.28, easeLinearity: 0.6 });
@@ -1667,7 +1667,7 @@ function renderMarkers() {
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
     if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
     if (hideVisited      && t.verifisert === 'ja')                                       return;
-    const lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
+    var lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
     leafletMarkers.push({ lm, index:i });
@@ -1682,9 +1682,9 @@ renderMarkers();
 updateMiniIndicators();
 
 loadSheetData().then(() => {
-  const param = new URLSearchParams(location.search).get('bord');
+  var param = new URLSearchParams(location.search).get('bord');
   if (param) {
-    const idx = TABLES.findIndex(t => t.navn.toLowerCase() === param.toLowerCase());
+    var idx = TABLES.findIndex(t => t.navn.toLowerCase() === param.toLowerCase());
     if (idx !== -1) {
       map.setView([TABLES[idx].lat, TABLES[idx].lng], 15, { animate: false });
       setTimeout(() => openSheet(idx), 400);
@@ -1694,7 +1694,7 @@ loadSheetData().then(() => {
 
 // ── Nearby strip ────────────────────────────────────────
 function showNearbyStrip(lat, lng) {
-  const nearest = TABLES
+  var nearest = TABLES
     .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
     .filter(({ t, i }) => {
       if (t.type === 'outdoor' && !showOutdoor) return false;
@@ -1710,12 +1710,12 @@ function showNearbyStrip(lat, lng) {
     .slice(0, 9);
 
   _nearbyStrip.innerHTML = nearest.map(({ t, i, d }, idx) => {
-    const color    = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-    const dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
-    const check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
-    const glow     = idx === 0 ? ' nearest-glow' : '';
-    const typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
-    const roofBadge = (t.under_tak && /ja/i.test(t.under_tak)) ? ' <span title="Under tak" style="font-size:11px">☂️</span>' : '';
+    var color    = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    var dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
+    var check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
+    var glow     = idx === 0 ? ' nearest-glow' : '';
+    var typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
+    var roofBadge = (t.under_tak && /ja/i.test(t.under_tak)) ? ' <span title="Under tak" style="font-size:11px">☂️</span>' : '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
@@ -1741,15 +1741,15 @@ var _lastNearbyLat = null, _lastNearbyLng = null;
 
 // Smooth dot animation between GPS fixes
 function _animateMarker(marker, toLat, toLng) {
-  const from = marker.getLatLng();
-  const dist  = haversine(from.lat, from.lng, toLat, toLng);
+  var from = marker.getLatLng();
+  var dist  = haversine(from.lat, from.lng, toLat, toLng);
   // Large jumps (GPS correction) snap instantly; small movements glide
   if (dist > 150) { marker.setLatLng([toLat, toLng]); return; }
-  const duration = 1200; // ms — matches typical GPS update interval
-  const start    = performance.now();
+  var duration = 1200; // ms — matches typical GPS update interval
+  var start    = performance.now();
   function step(now) {
-    const t = Math.min((now - start) / duration, 1);
-    const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
+    var t = Math.min((now - start) / duration, 1);
+    var e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
     marker.setLatLng([from.lat + (toLat - from.lat)*e, from.lng + (toLng - from.lng)*e]);
     if (t < 1) requestAnimationFrame(step);
   }
@@ -1757,15 +1757,15 @@ function _animateMarker(marker, toLat, toLng) {
 }
 
 function onPositionUpdate(pos) {
-  const lat = pos.coords.latitude;
-  const lng  = pos.coords.longitude;
+  var lat = pos.coords.latitude;
+  var lng  = pos.coords.longitude;
   userLat = lat; userLng = lng;
 
   if (userMarker) {
     _animateMarker(userMarker, lat, lng);
   } else {
     // First ever fix — create marker and fly to it
-    const icon = L.divIcon({
+    var icon = L.divIcon({
       html:`<div class="user-dot">
         <div class="user-dot-beam" id="userBeam"></div>
         <div class="user-dot-ring"></div>
@@ -1793,7 +1793,7 @@ function onPositionUpdate(pos) {
 }
 
 function showLocToast(title, body) {
-  const toast = document.getElementById('locToast');
+  var toast = document.getElementById('locToast');
   document.getElementById('locToastTitle').textContent = title;
   document.getElementById('locToastBody').innerHTML = body;
   toast.classList.add('show');
@@ -1818,9 +1818,9 @@ function locToastRetry() {
   }
 }
 function showLocPermissionDenied() {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isAndroid = /android/i.test(navigator.userAgent);
-  let body;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var body;
   if (isIOS) {
     body = `Gå til <b>Innstillinger → Personvern → Lokalisering → Safari</b> og velg <b>«Mens appen brukes»</b>. Kom tilbake hit etterpå.`;
   } else if (isAndroid) {
@@ -1857,13 +1857,13 @@ document.addEventListener('visibilitychange', () => {
 var _compassHeading = null;
 
 function _onCompass(e) {
-  const h = typeof e.webkitCompassHeading === 'number'
+  var h = typeof e.webkitCompassHeading === 'number'
     ? e.webkitCompassHeading
     : e.alpha != null ? (360 - e.alpha) % 360 : null;
   if (h === null) return;
   if (_compassHeading !== null && Math.abs(h - _compassHeading) < 1.5) return;
   _compassHeading = h;
-  const beam = document.getElementById('userBeam');
+  var beam = document.getElementById('userBeam');
   if (beam) { beam.classList.add('active'); beam.style.transform = `rotate(${h}deg)`; }
 }
 
@@ -1871,7 +1871,7 @@ async function startCompass() {
   if (typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
-      const p = await DeviceOrientationEvent.requestPermission();
+      var p = await DeviceOrientationEvent.requestPermission();
       if (p !== 'granted') return;
     } catch(e) { return; }
   }
@@ -1886,7 +1886,7 @@ if (!(typeof DeviceOrientationEvent !== 'undefined' &&
 
 function openSheet(idx, _fromNav) {
   if (!_fromNav) buildSwipeList(idx);
-  const t = TABLES[idx];
+  var t = TABLES[idx];
   selectedIdx = idx;
   closeMapsPicker();
   history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`);
@@ -1897,39 +1897,39 @@ function openSheet(idx, _fromNav) {
   } else {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
-  const typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
-  const typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
+  var typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
+  var typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
   _sheetName.textContent = t.navn || 'Ukjent bord';
-  const si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
-  const renderStars = v => {
-    let s = ''; for (let i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
+  var si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
+  var renderStars = v => {
+    var s = ''; for (var i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
   };
-  let statsHtml = '';
+  var statsHtml = '';
   if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:tr('stats.verifisert'), cls:' verified' });
   else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_funnet'), cls:' not-found' });
   else                           statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_besøkt') });
   if (t.tilstand)  statsHtml += si({ label:tr('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
   if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall) });
   if (t.under_tak) {
-    const takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
-    const takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
+    var takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
+    var takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
     statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
   }
   if (t.belysning) {
-    const lysVal = /ja/i.test(t.belysning) ? `💡 ${tr('stats.ja')}` : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
-    const lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
+    var lysVal = /ja/i.test(t.belysning) ? `💡 ${tr('stats.ja')}` : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
+    var lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
     statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
   }
   if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:tr('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
   _sheetStats.innerHTML = statsHtml;
-  let notesHtml = '';
+  var notesHtml = '';
   if (t.notater && t.notater.trim()) {
     notesHtml = `<div class="notes-inline"><span class="notes-tag">${tr('notes.label')}</span>${esc(t.notater.trim())}</div>`;
   }
   _sheetNote.innerHTML = notesHtml;
-  const alreadyOpen = _bottomSheet.classList.contains('open');
+  var alreadyOpen = _bottomSheet.classList.contains('open');
   _bottomSheet.classList.add('open');
   _nearbyContainer.classList.add('sheet-open');
   _fabStack.classList.add('sheet-open');
@@ -1949,7 +1949,7 @@ function closeSheet() {
   _cardAnimating = false;
   _bottomSheet.style.transition = '';
   _bottomSheet.style.transform  = '';
-  const card = document.getElementById('sheetCard');
+  var card = document.getElementById('sheetCard');
   if (card) { card.style.transition = ''; card.style.transform = ''; }
 
   _bottomSheet.classList.remove('open');
@@ -1972,7 +1972,7 @@ map.on('zoom', () => {
     leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx, index)));
   }, 80);
   // Dynamic cluster split/merge during pinch zoom
-  const z = Math.round(map.getZoom());
+  var z = Math.round(map.getZoom());
   if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
     _lastClusterZoom = z;
     cancelAnimationFrame(_clusterRaf);
@@ -1993,24 +1993,24 @@ function closeMapsPicker() {
 }
 function openGoogleMaps() {
   if (selectedIdx===null) return;
-  const { lat, lng } = TABLES[selectedIdx];
+  var { lat, lng } = TABLES[selectedIdx];
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`);
 }
 function openAppleMaps() {
   if (selectedIdx===null) return;
-  const { lat, lng } = TABLES[selectedIdx];
+  var { lat, lng } = TABLES[selectedIdx];
   window.open(`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`);
 }
 function shareTable() {
   if (selectedIdx===null) return;
-  const navn = TABLES[selectedIdx].navn;
-  const url = `${location.origin}${location.pathname}?bord=${encodeURIComponent(navn)}`;
+  var navn = TABLES[selectedIdx].navn;
+  var url = `${location.origin}${location.pathname}?bord=${encodeURIComponent(navn)}`;
   if (navigator.share) {
     navigator.share({ title: navn, text: `Sjekk ut dette bordtennisbordet: ${navn}`, url });
   } else {
     navigator.clipboard.writeText(url).then(() => {
-      const btn = document.querySelector('.btn-share');
-      const orig = btn.innerHTML;
+      var btn = document.querySelector('.btn-share');
+      var orig = btn.innerHTML;
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
       setTimeout(() => btn.innerHTML = orig, 1800);
     });
@@ -2025,13 +2025,13 @@ function closeProfile() {
 }
 function profileFavoritter() {
   // Build and open the Favoritter page
-  const list = document.getElementById('favList');
-  const favIdxs = [...FAVORITES];
+  var list = document.getElementById('favList');
+  var favIdxs = [...FAVORITES];
   if (!favIdxs.length) {
     list.innerHTML = `<div class="fav-empty"><div class="fav-empty-icon">🏓</div>Du har ingen favoritter ennå.<br>Trykk ❤ på et bord for å lagre det her.</div>`;
   } else {
     // Sort by distance if we have location, otherwise alphabetically
-    const sorted = favIdxs
+    var sorted = favIdxs
       .filter(i => TABLES[i])
       .map(i => ({
         i, t: TABLES[i],
@@ -2040,11 +2040,11 @@ function profileFavoritter() {
       .sort((a, b) => a.d !== null ? a.d - b.d : a.t.navn.localeCompare(b.t.navn));
 
     list.innerHTML = sorted.map(({ i, t, d }) => {
-      const typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
-      const typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : tr('type.bar');
-      const distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
-      const verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
-      const imgHtml = t.bilde_url
+      var typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+      var typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : tr('type.bar');
+      var distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
+      var verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
+      var imgHtml = t.bilde_url
         ? `<img src="${t.bilde_url}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover"/>`
         : `🏓`;
       return `<div class="fav-card" data-idx="${i}">
@@ -2062,9 +2062,9 @@ function profileFavoritter() {
 
     // Event delegation — reliable on all mobile browsers
     list.onclick = e => {
-      const card = e.target.closest('.fav-card');
+      var card = e.target.closest('.fav-card');
       if (!card) return;
-      const idx = parseInt(card.dataset.idx, 10);
+      var idx = parseInt(card.dataset.idx, 10);
       closeFavPage();
       closeProfile();
       setTimeout(() => openSheet(idx), 480);
@@ -2073,7 +2073,7 @@ function profileFavoritter() {
   document.getElementById('favPage').classList.add('open');
 }
 function closeFavPage() {
-  const fp = document.getElementById('favPage');
+  var fp = document.getElementById('favPage');
   fp.style.transition = '';
   fp.style.transform  = '';
   fp.classList.remove('open');
@@ -2081,9 +2081,9 @@ function closeFavPage() {
 
 // ── Swipe-to-dismiss for slide-in pages ─────────────────
 function addSwipeToDismiss(el, dismissFn) {
-  let startX = 0, startY = 0, lastX = 0, lastT = 0;
-  let curX = 0, isHoriz = null, active = false;
-  const EASE = 'transform 0.38s cubic-bezier(0.22,1,0.36,1)';
+  var startX = 0, startY = 0, lastX = 0, lastT = 0;
+  var curX = 0, isHoriz = null, active = false;
+  var EASE = 'transform 0.38s cubic-bezier(0.22,1,0.36,1)';
 
   el.addEventListener('touchstart', e => {
     if (!el.classList.contains('open')) return;
@@ -2096,8 +2096,8 @@ function addSwipeToDismiss(el, dismissFn) {
 
   el.addEventListener('touchmove', e => {
     if (!active) return;
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
 
     if (isHoriz === null) {
       if (Math.abs(dx) > 6 || Math.abs(dy) > 6)
@@ -2113,13 +2113,13 @@ function addSwipeToDismiss(el, dismissFn) {
     e.preventDefault();
   }, { passive: false });
 
-  const onEnd = e => {
+  var onEnd = e => {
     if (!active) return;
     active = false;
     if (!isHoriz) { el.style.transition = ''; return; }
 
-    const velX = (e.changedTouches[0].clientX - lastX) / Math.max(1, Date.now() - lastT); // px/ms
-    const dismiss = curX > window.innerWidth * 0.35 || velX > 0.55;
+    var velX = (e.changedTouches[0].clientX - lastX) / Math.max(1, Date.now() - lastT); // px/ms
+    var dismiss = curX > window.innerWidth * 0.35 || velX > 0.55;
 
     if (dismiss) {
       el.style.transition = EASE;
@@ -2245,26 +2245,26 @@ function tr(key) {
 
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
+    var key = el.dataset.i18n;
     el.textContent = tr(key);
   });
-  const si = document.getElementById('searchInput');
+  var si = document.getElementById('searchInput');
   if (si) si.placeholder = tr('search.placeholder');
-  const sl = document.querySelector('.search-label');
+  var sl = document.querySelector('.search-label');
   if (sl) sl.textContent = tr('search.label');
   document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
   document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
-  const lsl = document.getElementById('langSubLabel');
+  var lsl = document.getElementById('langSubLabel');
   if (lsl) lsl.textContent = tr('lang.sub');
-  const filterLabels = {
+  var filterLabels = {
     'pill-outdoor': 'filter.ute', 'pill-bar': 'filter.inne',
     'pill-roof': 'filter.tak', 'pill-fav': 'filter.likte',
     'pill-verified': 'filter.besøkt', 'pill-light': 'filter.lys'
   };
   Object.entries(filterLabels).forEach(([id, key]) => {
-    const el = document.getElementById(id);
+    var el = document.getElementById(id);
     if (!el) return;
-    const textNodes = [...el.childNodes].filter(n => n.nodeType === 3);
+    var textNodes = [...el.childNodes].filter(n => n.nodeType === 3);
     if (textNodes.length) textNodes[textNodes.length-1].textContent = '\n' + tr(key);
   });
   updateSheetNav();
@@ -2289,13 +2289,13 @@ function setThemeFromSettings(isLight) {
 }
 
 function syncSettingsUI() {
-  const isLight = document.body.classList.contains('light');
+  var isLight = document.body.classList.contains('light');
   document.getElementById('seg-light')?.classList.toggle('active', isLight);
   document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
   document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
   document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
-  const hv = localStorage.getItem('pinpong-hide-visited') === 'true';
-  const tog = document.getElementById('toggleHideVisited');
+  var hv = localStorage.getItem('pinpong-hide-visited') === 'true';
+  var tog = document.getElementById('toggleHideVisited');
   if (tog) tog.checked = hv;
 }
 
@@ -2312,7 +2312,7 @@ function profileSettings() {
   document.getElementById('settingsPage').classList.add('open');
 }
 function closeSettings() {
-  const sp = document.getElementById('settingsPage');
+  var sp = document.getElementById('settingsPage');
   sp.style.transition = '';
   sp.style.transform  = '';
   sp.classList.remove('open');
@@ -2321,24 +2321,24 @@ function closeSettings() {
 var _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
 function _rapportCanSubmit() {
   try {
-    const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
-    const today = new Date().toDateString();
+    var d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    var today = new Date().toDateString();
     if (d.date !== today) return true;
     return (d.count || 0) < 3;
   } catch { return true; }
 }
 function _rapportRecord() {
   try {
-    const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
-    const today = new Date().toDateString();
-    const count = d.date === today ? (d.count || 0) + 1 : 1;
+    var d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    var count = d.date === today ? (d.count || 0) + 1 : 1;
     localStorage.setItem(_RAPPORT_RL_KEY, JSON.stringify({ date: today, count }));
   } catch {}
 }
 function _rapportRemaining() {
   try {
-    const d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
-    const today = new Date().toDateString();
+    var d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    var today = new Date().toDateString();
     if (d.date !== today) return 3;
     return Math.max(0, 3 - (d.count || 0));
   } catch { return 3; }
@@ -2351,8 +2351,8 @@ function profileRapporter() {
   document.querySelectorAll('#rBelysingSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ja'));
   document.getElementById('rapportPhotoPreview').innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Ta bilde av bordet</span>`;
   // Update submit button with remaining count
-  const rem = _rapportRemaining();
-  const btn = document.querySelector('.rapport-submit');
+  var rem = _rapportRemaining();
+  var btn = document.querySelector('.rapport-submit');
   if (btn) btn.textContent = 'Send inn';
   document.getElementById('rapportPage').classList.add('open');
 }
@@ -2365,9 +2365,9 @@ function rapportSegPick(btn) {
 }
 function rapportSegPick2(btn) { rapportSegPick(btn); }
 function rapportPhotoChosen(input) {
-  const file = input.files[0];
+  var file = input.files[0];
   if (!file) return;
-  const url = URL.createObjectURL(file);
+  var url = URL.createObjectURL(file);
   document.getElementById('rapportPhotoPreview').innerHTML = `<img src="${url}" alt="Bilde"/>`;
 }
 function submitRapport() {
@@ -2375,14 +2375,14 @@ function submitRapport() {
     showLocToast('For mange innsendelser', 'Du har sendt inn for mange bord i dag. Prøv igjen om 24t.');
     return;
   }
-  const navn     = document.getElementById('rNavn').value.trim();
-  const adresse  = document.getElementById('rAdresse').value.trim();
-  const type     = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
-  const belysning = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
+  var navn     = document.getElementById('rNavn').value.trim();
+  var adresse  = document.getElementById('rAdresse').value.trim();
+  var type     = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
+  var belysning = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
   if (!navn) { document.getElementById('rNavn').focus(); return; }
-  const typeLabel = type === 'ute' ? 'Utebord' : 'Innebord';
-  const belysLabel = belysning === 'ja' ? 'Ja' : belysning === 'nei' ? 'Nei' : 'Vet ikke';
-  const body = [
+  var typeLabel = type === 'ute' ? 'Utebord' : 'Innebord';
+  var belysLabel = belysning === 'ja' ? 'Ja' : belysning === 'nei' ? 'Nei' : 'Vet ikke';
+  var body = [
     `Navn / Sted: ${navn}`,
     `Adresse: ${adresse || '–'}`,
     `Type: ${typeLabel}`,
@@ -2420,17 +2420,17 @@ function locateMe() {
 }
 
 function haversine(la1,ln1,la2,ln2) {
-  const R=6371e3, φ1=la1*Math.PI/180, φ2=la2*Math.PI/180;
-  const Δφ=(la2-la1)*Math.PI/180, Δλ=(ln2-ln1)*Math.PI/180;
-  const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  var R=6371e3, φ1=la1*Math.PI/180, φ2=la2*Math.PI/180;
+  var Δφ=(la2-la1)*Math.PI/180, Δλ=(ln2-ln1)*Math.PI/180;
+  var a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
 function fuzzyScore(name, q) {
   name = name.toLowerCase();
   if (name.includes(q)) return 100 + (100 - name.indexOf(q));
-  let j = 0;
-  for (let i = 0; i < name.length && j < q.length; i++) {
+  var j = 0;
+  for (var i = 0; i < name.length && j < q.length; i++) {
     if (name[i] === q[j]) j++;
   }
   return j === q.length ? j : 0;
@@ -2535,22 +2535,22 @@ searchInput.addEventListener('blur', () => {
 });
 
 searchInput.addEventListener('input', function() {
-  const q = this.value.toLowerCase().trim();
+  var q = this.value.toLowerCase().trim();
   if (!q) { searchResults.style.display = 'none'; return; }
 
-  const tableMatches = TABLES
+  var tableMatches = TABLES
     .map((t, i) => ({ kind:'table', t, i, score: fuzzyScore(t.navn, q) }))
     .filter(x => x.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  const areaMatches = AREAS
+  var areaMatches = AREAS
     .map((a, i) => ({ kind:'area', a, i, score: fuzzyScore(a.navn, q) }))
     .filter(x => x.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 2);
 
-  const all = [...tableMatches, ...areaMatches].slice(0, 5);
+  var all = [...tableMatches, ...areaMatches].slice(0, 5);
   if (!all.length) { searchResults.style.display = 'none'; return; }
 
   searchResults.innerHTML = all.map(x => {
@@ -2595,8 +2595,8 @@ function toggleFilter(type) {
   else if (type==='roof')     showRoofOnly     = !showRoofOnly;
   else if (type==='light')    showLightOnly    = !showLightOnly;
 
-  const pillMap  = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified', roof:'pill-roof', light:'pill-light' };
-  const stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly, light:showLightOnly };
+  var pillMap  = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified', roof:'pill-roof', light:'pill-light' };
+  var stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly, light:showLightOnly };
   document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
 
   renderMarkers(); closeSheet();
@@ -2609,7 +2609,7 @@ var _hSwipeActive = false; // set true during horizontal card navigation
 document.title='PRE-IIFE';
 try {
 (function() {
-  let startY = 0, currentY = 0, startTime = 0, dragging = false;
+  var startY = 0, currentY = 0, startTime = 0, dragging = false;
 
   _bottomSheet.addEventListener('touchstart', e => {
     if (!_bottomSheet.classList.contains('open')) return;
@@ -2622,7 +2622,7 @@ try {
 
   _bottomSheet.addEventListener('touchmove', e => {
     if (!dragging || _hSwipeActive) return; // yield to horizontal swipe
-    const dy = e.touches[0].clientY - startY;
+    var dy = e.touches[0].clientY - startY;
     if (dy <= 0) { _bottomSheet.style.transform = 'translate(-50%, 0)'; return; }
     currentY = dy;
     _bottomSheet.style.transform = `translate(-50%, ${dy}px)`;
@@ -2634,7 +2634,7 @@ try {
     // Always reset sheet inline styles so X button / CSS transitions work correctly
     _bottomSheet.style.transition = '';
     if (_hSwipeActive) { _bottomSheet.style.transform = ''; return; }
-    const velocity = currentY / Math.max(1, Date.now() - startTime);
+    var velocity = currentY / Math.max(1, Date.now() - startTime);
     if (currentY > 80 || velocity > 0.5) {
       _bottomSheet.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
       _bottomSheet.style.transform = 'translate(-50%, calc(100% + 40px))';
@@ -2661,13 +2661,13 @@ document.title='POST-IIFE';
 var _swipeList = [], _swipePos = 0;
 
 function buildSwipeList(fromIdx) {
-  const ref = (userLat !== null)
+  var ref = (userLat !== null)
     ? { lat: userLat, lng: userLng }
     : { lat: TABLES[fromIdx].lat, lng: TABLES[fromIdx].lng };
   _swipeList = TABLES
     .map((t, i) => ({ i, d: haversine(ref.lat, ref.lng, t.lat, t.lng) }))
     .filter(({ i }) => {
-      const t = TABLES[i];
+      var t = TABLES[i];
       if (!(t.type === 'outdoor' ? showOutdoor : showBar))              return false;
       if (showFavOnly      && !FAVORITES.has(i))                        return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
@@ -2688,15 +2688,15 @@ function sheetSwipeTo(nextIdx, dir) {
   if (_cardAnimating) return;
   _cardAnimating = true;
 
-  const nextTable = TABLES[nextIdx];
+  var nextTable = TABLES[nextIdx];
 
   function _doSlide() {
-    const card = document.getElementById('sheetCard');
+    var card = document.getElementById('sheetCard');
     if (!card) { openSheet(nextIdx, true); _cardAnimating = false; return; }
 
     // Clone ghost at exact current dimensions
-    const cardH = card.offsetHeight;
-    const ghost  = card.cloneNode(true);
+    var cardH = card.offsetHeight;
+    var ghost  = card.cloneNode(true);
     ghost.removeAttribute('id');
     ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
     ghost.style.cssText = `position:absolute;top:0;left:0;right:0;height:${cardH}px;pointer-events:none;z-index:5;will-change:transform;`;
@@ -2714,7 +2714,7 @@ function sheetSwipeTo(nextIdx, dir) {
     void card.offsetWidth;
 
     // Both cards animate at once
-    const tr = `transform 0.38s ${_cardEase}`;
+    var tr = `transform 0.38s ${_cardEase}`;
     ghost.style.transition = tr;
     ghost.style.transform  = `translateX(${dir > 0 ? '-100%' : '100%'})`;
     card.style.transition  = tr;
@@ -2731,9 +2731,9 @@ function sheetSwipeTo(nextIdx, dir) {
 
   // Pre-load the incoming image so it's ready before the card slides in
   if (nextTable.bilde_url) {
-    let done = false;
-    const guard = () => { if (!done) { done = true; _doSlide(); } };
-    const img = new Image();
+    var done = false;
+    var guard = () => { if (!done) { done = true; _doSlide(); } };
+    var img = new Image();
     img.onload  = guard;
     img.onerror = guard;
     img.src = nextTable.bilde_url;
@@ -2745,19 +2745,19 @@ function sheetSwipeTo(nextIdx, dir) {
 
 window.sheetNav = function(dir) {
   if (selectedIdx === null || !_swipeList.length || _cardAnimating) return;
-  const next = _swipePos + dir;
+  var next = _swipePos + dir;
   if (next < 0 || next >= _swipeList.length) return;
   _swipePos = next;
   sheetSwipeTo(_swipeList[_swipePos], dir);
 };
 
 function updateSheetNav() {
-  const label = document.getElementById('sheetNavLabel');
-  const prev  = document.getElementById('sheetNavPrev');
-  const next  = document.getElementById('sheetNavNext');
+  var label = document.getElementById('sheetNavLabel');
+  var prev  = document.getElementById('sheetNavPrev');
+  var next  = document.getElementById('sheetNavNext');
   if (!label) return;
-  const total = _swipeList.length;
-  const pos   = _swipePos + 1;
+  var total = _swipeList.length;
+  var pos   = _swipePos + 1;
   label.textContent = `${pos} / ${total} ${tr('nav.bord')}`;
   prev.disabled = _swipePos <= 0;
   next.disabled = _swipePos >= total - 1;
@@ -2767,10 +2767,10 @@ window.resetSheetHistory = () => {}; // kept for compat
 
 // ── Live horizontal card swipe ───────────────────────────
 (function() {
-  let sx = 0, sy = 0, liveDx = 0, dirLocked = null, active = false;
-  const LOCK_PX     = 7;    // px before direction is committed
-  const COMMIT_FRAC = 0.28; // fraction of card width needed to commit
-  const RESIST      = 0.18; // rubber-band at first/last card
+  var sx = 0, sy = 0, liveDx = 0, dirLocked = null, active = false;
+  var LOCK_PX     = 7;    // px before direction is committed
+  var COMMIT_FRAC = 0.28; // fraction of card width needed to commit
+  var RESIST      = 0.18; // rubber-band at first/last card
 
   function getCard() { return document.getElementById('sheetCard'); }
 
@@ -2783,8 +2783,8 @@ window.resetSheetHistory = () => {}; // kept for compat
 
   _bottomSheet.addEventListener('touchmove', e => {
     if (!active) return;
-    const dx = e.touches[0].clientX - sx;
-    const dy = e.touches[0].clientY - sy;
+    var dx = e.touches[0].clientX - sx;
+    var dy = e.touches[0].clientY - sy;
 
     if (!dirLocked) {
       if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
@@ -2793,10 +2793,10 @@ window.resetSheetHistory = () => {}; // kept for compat
     if (dirLocked !== 'h') return;
 
     _hSwipeActive = true;
-    const card = getCard();
+    var card = getCard();
     if (!card || _cardAnimating) return;
 
-    const atEdge = (dx > 0 && _swipePos <= 0) || (dx < 0 && _swipePos >= _swipeList.length - 1);
+    var atEdge = (dx > 0 && _swipePos <= 0) || (dx < 0 && _swipePos >= _swipeList.length - 1);
     liveDx = atEdge ? dx * RESIST : dx;
 
     card.style.transition = 'none';
@@ -2807,7 +2807,7 @@ window.resetSheetHistory = () => {}; // kept for compat
   _bottomSheet.addEventListener('touchcancel', () => {
     if (!active) return;
     active = false; dirLocked = null; liveDx = 0; _hSwipeActive = false;
-    const card = getCard();
+    var card = getCard();
     if (card) { card.style.transition = ''; card.style.transform = ''; }
   });
 
@@ -2817,12 +2817,12 @@ window.resetSheetHistory = () => {}; // kept for compat
 
     if (dirLocked !== 'h') { _hSwipeActive = false; liveDx = 0; return; }
 
-    const card = getCard();
-    const sheetW = _bottomSheet.offsetWidth;
-    const threshold = sheetW * COMMIT_FRAC;
-    const dir  = liveDx < 0 ? 1 : -1;
-    const next = _swipePos + dir;
-    const commit = Math.abs(liveDx) >= threshold && !_cardAnimating
+    var card = getCard();
+    var sheetW = _bottomSheet.offsetWidth;
+    var threshold = sheetW * COMMIT_FRAC;
+    var dir  = liveDx < 0 ? 1 : -1;
+    var next = _swipePos + dir;
+    var commit = Math.abs(liveDx) >= threshold && !_cardAnimating
                    && next >= 0 && next < _swipeList.length;
 
     if (commit) {
@@ -2866,36 +2866,36 @@ window.resetSheetHistory = () => {}; // kept for compat
 
 // ── Light / dark mode ────────────────────────────────────
 (function() {
-  const MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
-  const SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  var MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+  var SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
   window.applyTheme = function applyTheme(light) {
     document.body.classList.toggle('light', light);
-    const icon = document.getElementById('themeIcon');
+    var icon = document.getElementById('themeIcon');
     if (icon) icon.innerHTML = light ? SUN_SVG : MOON_SVG;
-    const tc = document.getElementById('metaThemeColor');
+    var tc = document.getElementById('metaThemeColor');
     if (tc) tc.content = light ? '#f2f2f7' : '#0c0c0f';
     document.documentElement.style.background = light ? '#f2f2f7' : '#0c0c0f';
   };
 
   window.swapTiles = function swapTiles(light) {
     if (typeof _darkTiles === 'undefined') return;
-    const add = light ? _lightTiles : _darkTiles;
-    const rem = light ? _darkTiles  : _lightTiles;
+    var add = light ? _lightTiles : _darkTiles;
+    var rem = light ? _darkTiles  : _lightTiles;
     if (!map.hasLayer(add)) map.addLayer(add);
     if (map.hasLayer(rem)) map.removeLayer(rem);
     _currentTiles = add;
   };
 
   window.toggleTheme = function() {
-    const isLight = !document.body.classList.contains('light');
+    var isLight = !document.body.classList.contains('light');
     localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
     applyTheme(isLight);
     swapTiles(isLight);
   };
 
   // Apply saved preference on load — default is light mode
-  const savedLight = localStorage.getItem('pinpong-theme') !== 'dark';
+  var savedLight = localStorage.getItem('pinpong-theme') !== 'dark';
   applyTheme(savedLight);
   // Tiles swap after map is ready
   if (savedLight) setTimeout(() => swapTiles(true), 0);
@@ -2915,9 +2915,9 @@ document.addEventListener('gestureend',    e => e.preventDefault(), { passive: f
 // delta accumulation. Pinch (ctrlKey) and scroll use separate sensitivities.
 map.scrollWheelZoom.disable();
 (function () {
-  let targetZoom = map.getZoom();
-  let pt  = null;
-  let raf = null;
+  var targetZoom = map.getZoom();
+  var pt  = null;
+  var raf = null;
 
   map.getContainer().addEventListener('wheel', e => {
     e.preventDefault();
@@ -2934,7 +2934,7 @@ map.scrollWheelZoom.disable();
       }
     } else {
       // Two-finger scroll or mouse wheel — smooth CSS-animated zoom
-      const px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
+      var px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
       targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - px / 150));
       if (!raf) {
         raf = requestAnimationFrame(() => {
@@ -2946,6 +2946,21 @@ map.scrollWheelZoom.disable();
   }, { passive: false });
 
   map.on('zoomend', () => { if (!raf) targetZoom = map.getZoom(); });
+
+// ── Startup diagnostic (REMOVE AFTER FIX) ───────────────
+(function() {
+  var st = [
+    'fF:'+(typeof filterFab)+'='+(filterFab?'ok':String(filterFab)),
+    'sL:'+(typeof _swipeList)+'='+(_swipeList?_swipeList.length:'?'),
+    'sN:'+(typeof window.sheetNav),
+    'tT:'+(typeof window.toggleTheme),
+    'ttl:'+document.title
+  ].join(' | ');
+  var b=document.createElement('div');
+  b.style.cssText='position:fixed;bottom:60px;left:0;right:0;z-index:99999;background:#00c;color:#fff;font-size:10px;padding:3px 5px;';
+  b.textContent=st;
+  document.body.appendChild(b);
+})();
 })();
 </script>
 </body>

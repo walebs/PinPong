@@ -1321,6 +1321,14 @@
     Apple Maps
   </button>
 </div>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  let el = document.getElementById('_errbox');
+  if (!el) { el = document.createElement('div'); el.id='_errbox'; el.style.cssText='position:fixed;top:60px;left:0;right:0;z-index:99999;background:rgba(180,0,0,0.95);color:#fff;font-size:11px;padding:6px 8px;pointer-events:none;white-space:pre-wrap;'; document.body.appendChild(el); }
+  el.textContent += line + ': ' + msg + '\n';
+  return false;
+};
+</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>

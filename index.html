@@ -243,7 +243,7 @@
       background: var(--bg);
       transform: translateX(100%);
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      overflow: hidden;
       display: flex; flex-direction: column;
     }
     .profile-page.open { transform: translateX(0); }
@@ -278,6 +278,8 @@
       flex: 1; padding: 24px 20px;
       padding-bottom: calc(env(safe-area-inset-bottom,0px) + 32px);
       display: flex; flex-direction: column; gap: 0;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      min-height: 0;
     }
     .profile-card {
       background: var(--surface); border-radius: 18px;
@@ -318,6 +320,8 @@
       padding: 20px 16px;
       padding-bottom: calc(env(safe-area-inset-bottom,0px) + 40px);
       display: flex; flex-direction: column; gap: 24px;
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      min-height: 0;
     }
     .settings-section-label {
       font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
@@ -385,6 +389,7 @@
       padding-bottom: calc(env(safe-area-inset-bottom,0px) + 32px);
       display: flex; flex-direction: column; gap: 14px;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
+      flex: 1; min-height: 0;
     }
     .rapport-photo-wrap {
       border-radius: 16px; overflow: hidden;
@@ -461,6 +466,8 @@
     .fav-list {
       padding: 16px; display: flex; flex-direction: column; gap: 12px;
       padding-bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      flex: 1; min-height: 0;
     }
     .fav-card {
       background: var(--surface); border-radius: 16px;

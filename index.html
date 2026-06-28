@@ -2606,7 +2606,8 @@ function toggleFilter(type) {
 
 // ── Swipe-to-dismiss bottom sheet ───────────────────────
 var _hSwipeActive = false; // set true during horizontal card navigation
-
+document.title='PRE-IIFE';
+try {
 (function() {
   let startY = 0, currentY = 0, startTime = 0, dragging = false;
 
@@ -2654,7 +2655,8 @@ var _hSwipeActive = false; // set true during horizontal card navigation
     }
   });
 })();
-
+} catch(e) { window.onerror(e.message,'',0); }
+document.title='POST-IIFE';
 // ── Sheet table navigation (swipe + arrow buttons) ───────
 var _swipeList = [], _swipePos = 0;
 

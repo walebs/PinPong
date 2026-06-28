@@ -87,9 +87,9 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; color: var(--text);
       -webkit-tap-highlight-color: transparent;
-      transition: background 0.12s;
+      transition: background 0.12s, opacity 0.22s ease, transform 0.12s ease;
     }
-    .filter-toggle:active { background: var(--s2); }
+    .filter-toggle:active { background: var(--s2); transform: scale(0.93); }
     .filter-panel {
       position: absolute; top: 0; left: 0;
       background: var(--surface); border: 1px solid var(--border);
@@ -99,22 +99,31 @@
       grid-template-columns: repeat(3, 34px);
       grid-template-rows: repeat(3, 34px);
       opacity: 0; pointer-events: none;
-      transform: scale(0);
+      transform: scale(0.72);
       transform-origin: top left;
-      transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      /* close curve — snappy ease-in */
+      transition: opacity 0.2s cubic-bezier(0.4, 0, 1, 1),
+                  transform 0.24s cubic-bezier(0.4, 0, 1, 1);
     }
     .filter-fab.open .filter-panel {
       opacity: 1; pointer-events: auto;
       transform: scale(1);
+      /* open curve — spring bounce */
+      transition: opacity 0.22s ease,
+                  transform 0.42s cubic-bezier(0.34, 1.4, 0.64, 1);
     }
-    .filter-fab.open .filter-toggle { opacity: 0; pointer-events: none; }
+    .filter-fab.open .filter-toggle {
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
     .filter-cell-toggle {
       background: var(--surface); border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; color: var(--text);
       -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, transform 0.12s ease;
     }
-    .filter-cell-toggle:active { background: var(--s2); }
+    .filter-cell-toggle:active { background: var(--s2); transform: scale(0.88); }
     /* Mini filter indicator grid — below the toggle button */
     .filter-mini-grid {
       position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
@@ -151,11 +160,11 @@
       gap: 4px;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       background: var(--surface); border: none; border-radius: 0;
-      transition: background 0.15s;
+      transition: background 0.12s, transform 0.12s ease;
       font-size: 11px; font-weight: 600; color: var(--muted);
       user-select: none;
     }
-    .filter-cell:active { background: var(--s2); }
+    .filter-cell:active { background: var(--s2); transform: scale(0.88); }
     .filter-cell-icon { color: var(--text); }
     .filter-cell-box {
       width: 11px; height: 11px; border-radius: 3px;
@@ -368,6 +377,7 @@
     .settings-about {
       text-align: center; color: var(--muted); font-size: 13px;
       line-height: 1.6; padding: 8px 0 4px;
+      margin-top: auto; padding-top: 40px;
     }
     /* ── Rapport page ──────────────────────────────────── */
     .rapport-body {
@@ -555,7 +565,7 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
       transform: translate(-50%, calc(100% + 40px));
-      transition: transform 0.52s cubic-bezier(0.32, 0.72, 0, 1);
+      transition: transform 0.5s cubic-bezier(0.34, 1.15, 0.64, 1);
       overflow: hidden;
       will-change: transform;
       display: flex; flex-direction: column;
@@ -567,7 +577,7 @@
       .sheet-type { font-size: 10px; margin-bottom: 2px; }
       .sheet-name { font-size: 16px; margin-bottom: 6px; }
       .sheet-content { gap: 8px; }
-      .stat-val { font-size: 12px; }
+      .stat-val { font-size: 13px; }
       .btn-directions { padding: 10px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
@@ -670,21 +680,22 @@
     }
     .sheet-notes-col { /* full width below stats */ }
     .stat-item {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      padding: 8px 4px; gap: 3px; text-align: center;
+      flex: 1; min-width: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 10px 3px; gap: 4px; text-align: center;
       border-right: 1px solid var(--border);
     }
     .stat-item:last-child { border-right: none; }
-    .stat-label { font-size: 8px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
-    .stat-val { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .stat-label { font-size: 7.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .stat-val { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.15; }
     .stat-val.verified  { color: var(--green); }
     .stat-val.not-found { color: #FF3B30; }
-    .stat-val.stars     { color: var(--orange); font-size: 10px; letter-spacing: -1px; }
+    .stat-val.stars     { color: var(--orange); font-size: 11px; letter-spacing: -1px; }
     .stat-val.cond-good { color: var(--green); }
     .stat-val.cond-mid  { color: #FF9500; }
     .stat-val.cond-bad  { color: #FF3B30; }
-    .stat-val.big-num   { font-size: 16px; font-weight: 800; line-height: 1; text-align: center; }
-    .stat-val.status-icon { font-size: 18px; line-height: 1; text-align: center; }
+    .stat-val.big-num   { font-size: 13px; font-weight: 700; }
+    .stat-val.status-icon { font-size: 14px; }
     .notes-inline {
       font-size: 11px; color: var(--muted); line-height: 1.4;
       font-style: italic;
@@ -1027,7 +1038,7 @@
         </svg>
       </div>
       <div class="profile-app-name">PinPong</div>
-      <div class="profile-app-sub">Bordtennis bord i Oslo, Lørenskog og Lillestrøm!</div>
+      <div class="profile-app-sub" data-i18n="profile.sub">Bordtennis bord i Oslo, Lørenskog og Lillestrøm!</div>
     </div>
   </div>
   <div class="profile-body">
@@ -1037,7 +1048,7 @@
           <span class="profile-item-icon" style="background:rgba(255,59,48,0.12);color:#ff3b30">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff3b30" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </span>
-          Favoritter
+          <span data-i18n="profile.favoritter">Favoritter</span>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -1047,7 +1058,7 @@
           <span class="profile-item-icon" style="background:rgba(142,142,147,0.15);color:var(--muted)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </span>
-          Innstillinger
+          <span data-i18n="profile.innstillinger">Innstillinger</span>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -1737,7 +1748,7 @@ function showNearbyStrip(lat, lng) {
     var check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     var glow     = idx === 0 ? ' nearest-glow' : '';
     var typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
-    var roofBadge = (t.under_tak && /ja/i.test(t.under_tak)) ? ' <span title="Under tak" style="font-size:11px">☂️</span>' : '';
+    var roofBadge = '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
@@ -1948,7 +1959,7 @@ function openSheet(idx, _fromNav) {
   }
   if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall), cls:' big-num' });
   if (t.under_tak) {
-    var takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
+    var takVal = /ja/i.test(t.under_tak) ? tr('stats.ja') : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
     var takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
     statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
   }

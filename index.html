@@ -101,9 +101,9 @@
       opacity: 0; pointer-events: none;
       transform: scale(0.72);
       transform-origin: top left;
-      /* close curve — snappy ease-in */
-      transition: opacity 0.2s cubic-bezier(0.4, 0, 1, 1),
-                  transform 0.24s cubic-bezier(0.4, 0, 1, 1);
+      /* close curve — smooth ease-in-out */
+      transition: opacity 0.26s ease,
+                  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .filter-fab.open .filter-panel {
       opacity: 1; pointer-events: auto;
@@ -581,6 +581,15 @@
       .btn-directions { padding: 10px; font-size: 13px; }
     }
     .bottom-sheet.open { transform: translate(-50%, 0); }
+    /* Dark mode: brighten tiles so roads are readable */
+    body:not(.light) .leaflet-tile-pane {
+      filter: brightness(1.55) contrast(0.88) saturate(0.85);
+      transition: filter 0.4s ease;
+    }
+    body.light .leaflet-tile-pane {
+      filter: none;
+      transition: filter 0.4s ease;
+    }
     .sheet-close-top {
       position: absolute; top: 12px; right: 12px; z-index: 10;
       width: 40px; height: 40px; border-radius: 50%;

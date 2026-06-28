@@ -1321,9 +1321,7 @@
     Apple Maps
   </button>
 </div>
-<script>
-window.onerror=function(m,s,l){var b=document.getElementById("_eb");if(!b){b=document.createElement("div");b.id="_eb";b.style.cssText="position:fixed;top:55px;left:0;right:0;z-index:99999;background:red;color:#fff;font-size:11px;padding:4px 6px;pointer-events:none;white-space:pre-wrap;";document.body.appendChild(b);}b.textContent+=l+": "+m+"\n";return false;};
-</script>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
@@ -1901,7 +1899,7 @@ function openSheet(idx, _fromNav) {
   } else {
     _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
   }
-  var typeMain = t.type==='outdoor' ? '🏓 Utebord' : '🍺 Innebord';
+  var typeMain = t.type==='outdoor' ? '🏓 ' + tr('type.outdoor') : '🍺 ' + tr('type.bar');
   var typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
   _sheetType.innerHTML = `<span>${typeMain}</span>${typeLabel}`;
   _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
@@ -1914,7 +1912,17 @@ function openSheet(idx, _fromNav) {
   if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:tr('stats.verifisert'), cls:' verified' });
   else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_funnet'), cls:' not-found' });
   else                           statsHtml += si({ label:tr('stats.status'), val:tr('stats.ikke_besøkt') });
-  if (t.tilstand)  statsHtml += si({ label:tr('stats.tilstand'), val: esc(t.tilstand), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+  if (t.tilstand) {
+    var _condMap = {
+      'god':'Good','meget god':'Excellent','veldig god':'Excellent',
+      'grei':'Decent','ok':'Decent','middels':'Average',
+      'dårlig':'Poor','dårleg':'Poor','dårleg.':'Poor',
+      'ikke funnet':'Not found','ukjent':'Unknown','ny':'New'
+    };
+    var _condVal = currentLang === 'no' ? t.tilstand :
+      (_condMap[t.tilstand.toLowerCase()] || t.tilstand);
+    statsHtml += si({ label:tr('stats.tilstand'), val: esc(_condVal), cls: /dårlig/i.test(t.tilstand) ? ' not-found' : '' });
+  }
   if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall) });
   if (t.under_tak) {
     var takVal = /ja/i.test(t.under_tak) ? `☂ ${tr('stats.ja')}` : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
@@ -1922,7 +1930,7 @@ function openSheet(idx, _fromNav) {
     statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
   }
   if (t.belysning) {
-    var lysVal = /ja/i.test(t.belysning) ? `💡 ${tr('stats.ja')}` : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
+    var lysVal = /ja/i.test(t.belysning) ? tr('stats.ja') : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
     var lysCls = /ja/i.test(t.belysning) ? ' verified' : '';
     statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
   }
@@ -1944,7 +1952,7 @@ function openSheet(idx, _fromNav) {
     map.panTo([t.lat, t.lng], { animate:true, duration: alreadyOpen ? 0.2 : 0.35 });
   }
   updateHeartBtn();
-  updateSheetNav();
+  if (typeof updateSheetNav === 'function') updateSheetNav();
 }
 
 function closeSheet() {
@@ -2618,7 +2626,6 @@ function toggleFilter(type) {
 
 // ── Swipe-to-dismiss bottom sheet ───────────────────────
 var _hSwipeActive = false; // set true during horizontal card navigation
-document.title='PRE-IIFE';
 try {
 (function() {
   var startY = 0, currentY = 0, startTime = 0, dragging = false;
@@ -2667,8 +2674,7 @@ try {
     }
   });
 })();
-} catch(e) { window.onerror(e.message,'',0); }
-document.title='POST-IIFE';
+} catch(e) {}
 // ── Sheet table navigation (swipe + arrow buttons) ───────
 var _swipeList = [], _swipePos = 0;
 
@@ -2959,20 +2965,6 @@ map.scrollWheelZoom.disable();
 
   map.on('zoomend', () => { if (!raf) targetZoom = map.getZoom(); });
 
-// ── Startup diagnostic (REMOVE AFTER FIX) ───────────────
-(function() {
-  var st = [
-    'fF:'+(typeof filterFab)+'='+(filterFab?'ok':String(filterFab)),
-    'sL:'+(typeof _swipeList)+'='+(_swipeList?_swipeList.length:'?'),
-    'sN:'+(typeof window.sheetNav),
-    'tT:'+(typeof window.toggleTheme),
-    'ttl:'+document.title
-  ].join(' | ');
-  var b=document.createElement('div');
-  b.style.cssText='position:fixed;bottom:60px;left:0;right:0;z-index:99999;background:#00c;color:#fff;font-size:10px;padding:3px 5px;';
-  b.textContent=st;
-  document.body.appendChild(b);
-})();
 })();
 </script>
 </body>

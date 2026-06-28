@@ -1321,14 +1321,6 @@
     Apple Maps
   </button>
 </div>
-<script>
-window.onerror = function(msg, src, line, col, err) {
-  let el = document.getElementById('_errbox');
-  if (!el) { el = document.createElement('div'); el.id='_errbox'; el.style.cssText='position:fixed;bottom:80px;left:0;right:0;z-index:99999;background:rgba(180,0,0,0.95);color:#fff;font-size:11px;padding:6px 8px;pointer-events:none;'; document.body.appendChild(el); }
-  el.innerHTML += line + ': ' + msg + '<br>';
-  return false;
-};
-</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
@@ -2505,11 +2497,11 @@ const AREAS = [
 ];
 
 // ── Search ──────────────────────────────────────────────
-const searchInput  = document.getElementById('searchInput');
-const searchResults= document.getElementById('searchResults');
-const searchWrap   = document.getElementById('searchWrap');
+var searchInput  = document.getElementById('searchInput');
+var searchResults= document.getElementById('searchResults');
+var searchWrap   = document.getElementById('searchWrap');
 
-const filterFab = document.getElementById('filterFab');
+var filterFab = document.getElementById('filterFab');
 
 function toggleFilterFab() {
   filterFab.classList.toggle('open');
@@ -2661,7 +2653,7 @@ let _hSwipeActive = false; // set true during horizontal card navigation
 })();
 
 // ── Sheet table navigation (swipe + arrow buttons) ───────
-let _swipeList = [], _swipePos = 0;
+var _swipeList = [], _swipePos = 0;
 
 function buildSwipeList(fromIdx) {
   const ref = (userLat !== null)
@@ -2684,8 +2676,8 @@ function buildSwipeList(fromIdx) {
   _swipePos = _swipeList.indexOf(fromIdx);
 }
 
-const _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
-let _cardAnimating = false;
+var _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
+var _cardAnimating = false;
 
 function sheetSwipeTo(nextIdx, dir) {
   if (_cardAnimating) return;
@@ -2872,23 +2864,23 @@ window.resetSheetHistory = () => {}; // kept for compat
   const MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
   const SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
-  function applyTheme(light) {
+  window.applyTheme = function applyTheme(light) {
     document.body.classList.toggle('light', light);
     const icon = document.getElementById('themeIcon');
     if (icon) icon.innerHTML = light ? SUN_SVG : MOON_SVG;
     const tc = document.getElementById('metaThemeColor');
     if (tc) tc.content = light ? '#f2f2f7' : '#0c0c0f';
     document.documentElement.style.background = light ? '#f2f2f7' : '#0c0c0f';
-  }
+  };
 
-  function swapTiles(light) {
+  window.swapTiles = function swapTiles(light) {
     if (typeof _darkTiles === 'undefined') return;
     const add = light ? _lightTiles : _darkTiles;
     const rem = light ? _darkTiles  : _lightTiles;
     if (!map.hasLayer(add)) map.addLayer(add);
     if (map.hasLayer(rem)) map.removeLayer(rem);
     _currentTiles = add;
-  }
+  };
 
   window.toggleTheme = function() {
     const isLight = !document.body.classList.contains('light');

@@ -1242,7 +1242,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
     <span class="search-label">Søk…</span>
-    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" spellcheck="false" onclick="event.stopPropagation()" />
+    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" spellcheck="false" onclick="event.stopPropagation()" oninput="runSearch(this.value)" />
     <button class="search-close" onclick="event.stopPropagation(); collapseSearch()">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
@@ -2599,39 +2599,37 @@ searchInput.addEventListener('blur', () => {
   }, 150);
 });
 
-searchInput.addEventListener('input', function() {
-  var q = this.value.toLowerCase().trim();
+function runSearch(val) {
+  var q = (val || '').toLowerCase().trim();
   if (!q) { searchResults.style.display = 'none'; return; }
 
   var tableMatches = TABLES
-    .map((t, i) => ({ kind:'table', t, i, score: fuzzyScore(t.navn, q) }))
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
+    .map(function(t, i) { return { kind:'table', t:t, i:i, score: fuzzyScore(t.navn, q) }; })
+    .filter(function(x) { return x.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
     .slice(0, 3);
 
   var areaMatches = AREAS
-    .map((a, i) => ({ kind:'area', a, i, score: fuzzyScore(a.navn, q) }))
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
+    .map(function(a, i) { return { kind:'area', a:a, i:i, score: fuzzyScore(a.navn, q) }; })
+    .filter(function(x) { return x.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
     .slice(0, 2);
 
-  var all = [...tableMatches, ...areaMatches].slice(0, 5);
+  var all = tableMatches.concat(areaMatches).slice(0, 5);
   if (!all.length) { searchResults.style.display = 'none'; return; }
 
-  searchResults.innerHTML = all.map(x => {
+  searchResults.innerHTML = all.map(function(x) {
     if (x.kind === 'table') {
-      return `<div class="search-result-item" onclick="selectSearch(${x.i})">
-        <span style="font-size:10px;color:${x.t.type==='outdoor'?'var(--orange)':'var(--purple)'}">●</span>
-        <span>${esc(x.t.navn)}</span>
-      </div>`;
+      return '<div class="search-result-item" onclick="selectSearch(' + x.i + ')">'
+        + '<span style="font-size:10px;color:' + (x.t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)') + '">●</span>'
+        + '<span>' + esc(x.t.navn) + '</span></div>';
     } else {
-      return `<div class="search-result-item" onclick="selectArea(${x.i})">
-        <span>${esc(x.a.navn)}</span>
-      </div>`;
+      return '<div class="search-result-item" onclick="selectArea(' + x.i + ')">'
+        + '<span>' + esc(x.a.navn) + '</span></div>';
     }
   }).join('');
   searchResults.style.display = 'block';
-});
+}
 
 function selectSearch(idx) {
   collapseSearch();

@@ -2606,7 +2606,19 @@ searchInput.addEventListener('blur', () => {
 
 function runSearch(val) {
   var q = (val || '').toLowerCase().trim();
-  if (!q) { searchResults.style.display = 'none'; return; }
+  var dbg = document.getElementById('_srchDbg');
+  if (!dbg) {
+    dbg = document.createElement('div');
+    dbg.id = '_srchDbg';
+    dbg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#FF9500;color:#000;font-size:13px;font-weight:700;padding:6px 14px;border-radius:20px;z-index:9999;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(dbg);
+  }
+  if (!q) {
+    dbg.textContent = 'search: empty';
+    searchResults.style.display = 'none';
+    return;
+  }
+  dbg.textContent = 'q="' + q + '" tables=' + TABLES.length + ' areas=' + AREAS.length;
 
   var tableMatches = TABLES
     .map(function(t, i) { return { kind:'table', t:t, i:i, score: fuzzyScore(t.navn, q) }; })
@@ -2621,6 +2633,8 @@ function runSearch(val) {
     .slice(0, 2);
 
   var all = tableMatches.concat(areaMatches).slice(0, 5);
+  dbg.textContent += ' hits=' + all.length;
+
   if (!all.length) { searchResults.style.display = 'none'; return; }
 
   searchResults.innerHTML = all.map(function(x) {

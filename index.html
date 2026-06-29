@@ -1247,7 +1247,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
     <span class="search-label">Søk…</span>
-    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" spellcheck="false" onclick="event.stopPropagation()" oninput="runSearch(this.value)" />
+    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onclick="event.stopPropagation()" oninput="scheduleSearch()" onkeyup="scheduleSearch()" />
     <button class="search-close" onclick="event.stopPropagation(); collapseSearch()">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
@@ -2604,8 +2604,14 @@ searchInput.addEventListener('blur', () => {
   }, 150);
 });
 
-function runSearch(val) {
-  var q = (val || '').toLowerCase().trim();
+var _searchTimer = null;
+function scheduleSearch() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(runSearch, 30);
+}
+
+function runSearch() {
+  var q = (searchInput.value || '').toLowerCase().trim();
   var dbg = document.getElementById('_srchDbg');
   if (!dbg) {
     dbg = document.createElement('div');
@@ -2614,11 +2620,11 @@ function runSearch(val) {
     document.body.appendChild(dbg);
   }
   if (!q) {
-    dbg.textContent = 'search: empty';
+    dbg.textContent = 'input empty, val="' + searchInput.value + '"';
     searchResults.style.display = 'none';
     return;
   }
-  dbg.textContent = 'q="' + q + '" tables=' + TABLES.length + ' areas=' + AREAS.length;
+  dbg.textContent = 'q="' + q + '" T=' + TABLES.length + ' A=' + AREAS.length;
 
   var tableMatches = TABLES
     .map(function(t, i) { return { kind:'table', t:t, i:i, score: fuzzyScore(t.navn, q) }; })

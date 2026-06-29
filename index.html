@@ -66,7 +66,7 @@
       border: 1px solid rgba(0,0,0,0.12);
     }
     body.light .search-results {
-      background: rgba(255,255,255,0.96);
+      background: rgba(255,255,255,0.98);
       border: 1px solid rgba(0,0,0,0.1);
     }
     /* Light mode: vivid green location dot */
@@ -661,7 +661,12 @@
     }
     .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
     .search-results {
-      margin-top: 8px; background: rgba(23,23,28,0.9);
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 114px);
+      left: 50%; transform: translateX(-50%);
+      width: min(260px, calc(100vw - 80px));
+      z-index: 403;
+      background: rgba(23,23,28,0.95);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(42,42,53,0.5); border-radius: 14px;
       overflow: hidden; display: none;
@@ -1247,8 +1252,8 @@
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
-  <div class="search-results" id="searchResults"></div>
 </div>
+<div class="search-results" id="searchResults"></div>
 <div class="zoom-btns">
   <div class="app-wordmark">PINPONG</div>
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>

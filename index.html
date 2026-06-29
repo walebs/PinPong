@@ -623,9 +623,7 @@
     .search-label {
       font-size: 13px; font-weight: 600; color: var(--muted);
       white-space: nowrap; flex: 1;
-      text-align: center;
-      /* shift left to compensate for 44px icon, centering in full pill */
-      margin-left: -44px; padding-right: 0; pointer-events: none;
+      margin-left: -8px; pointer-events: none;
       transition: opacity 0.18s ease;
     }
     .search-wrap.expanded .search-label { opacity: 0; pointer-events: none; position: absolute; }
@@ -2630,8 +2628,6 @@ function runSearch() {
     .slice(0, 2);
 
   var all = tableMatches.concat(areaMatches).slice(0, 5);
-  dbg.textContent += ' hits=' + all.length;
-
   if (!all.length) { searchResults.style.display = 'none'; return; }
 
   searchResults.innerHTML = all.map(function(x) {
@@ -2659,7 +2655,7 @@ function selectArea(idx) {
 }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('.search-wrap')) {
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-results')) {
     if (searchWrap.classList.contains('expanded')) collapseSearch();
   }
 });

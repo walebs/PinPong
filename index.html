@@ -81,6 +81,7 @@
       z-index: 401;
     }
     .filter-toggle {
+      position: relative;
       width: 44px; height: 44px;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
@@ -89,6 +90,14 @@
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s, opacity 0.22s ease, transform 0.12s ease;
     }
+    .filter-dot {
+      position: absolute; top: 8px; right: 8px;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--orange);
+      opacity: 0; transform: scale(0); pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    .filter-dot.visible { opacity: 1; transform: scale(1); }
     .filter-toggle:active { background: var(--s2); transform: scale(0.93); }
     .filter-panel {
       position: absolute; top: 0; left: 0;
@@ -124,36 +133,6 @@
       transition: background 0.12s, transform 0.12s ease;
     }
     .filter-cell-toggle:active { background: var(--s2); transform: scale(0.88); }
-    /* Mini filter indicator grid — below the toggle button */
-    .filter-mini-grid {
-      position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
-      display: grid;
-      grid-template-columns: repeat(2, 20px);
-      grid-template-rows: repeat(4, 20px);
-      gap: 6px;
-      pointer-events: none;
-      transition: opacity 0.15s ease;
-    }
-    .filter-fab.open .filter-mini-grid { opacity: 0; }
-    .fmi {
-      width: 20px; height: 20px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--muted); opacity: 0.2;
-      transition: color 0.2s, opacity 0.2s, filter 0.2s;
-    }
-    .fmi svg { width: 15px; height: 15px; }
-    .fmi.on { opacity: 1; }
-    .fmi-ute.on   { color: var(--orange); filter: drop-shadow(0 0 4px rgba(255,149,0,0.8)); }
-    .fmi-inne.on  { color: var(--purple); filter: drop-shadow(0 0 4px rgba(139,92,246,0.8)); }
-    .fmi-tak.on   { color: #64a0ff;       filter: drop-shadow(0 0 4px rgba(100,160,255,0.8)); }
-    .fmi-fav.on   { color: #FF375F;       filter: drop-shadow(0 0 4px rgba(255,55,95,0.8)); }
-    .fmi-besok.on { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
-    .fmi-prog.on  { color: var(--green);  filter: drop-shadow(0 0 4px rgba(52,199,89,0.8)); }
-    .fmi-light.on { color: #FFD600;       filter: drop-shadow(0 0 4px rgba(255,214,0,0.9)); }
-    .filter-icon-label {
-      font-size: 7.5px; font-weight: 700; color: var(--muted);
-      letter-spacing: 0.6px; text-transform: uppercase; margin-top: 3px;
-    }
     /* .filter-grid replaced by .filter-panel above */
     .filter-cell {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -173,14 +152,13 @@
       transition: background 0.15s, border-color 0.15s;
       flex-shrink: 0;
     }
-    #pill-outdoor .filter-cell-box { border-color: var(--orange); }
-    #pill-bar     .filter-cell-box { border-color: var(--purple); }
-    .filter-cell-outdoor.active .filter-cell-box { background: var(--orange); border-color: var(--orange); }
-    .filter-cell-bar.active     .filter-cell-box { background: var(--purple); border-color: var(--purple); }
+    #pill-bar .filter-cell-box { border-color: var(--purple); }
+    .filter-cell-bar.active .filter-cell-box { background: var(--purple); border-color: var(--purple); }
     .filter-cell-outdoor { color: rgba(255,107,0,0.35); font-size: 10px; }
     .filter-cell-bar     { color: rgba(124,58,237,0.35); font-size: 10px; }
     .filter-cell-outdoor.active { color: var(--orange); background: transparent;
       text-shadow: 0 0 8px rgba(255,107,0,0.6); }
+    .filter-cell-outdoor.active svg { stroke: var(--orange); }
     .filter-cell-bar.active     { color: var(--purple); background: transparent;
       text-shadow: 0 0 8px rgba(124,58,237,0.6); }
     .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
@@ -665,7 +643,7 @@
       position: fixed;
       top: calc(env(safe-area-inset-top, 0px) + 114px);
       left: 50%; transform: translateX(-50%);
-      width: min(260px, calc(100vw - 80px));
+      width: min(200px, calc(100vw - 160px));
       z-index: 403;
       background: rgba(23,23,28,0.95);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -973,6 +951,7 @@
       <line x1="3" y1="6.5" x2="13" y2="6.5"/>
       <line x1="5" y1="11.5" x2="11" y2="11.5"/>
     </svg>
+    <span class="filter-dot" id="filterDot"></span>
   </button>
   <div class="filter-panel">
     <div class="filter-cell-toggle" onclick="toggleFilterFab()" title="Close filters">
@@ -991,7 +970,8 @@
       <span class="progress-fraction" id="progressFraction">0/0</span>
     </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
-      <div class="filter-cell-box"></div>UTE
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 14h6l-3 6h12l-3-6h6L12 3z"/><line x1="12" y1="20" x2="12" y2="23"/></svg>
+      UTE
     </div>
     <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
       <div class="filter-cell-box"></div>INNE
@@ -1012,35 +992,6 @@
       <svg width="13" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z"/></svg>
       LYS
     </div>
-  </div>
-  <!-- Mini indicator icons below toggle, hidden when panel open -->
-  <div class="filter-mini-grid" id="filterMiniGrid">
-    <!-- Row 1 -->
-    <div class="fmi fmi-ute on" id="fmi-ute">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><line x1="12" y1="7.5" x2="12" y2="14"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="9" y1="20" x2="12" y2="14"/><line x1="15" y1="20" x2="12" y2="14"/></svg>
-    </div>
-    <div class="fmi fmi-inne on" id="fmi-inne">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M3 10L12 3l9 7"/></svg>
-    </div>
-    <!-- Row 2 -->
-    <div class="fmi fmi-tak" id="fmi-tak">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M9 21V12h6v9"/><path d="M3 9.5v11.5h18V9.5"/></svg>
-    </div>
-    <div class="fmi fmi-fav" id="fmi-fav">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-    </div>
-    <!-- Row 3 -->
-    <div class="fmi fmi-besok" id="fmi-besok">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-    </div>
-    <div class="fmi fmi-prog on" id="fmi-prog">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="9 12 11 14 15 10"/></svg>
-    </div>
-    <!-- Row 4 -->
-    <div class="fmi fmi-light" id="fmi-light">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z"/></svg>
-    </div>
-    <div class="fmi" style="opacity:0"></div>
   </div>
 </div>
 
@@ -1391,23 +1342,11 @@ var _mapsOverlay     = document.getElementById('mapsOverlay');
 var _mapsModal       = document.getElementById('mapsModal');
 var _progressArc     = document.getElementById('progressArc');
 var _progressFraction= document.getElementById('progressFraction');
-var _fmiUte          = document.getElementById('fmi-ute');
-var _fmiInne         = document.getElementById('fmi-inne');
-var _fmiTak          = document.getElementById('fmi-tak');
-var _fmiFav          = document.getElementById('fmi-fav');
-var _fmiBesok        = document.getElementById('fmi-besok');
-var _fmiProg         = document.getElementById('fmi-prog');
-var _fmiLight        = document.getElementById('fmi-light');
+var _filterDot = document.getElementById('filterDot');
 
 function updateMiniIndicators() {
-  _fmiUte  .classList.toggle('on', showOutdoor);
-  _fmiInne .classList.toggle('on', showBar);
-  _fmiTak  .classList.toggle('on', showRoofOnly);
-  _fmiFav  .classList.toggle('on', showFavOnly);
-  _fmiBesok.classList.toggle('on', showVerifiedOnly);
-  _fmiLight.classList.toggle('on', showLightOnly);
-  var anyVerified = TABLES.some(t => t.verifisert === 'ja');
-  _fmiProg.classList.toggle('on', anyVerified);
+  var nonDefault = showFavOnly || showVerifiedOnly || showRoofOnly || showLightOnly || !showOutdoor || !showBar;
+  _filterDot.classList.toggle('visible', nonDefault);
 }
 
 var SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";

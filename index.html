@@ -206,7 +206,8 @@
     }
     .nearby-label {
       flex: 1; text-align: center;
-      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      font-family: 'Russo One', 'Arial Black', sans-serif;
+      font-size: 11px; font-weight: 400; letter-spacing: 2px;
       color: var(--orange); text-transform: uppercase;
       animation: label-glow 4s ease-in-out infinite;
     }
@@ -1353,7 +1354,7 @@
 </div>
 <div class="search-results" id="searchResults"></div>
 <div class="zoom-btns">
-  <div class="app-wordmark">PINPONG</div>
+  <div class="app-wordmark">P<svg class="wordmark-pin" width="11" height="20" viewBox="0 0 11 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:-2px"><path d="M5.5 0C2.46 0 0 2.46 0 5.5c0 4.2 5.5 14.5 5.5 14.5S11 9.7 11 5.5C11 2.46 8.54 0 5.5 0z"/><circle cx="5.5" cy="5.4" r="2.1" fill="rgba(0,0,0,0.28)"/></svg>NPONG</div>
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema">
@@ -1609,13 +1610,27 @@ function resolveImage(url) {
   return `images/bord/${encodeURIComponent(filename)}`;
 }
 
+async function fetchWithRetry(url, maxAttempts) {
+  var delay = 1200;
+  for (var i = 0; i < maxAttempts; i++) {
+    try {
+      var r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) return r;
+    } catch (e) {}
+    if (i < maxAttempts - 1) await new Promise(res => setTimeout(res, delay));
+    delay = Math.min(delay * 2, 8000);
+  }
+  return null;
+}
+
 async function loadSheetData() {
   if (!SHEETS_CSV_URL) {
     updateProgress();
     return;
   }
   try {
-    var res = await fetch(SHEETS_CSV_URL + '&t=' + Date.now(), { cache: 'no-store' });
+    var res = await fetchWithRetry(SHEETS_CSV_URL + '&t=' + Date.now(), 3);
+    if (!res) { updateProgress(); return; }
     var text = await res.text();
     var rows = parseCSV(text);
     var newTables = [];
@@ -3251,7 +3266,7 @@ function dismissDonateNudge() {
   </div>
 </div>
 
-<div class="donate-nudge-bg" id="donateNudgeBg" onclick="dismissDonateNudge()"></div>
+<div class="donate-nudge-bg" id="donateNudgeBg"></div>
 <div class="donate-nudge" id="donateNudge">
   <button class="donate-nudge-close" onclick="dismissDonateNudge()">✕</button>
   <div class="donate-nudge-title" data-i18n="vipps.nudge.title">Lyst til å støtte arbeidet? 🏓</div>

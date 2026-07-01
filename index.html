@@ -222,13 +222,17 @@
     @keyframes label-glow {
       0%, 100% {
         text-shadow:
-          0 1px 4px rgba(0,0,0,0.75),
-          0 0 8px rgba(255,149,0,0.2);
+          -1px -1px 0 rgba(0,0,0,0.4),  1px -1px 0 rgba(0,0,0,0.4),
+          -1px  1px 0 rgba(0,0,0,0.4),  1px  1px 0 rgba(0,0,0,0.4),
+          0 1px 4px rgba(0,0,0,0.25),
+          0 0 8px rgba(255,149,0,0.3);
       }
       50% {
         text-shadow:
-          0 1px 4px rgba(0,0,0,0.75),
-          0 0 12px rgba(255,149,0,0.8), 0 0 26px rgba(255,149,0,0.3);
+          -1px -1px 0 rgba(0,0,0,0.4),  1px -1px 0 rgba(0,0,0,0.4),
+          -1px  1px 0 rgba(0,0,0,0.4),  1px  1px 0 rgba(0,0,0,0.4),
+          0 1px 4px rgba(0,0,0,0.25),
+          0 0 12px rgba(255,149,0,0.9), 0 0 28px rgba(255,149,0,0.35);
       }
     }
     body.light .nearby-label { font-weight: 800; }

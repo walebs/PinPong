@@ -1130,11 +1130,24 @@
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="openFeilPage()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(255,59,48,0.12);color:#ff3b30">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
+          <div>
+            <div data-i18n="profile.feil">Rapporter feil</div>
+            <div class="profile-item-sub" data-i18n="profile.feil.sub">Noe som ikke stemmer?</div>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
     <div class="profile-footer">
       <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" style="width:calc(100% - 48px);justify-content:center;font-size:15px;padding:14px 22px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.6c-5.3 0-9.6-4.3-9.6-9.6S6.7 2.4 12 2.4s9.6 4.3 9.6 9.6-4.3 9.6-9.6 9.6zm.9-14.3c-.7 0-1.3.4-1.6 1L8.6 13c-.1.2-.1.4 0 .5.1.2.3.3.5.3h1.5c.4 0 .8-.3 1-.7l.7-1.5 1.8 4c.2.4.6.7 1 .7h1c.2 0 .4-.1.5-.3.1-.2.1-.4 0-.6l-2.7-8.2c-.3-.6-.9-1-1.5-1.1h-.5z"/></svg>
-        Støtt oss med Vipps!
+        <span data-i18n="vipps.btn">Støtt oss med Vipps!</span>
       </a>
       <div style="margin-top:14px">🇳🇴 Designed in Norway</div>
     </div>
@@ -1265,6 +1278,51 @@
 
     <button class="rapport-submit" onclick="submitRapport()">Send inn</button>
 
+  </div>
+</div>
+
+<!-- Rapporter Feil Page -->
+<div class="profile-page" id="feilPage">
+  <div class="fav-header">
+    <button class="profile-back" onclick="closeFeilPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="feil.title">Rapporter feil</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="rapport-body">
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label" data-i18n="feil.label.subject">Kategori</label>
+        <select class="rapport-input" id="feilSubject" style="background:transparent;color:var(--text);border:none;width:100%;font-size:15px;padding:0;-webkit-appearance:auto">
+          <option id="feilS1" data-i18n="feil.s1">Bord finnes ikke</option>
+          <option id="feilS2" data-i18n="feil.s2">Bord er ødelagt</option>
+          <option id="feilS3" data-i18n="feil.s3">Bug i nettsiden</option>
+          <option id="feilS4" data-i18n="feil.s4">Generelt spørsmål</option>
+          <option id="feilS5" data-i18n="feil.s5">Annet</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label" data-i18n="feil.label.desc">Beskriv problemet</label>
+        <textarea class="rapport-input" id="feilDesc" rows="4"
+          style="resize:none;min-height:90px;font-family:inherit;font-size:15px;line-height:1.4"
+          placeholder="…"></textarea>
+      </div>
+    </div>
+
+    <div class="rapport-photo-wrap" onclick="document.getElementById('feilPhotoInput').click()">
+      <input type="file" id="feilPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="feilPhotoChosen(this)">
+      <div class="rapport-photo-preview" id="feilPhotoPreview">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span data-i18n="feil.photo">Legg til bilde (valgfritt)</span>
+      </div>
+    </div>
+
+    <button class="rapport-submit" id="feilSubmitBtn" onclick="submitFeil()" data-i18n="feil.submit">Send rapport</button>
   </div>
 </div>
 
@@ -2284,6 +2342,24 @@ var LANG = {
     'settings.hide_visited.sub':'Vis kun bord du ikke har sett ennå',
     'lang.sub':             'Velg språk i appen',
     'rapport.title':        'Tips oss om et bord!',
+    'profile.feil':         'Rapporter feil',
+    'profile.feil.sub':     'Noe som ikke stemmer?',
+    'feil.title':           'Rapporter feil',
+    'feil.label.subject':   'Kategori',
+    'feil.label.desc':      'Beskriv problemet',
+    'feil.submit':          'Send rapport',
+    'feil.s1':              'Bord finnes ikke',
+    'feil.s2':              'Bord er ødelagt',
+    'feil.s3':              'Bug i nettsiden',
+    'feil.s4':              'Generelt spørsmål',
+    'feil.s5':              'Annet',
+    'feil.photo':           'Legg til bilde (valgfritt)',
+    'vipps.btn':            'Støtt oss med Vipps!',
+    'vipps.nudge.title':    'Lyst til å støtte arbeidet? 🏓',
+    'vipps.nudge.sub':      'Vi tar gjerne en Vipps ☕',
+    'vipps.modal.title':    'Støtt arbeidet med Vipps! 🧡',
+    'vipps.modal.sub':      'Skann med telefonkameraet',
+    'vipps.modal.close':    'Lukk',
   },
   en: {
     'nearby.label':         'Nearest',
@@ -2330,6 +2406,24 @@ var LANG = {
     'settings.hide_visited.sub':'Show only tables you haven\'t seen yet',
     'lang.sub':             'Choose app language',
     'rapport.title':        'Tip us about a table!',
+    'profile.feil':         'Report an issue',
+    'profile.feil.sub':     'Something not right?',
+    'feil.title':           'Report an issue',
+    'feil.label.subject':   'Category',
+    'feil.label.desc':      'Describe the issue',
+    'feil.submit':          'Send report',
+    'feil.s1':              'Table does not exist',
+    'feil.s2':              'Table is broken',
+    'feil.s3':              'Bug on the website',
+    'feil.s4':              'General question',
+    'feil.s5':              'Other',
+    'feil.photo':           'Add photo (optional)',
+    'vipps.btn':            'Support us on Vipps!',
+    'vipps.nudge.title':    'Want to support the project? 🏓',
+    'vipps.nudge.sub':      'We appreciate a Vipps tip ☕',
+    'vipps.modal.title':    'Support our work on Vipps! 🧡',
+    'vipps.modal.sub':      'Scan with your phone camera',
+    'vipps.modal.close':    'Close',
   }
 };
 
@@ -2453,6 +2547,57 @@ function profileRapporter() {
 function closeRapport() {
   document.getElementById('rapportPage').classList.remove('open');
 }
+
+/* ── Rapporter Feil ───────────────────────────────────── */
+var _FEIL_RL_KEY = 'pp_feil_rl';
+function _feilCanSubmit() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_FEIL_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    if (d.date !== today) return true;
+    return (d.count || 0) < 2;
+  } catch { return true; }
+}
+function _feilRecord() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_FEIL_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    var count = d.date === today ? (d.count || 0) + 1 : 1;
+    localStorage.setItem(_FEIL_RL_KEY, JSON.stringify({ date: today, count }));
+  } catch {}
+}
+function openFeilPage() {
+  document.getElementById('feilDesc').value = '';
+  document.getElementById('feilSubject').selectedIndex = 0;
+  document.getElementById('feilPhotoPreview').innerHTML =
+    `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>${tr('feil.photo')}</span>`;
+  document.getElementById('feilPage').classList.add('open');
+}
+function closeFeilPage() {
+  document.getElementById('feilPage').classList.remove('open');
+}
+function feilPhotoChosen(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var preview = document.getElementById('feilPhotoPreview');
+    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function submitFeil() {
+  if (!_feilCanSubmit()) {
+    showLocToast(tr('feil.title'), 'Maks 2 rapporter per dag. Prøv igjen i morgen.');
+    return;
+  }
+  var subject = document.getElementById('feilSubject').value;
+  var desc    = document.getElementById('feilDesc').value.trim();
+  if (!desc) { document.getElementById('feilDesc').focus(); return; }
+  var body = [`Kategori: ${subject}`, '', desc, '', '(Legg ved bilde som vedlegg hvis relevant)'].join('\n');
+  window.open(`mailto:pinpongnorge@outlook.com?subject=${encodeURIComponent('PinPong – ' + subject)}&body=${encodeURIComponent(body)}`, '_blank');
+  _feilRecord();
+  closeFeilPage();
+}
 function rapportSegPick(btn) {
   btn.closest('.rapport-seg').querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -2484,7 +2629,7 @@ function submitRapport() {
     '',
     '⚠️ Husk å legge ved bilde som vedlegg!'
   ].join('\n');
-  window.open(`mailto:belal.jan@hotmail.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`, '_blank');
+  window.open(`mailto:pinpongnorge@outlook.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`, '_blank');
   _rapportRecord();
   closeRapport();
 }
@@ -3097,23 +3242,23 @@ function dismissDonateNudge() {
 
 <div class="vipps-modal-bg" id="vippsModalBg" onclick="closeVippsModal(event)">
   <div class="vipps-modal">
-    <div class="vipps-modal-title">Støtt arbeidet med Vipps! 🧡</div>
-    <div class="vipps-modal-sub">Skann med telefonkameraet</div>
+    <div class="vipps-modal-title" data-i18n="vipps.modal.title">Støtt arbeidet med Vipps! 🧡</div>
+    <div class="vipps-modal-sub" data-i18n="vipps.modal.sub">Skann med telefonkameraet</div>
     <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=12&data=https%3A%2F%2Fqr.vipps.no%2F28%2F2%2F01%2F031%2F4740856448%3Fv%3D1" alt="Vipps QR" style="border-radius:12px;width:180px;height:180px;margin:4px 0" loading="lazy">
     <div class="vipps-modal-num">408 56 448</div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px">Wale Belal Sayed</div>
-    <button class="vipps-modal-close" onclick="closeVippsModal()">Lukk</button>
+    <button class="vipps-modal-close" data-i18n="vipps.modal.close" onclick="closeVippsModal()">Lukk</button>
   </div>
 </div>
 
 <div class="donate-nudge-bg" id="donateNudgeBg" onclick="dismissDonateNudge()"></div>
 <div class="donate-nudge" id="donateNudge">
   <button class="donate-nudge-close" onclick="dismissDonateNudge()">✕</button>
-  <div class="donate-nudge-title">Lyst til å støtte arbeidet? 🏓</div>
-  <div class="donate-nudge-sub">Vi tar gjerne en Vipps ☕</div>
+  <div class="donate-nudge-title" data-i18n="vipps.nudge.title">Lyst til å støtte arbeidet? 🏓</div>
+  <div class="donate-nudge-sub" data-i18n="vipps.nudge.sub">Vi tar gjerne en Vipps ☕</div>
   <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" onclick="dismissDonateNudge()" style="margin-bottom:0">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.6c-5.3 0-9.6-4.3-9.6-9.6S6.7 2.4 12 2.4s9.6 4.3 9.6 9.6-4.3 9.6-9.6 9.6zm.9-14.3c-.7 0-1.3.4-1.6 1L8.6 13c-.1.2-.1.4 0 .5.1.2.3.3.5.3h1.5c.4 0 .8-.3 1-.7l.7-1.5 1.8 4c.2.4.6.7 1 .7h1c.2 0 .4-.1.5-.3.1-.2.1-.4 0-.6l-2.7-8.2c-.3-.6-.9-1-1.5-1.1h-.5z"/></svg>
-    Støtt oss med Vipps!
+    <span data-i18n="vipps.btn">Støtt oss med Vipps!</span>
   </a>
 </div>
 

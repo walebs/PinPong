@@ -202,7 +202,7 @@
       font-size: 12px; font-weight: 400; letter-spacing: 3px;
       color: var(--orange); text-transform: uppercase;
       line-height: 1.6; padding-bottom: 2px;
-      animation: label-glow 4s ease-in-out infinite;
+      animation: wordmark-glow 4s ease-in-out infinite;
     }
     @keyframes wordmark-glow {
       0%, 100% {
@@ -219,30 +219,6 @@
           0 2px 6px rgba(0,0,0,0.4),
           0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
       }
-    }
-    @keyframes label-glow {
-      0%, 100% {
-        text-shadow:
-          -1px -1px 0 rgba(0,0,0,0.18),  1px -1px 0 rgba(0,0,0,0.18),
-          -1px  1px 0 rgba(0,0,0,0.18),  1px  1px 0 rgba(0,0,0,0.18),
-          0 0 6px rgba(255,149,0,0.2);
-      }
-      50% {
-        text-shadow:
-          -1px -1px 0 rgba(0,0,0,0.18),  1px -1px 0 rgba(0,0,0,0.18),
-          -1px  1px 0 rgba(0,0,0,0.18),  1px  1px 0 rgba(0,0,0,0.18),
-          0 0 10px rgba(255,149,0,0.75), 0 0 22px rgba(255,149,0,0.25);
-      }
-    }
-    body.light .nearby-label {
-      color: var(--orange);
-      background: rgba(255,255,255,0.65);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border-radius: 6px;
-      padding: 2px 10px;
-      animation: none;
-      text-shadow: none;
     }
 
     /* ── Profile page ───────────────────────────────────── */

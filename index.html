@@ -230,15 +230,15 @@
     @keyframes label-glow {
       0%, 100% {
         text-shadow:
-          -0.6px -0.6px 0 rgba(0,0,0,0.6),  0.6px -0.6px 0 rgba(0,0,0,0.6),
-          -0.6px  0.6px 0 rgba(0,0,0,0.6),  0.6px  0.6px 0 rgba(0,0,0,0.6),
-          0 0 6px rgba(255,149,0,0.15);
+          -1px -1px 0 rgba(0,0,0,0.5),  1px -1px 0 rgba(0,0,0,0.5),
+          -1px  1px 0 rgba(0,0,0,0.5),  1px  1px 0 rgba(0,0,0,0.5),
+          0 0 6px rgba(255,149,0,0.2);
       }
       50% {
         text-shadow:
-          -0.6px -0.6px 0 rgba(0,0,0,0.6),  0.6px -0.6px 0 rgba(0,0,0,0.6),
-          -0.6px  0.6px 0 rgba(0,0,0,0.6),  0.6px  0.6px 0 rgba(0,0,0,0.6),
-          0 0 10px rgba(255,149,0,0.6), 0 0 20px rgba(255,149,0,0.2);
+          -1px -1px 0 rgba(0,0,0,0.5),  1px -1px 0 rgba(0,0,0,0.5),
+          -1px  1px 0 rgba(0,0,0,0.5),  1px  1px 0 rgba(0,0,0,0.5),
+          0 0 10px rgba(255,149,0,0.7), 0 0 22px rgba(255,149,0,0.3);
       }
     }
     body.light .nearby-label { font-weight: 800; }
@@ -1364,7 +1364,7 @@
 </div>
 <div class="search-results" id="searchResults"></div>
 <div class="zoom-btns">
-  <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+  <div class="app-wordmark">P<span style="font-size:13px;vertical-align:2px;letter-spacing:-5px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema">

@@ -192,11 +192,13 @@
     }
     .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-header {
-      display: flex; align-items: flex-end; justify-content: space-between;
+      position: relative;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 16px 5px 16px;
     }
     .nearby-label {
-      flex: 1; text-align: center;
+      position: absolute; left: 0; right: 0;
+      text-align: center; pointer-events: none;
       font-family: 'Russo One', 'Arial Black', sans-serif;
       font-size: 12px; font-weight: 400; letter-spacing: 3px;
       color: var(--orange); text-transform: uppercase;
@@ -577,7 +579,7 @@
     }
     .nearby-strip::-webkit-scrollbar { display: none; }
     .nearby-card {
-      flex-shrink: 0; width: calc((100vw - 56px) / 3);
+      flex-shrink: 0; width: calc((100vw - 50px) / 3);
       scroll-snap-align: start;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px 10px 14px 11px;

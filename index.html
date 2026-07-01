@@ -11,7 +11,20 @@
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
-  <title>PinPong</title>
+  <title>PinPong – Finn bordtennisbord i Oslo</title>
+
+  <!-- Open Graph / link previews (bytt URL når du har domene) -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://pinpong.no" />
+  <meta property="og:title"       content="PinPong – Finn bordtennisbord i Oslo" />
+  <meta property="og:description" content="Kart over alle bordtennisbord i Oslo, Lørenskog og Lillestrøm. Filtrer på ute/inne, tak, lys og mer." />
+  <meta property="og:image"       content="https://pinpong.no/icons/icon-512.png" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card"        content="summary" />
+  <meta name="twitter:title"       content="PinPong – Finn bordtennisbord i Oslo" />
+  <meta name="twitter:description" content="Kart over alle bordtennisbord i Oslo, Lørenskog og Lillestrøm." />
+  <meta name="twitter:image"       content="https://pinpong.no/icons/icon-512.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" />
@@ -330,21 +343,31 @@
       padding: 8px 22px; cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     /* Donation nudge popup */
+    .donate-nudge-bg {
+      position: fixed; inset: 0; z-index: 799;
+      background: rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .donate-nudge-bg.visible { opacity: 1; pointer-events: auto; }
     .donate-nudge {
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(120px);
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -44%);
       z-index: 800; width: min(300px, calc(100vw - 40px));
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 18px; padding: 16px 16px 14px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      border-radius: 20px; padding: 20px 16px 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
       opacity: 0; pointer-events: none;
-      transition: transform 0.42s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.3s ease;
+      transition: transform 0.38s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.25s ease;
     }
-    .donate-nudge.visible { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+    .donate-nudge.visible { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
     .donate-nudge-close {
-      position: absolute; top: 10px; right: 12px;
-      background: none; border: none; color: var(--muted);
-      font-size: 16px; cursor: pointer; line-height: 1; padding: 4px;
+      position: absolute; top: 10px; right: 10px;
+      width: 30px; height: 30px;
+      background: var(--s2); border: none; border-radius: 50%;
+      color: var(--muted); font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       -webkit-tap-highlight-color: transparent;
     }
     .donate-nudge-title { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -1060,10 +1083,13 @@
     <div class="profile-logo-wrap">
       <div class="profile-logo-circle">
         <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <!-- head -->
-          <circle cx="50" cy="32" r="22" fill="white" opacity="0.95"/>
-          <!-- shoulders/body -->
-          <path d="M5 95 C5 65 22 54 50 54 C78 54 95 65 95 95 Z" fill="white" opacity="0.95"/>
+          <!-- paddle -->
+          <ellipse cx="38" cy="38" rx="28" ry="28" fill="white" opacity="0.95"/>
+          <ellipse cx="38" cy="38" rx="18" ry="18" fill="#FF9500" opacity="0.85"/>
+          <!-- handle -->
+          <rect x="58" y="55" width="10" height="30" rx="5" fill="white" opacity="0.95" transform="rotate(-45 63 70)"/>
+          <!-- ball -->
+          <circle cx="78" cy="22" r="10" fill="white" opacity="0.95"/>
         </svg>
       </div>
       <div class="profile-app-name">PinPong</div>
@@ -1411,7 +1437,7 @@ function updateMiniIndicators() {
   _filterDot.classList.toggle('visible', nonDefault);
 }
 
-var SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXeSufHuKBt4EJvkz3XRtwtE0KlB9Sbo6pUoNERXDUZXhLn4P8eE-bKjj4l1gGSbzGoQb0CNHoyJ8Z/pub?output=csv";
+var SHEETS_CSV_URL = "/api/tables";
 
 var STATIC = [
   { navn:"Blindern",                 lat:59.9393882, lng:10.7231652, type:"outdoor" },
@@ -1531,7 +1557,7 @@ async function loadSheetData() {
     return;
   }
   try {
-    var res = await fetch(SHEETS_CSV_URL + '&t=' + Date.now(), { cache: 'no-store' });
+    var res = await fetch(SHEETS_CSV_URL, { cache: 'no-store' });
     var text = await res.text();
     var rows = parseCSV(text);
     var newTables = [];
@@ -3052,7 +3078,9 @@ document.querySelectorAll('a.vipps-btn').forEach(function(el) {
     if (firstTime || repeat) {
       setTimeout(function() {
         var el = document.getElementById('donateNudge');
+        var bg = document.getElementById('donateNudgeBg');
         if (el) el.classList.add('visible');
+        if (bg) bg.classList.add('visible');
       }, 10000); // wait 10s so they're settled in
     }
   } catch(e) {}
@@ -3061,7 +3089,9 @@ document.querySelectorAll('a.vipps-btn').forEach(function(el) {
 function dismissDonateNudge() {
   try { localStorage.setItem('pp_donate_shown', localStorage.getItem('pp_sessions') || '0'); } catch(e) {}
   var el = document.getElementById('donateNudge');
+  var bg = document.getElementById('donateNudgeBg');
   if (el) el.classList.remove('visible');
+  if (bg) bg.classList.remove('visible');
 }
 </script>
 
@@ -3076,6 +3106,7 @@ function dismissDonateNudge() {
   </div>
 </div>
 
+<div class="donate-nudge-bg" id="donateNudgeBg" onclick="dismissDonateNudge()"></div>
 <div class="donate-nudge" id="donateNudge">
   <button class="donate-nudge-close" onclick="dismissDonateNudge()">✕</button>
   <div class="donate-nudge-title">Lyst til å støtte arbeidet? 🏓</div>

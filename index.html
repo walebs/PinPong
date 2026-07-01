@@ -186,16 +186,15 @@
     /* Nearby strip */
     .nearby-container {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-      left: 50%; transform: translateX(-50%) translateY(10px);
-      width: min(100vw, 480px);
-      z-index: 299;
-      opacity: 0; pointer-events: none;
+      left: 0; right: 0; z-index: 299;
+      padding-left: 16px;
+      opacity: 0; transform: translateY(10px); pointer-events: none;
       transition: opacity 0.35s ease, transform 0.35s ease;
     }
-    .nearby-container.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .nearby-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px 5px 16px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      padding: 0 16px 5px 0;
     }
     .nearby-label {
       flex: 1; text-align: center;
@@ -570,16 +569,16 @@
     }
     .nearby-divider {
       height: 1px; background: var(--border);
-      margin: 0 16px 0 16px;
+      margin: 0 16px 0 0;
     }
     .nearby-strip {
-      display: flex; gap: 9px; padding: 10px 16px 10px 16px;
+      display: flex; gap: 9px; padding: 10px 16px 10px 0;
       overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
       scroll-snap-type: x proximity;
     }
     .nearby-strip::-webkit-scrollbar { display: none; }
     .nearby-card {
-      flex-shrink: 0; width: calc((min(100vw, 480px) - 50px) / 3);
+      flex-shrink: 0; width: calc((100vw - 40px) / 3);
       scroll-snap-align: start;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px 10px 14px 11px;
@@ -658,7 +657,7 @@
     }
     .sheet-close-top:active { background: rgba(0,0,0,0.95); }
     .nearby-container.sheet-open {
-      opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(12px);
+      opacity: 0; pointer-events: none; transform: translateY(12px);
     }
     .fab-stack.sheet-open { opacity: 0; pointer-events: none; }
     /* Search — single animated container */

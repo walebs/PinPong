@@ -1361,7 +1361,7 @@
 </div>
 <div class="search-results" id="searchResults"></div>
 <div class="zoom-btns">
-  <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;margin-left:-7px;letter-spacing:-5px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+  <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;margin-left:-5px;letter-spacing:-3px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
   <button class="zoom-btn" onclick="map.zoomIn()">+</button>
   <button class="zoom-btn" onclick="map.zoomOut()">−</button>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema">
@@ -1813,8 +1813,8 @@ function renderMarkers() {
   clusterGroup    = makeClusterGroup('#FF9500');
   clusterGroupBar = makeClusterGroup('#8B5CF6');
   TABLES.forEach((t, i) => {
-    if (t.type==='outdoor' && !showOutdoor) return;
-    if (t.type==='bar'     && !showBar)     return;
+    if ((showOutdoor || showBar) && t.type==='outdoor' && !showOutdoor) return;
+    if ((showOutdoor || showBar) && t.type==='bar'     && !showBar)     return;
     if (showFavOnly      && !FAVORITES.has(i))                                           return;
     if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
@@ -1854,8 +1854,8 @@ function showNearbyStrip(lat, lng) {
   var nearest = TABLES
     .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
     .filter(({ t, i }) => {
-      if (t.type === 'outdoor' && !showOutdoor) return false;
-      if (t.type !== 'outdoor' && !showBar) return false;
+      if ((showOutdoor || showBar) && t.type === 'outdoor' && !showOutdoor) return false;
+      if ((showOutdoor || showBar) && t.type !== 'outdoor' && !showBar)    return false;
       if (showFavOnly      && !FAVORITES.has(i))                                    return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
@@ -2939,7 +2939,7 @@ function buildSwipeList(fromIdx) {
     .map((t, i) => ({ i, d: haversine(ref.lat, ref.lng, t.lat, t.lng) }))
     .filter(({ i }) => {
       var t = TABLES[i];
-      if (!(t.type === 'outdoor' ? showOutdoor : showBar))              return false;
+      if ((showOutdoor || showBar) && !(t.type === 'outdoor' ? showOutdoor : showBar)) return false;
       if (showFavOnly      && !FAVORITES.has(i))                        return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;

@@ -234,20 +234,10 @@
           0 0 10px rgba(255,149,0,0.75), 0 0 22px rgba(255,149,0,0.25);
       }
     }
-    @keyframes label-glow-light {
-      0%, 100% {
-        text-shadow:
-          0 1px 3px rgba(0,0,0,0.35),
-          0 0 6px rgba(255,149,0,0.2);
-      }
-      50% {
-        text-shadow:
-          0 1px 3px rgba(0,0,0,0.35),
-          0 0 10px rgba(255,149,0,0.75), 0 0 22px rgba(255,149,0,0.25);
-      }
-    }
     body.light .nearby-label {
-      animation-name: label-glow-light;
+      color: #c05800;
+      text-shadow: none;
+      animation: none;
     }
 
     /* ── Profile page ───────────────────────────────────── */

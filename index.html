@@ -174,7 +174,7 @@
     .filter-cell-progress:active { background: var(--surface); }
     .progress-fraction { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
     .filter-cell-fav      { color: rgba(255,59,48,0.35);   font-size: 10px; }
-    .filter-cell-verified { color: rgba(52,199,89,0.35);   font-size: 9px; letter-spacing: -0.2px; }
+    .filter-cell-verified { color: rgba(52,199,89,0.35);   font-size: 7px; letter-spacing: -0.8px; }
     .filter-cell-roof     { color: rgba(100,160,255,0.35); font-size: 11px; }
     .filter-cell-fav.active      { color: #ff3b30; background: transparent; text-shadow: 0 0 8px rgba(255,59,48,0.6); }
     .filter-cell-fav.active svg  { fill: #ff3b30; stroke: #ff3b30; }
@@ -1073,7 +1073,7 @@
     </div>
     <div class="filter-cell filter-cell-verified" id="pill-verified" onclick="toggleFilter('verified')">
       <svg width="18" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      BESØKT
+      VERIFISERT
     </div>
     <div class="filter-cell filter-cell-light" id="pill-light" onclick="toggleFilter('light')">
       <svg width="17" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z"/></svg>
@@ -2347,7 +2347,7 @@ var LANG = {
     'filter.inne':          'INNE',
     'filter.tak':           'TAK',
     'filter.likte':         'LIKTE',
-    'filter.besøkt':        'BESØKT',
+    'filter.besøkt':        'VERIFISERT',
     'filter.lys':           'LYS',
     'profile.favoritter':   'Favoritter',
     'profile.innstillinger':'Innstillinger',
@@ -2411,7 +2411,7 @@ var LANG = {
     'filter.inne':          'IN',
     'filter.tak':           'ROOF',
     'filter.likte':         'LIKED',
-    'filter.besøkt':        'VISITED',
+    'filter.besøkt':        'VERIFIED',
     'filter.lys':           'LIGHT',
     'profile.favoritter':   'Favorites',
     'profile.innstillinger':'Settings',

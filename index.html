@@ -201,9 +201,7 @@
       font-family: 'Russo One', 'Arial Black', sans-serif;
       font-size: 11px; font-weight: 400; letter-spacing: 3px;
       color: var(--orange); text-transform: uppercase;
-      text-shadow:
-        -1px -1px 0 rgba(0,0,0,0.15),  1px -1px 0 rgba(0,0,0,0.15),
-        -1px  1px 0 rgba(0,0,0,0.15),  1px  1px 0 rgba(0,0,0,0.15);
+      animation: label-glow 4s ease-in-out infinite;
     }
     @keyframes wordmark-glow {
       0%, 100% {
@@ -219,6 +217,20 @@
           -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
           0 2px 6px rgba(0,0,0,0.4),
           0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
+      }
+    }
+    @keyframes label-glow {
+      0%, 100% {
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.18),  1px -1px 0 rgba(0,0,0,0.18),
+          -1px  1px 0 rgba(0,0,0,0.18),  1px  1px 0 rgba(0,0,0,0.18),
+          0 0 6px rgba(255,149,0,0.2);
+      }
+      50% {
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.18),  1px -1px 0 rgba(0,0,0,0.18),
+          -1px  1px 0 rgba(0,0,0,0.18),  1px  1px 0 rgba(0,0,0,0.18),
+          0 0 10px rgba(255,149,0,0.75), 0 0 22px rgba(255,149,0,0.25);
       }
     }
     body.light .nearby-label { font-weight: 800; }

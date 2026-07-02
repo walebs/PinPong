@@ -3180,16 +3180,26 @@ map.scrollWheelZoom.disable();
   var targetZoom = map.getZoom();
   var pt = null;
   var raf = null;
+  var isPinching = false;
+  var pinchTimer = null;
 
   map.getContainer().addEventListener('wheel', e => {
     e.preventDefault();
     pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
 
     if (e.ctrlKey) {
-      // Mac trackpad pinch — fire every event directly, no RAF gating
-      // Higher sensitivity (0.05) so small pinch gestures register immediately
+      // Mac trackpad pinch — mark active so zoomend can't reset targetZoom mid-gesture
+      isPinching = true;
+      clearTimeout(pinchTimer);
+      pinchTimer = setTimeout(() => { isPinching = false; }, 150);
+
       targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - e.deltaY * 0.05));
-      map.setZoomAround(pt, targetZoom, { animate: false });
+      if (!raf) {
+        raf = requestAnimationFrame(() => {
+          map.setZoomAround(pt, targetZoom, { animate: false });
+          raf = null;
+        });
+      }
     } else {
       // Two-finger scroll or mouse wheel — smooth CSS-animated zoom
       var px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
@@ -3203,7 +3213,8 @@ map.scrollWheelZoom.disable();
     }
   }, { passive: false });
 
-  map.on('zoomend', () => { targetZoom = map.getZoom(); });
+  // Only sync targetZoom from external zoom changes (buttons, etc.), never mid-pinch
+  map.on('zoomend', () => { if (!isPinching) targetZoom = map.getZoom(); });
 
 })();
 

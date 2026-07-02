@@ -1691,9 +1691,9 @@ var map = L.map('map', {
   center: [59.926, 10.752], zoom: 13,
   zoomControl: false, attributionControl: true,
   tap: true, preferCanvas: true,
-  zoomSnap: 0, zoomDelta: 0.5,
-  wheelPxPerZoomLevel: 120,
-  wheelDebounceTime: 20,
+  zoomSnap: 0, zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 80,
+  wheelDebounceTime: 0,
   minZoom: 5, maxZoom: 19,
   rotate: true, rotateControl: false, bearing: 0,
   inertia: true,
@@ -3174,53 +3174,32 @@ document.addEventListener('gesturestart',  e => e.preventDefault(), { passive: f
 document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
 document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
 
-// ── Smooth trackpad / mouse-wheel zoom ───────────────────
-map.scrollWheelZoom.disable();
+// ── Trackpad / mouse-wheel zoom ──────────────────────────
+// Let Leaflet handle two-finger scroll natively (smooth, momentum-aware).
+// Only intercept ctrlKey pinch events to normalize their wild delta values.
+map.scrollWheelZoom.enable();
+
 (function () {
   var targetZoom = map.getZoom();
-  var pt = null;
   var raf = null;
-  var isScrolling = false;
-  var scrollTimer = null;
+  var pt = null;
 
   map.getContainer().addEventListener('wheel', e => {
+    if (!e.ctrlKey) return; // let Leaflet handle regular two-finger scroll
     e.preventDefault();
+    e.stopPropagation();
+
     pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+    var raw = Math.max(-5, Math.min(5, e.deltaY));
+    targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), map.getZoom() - raw * 0.06));
 
-    if (e.ctrlKey) {
-      isScrolling = true;
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => { isScrolling = false; }, 150);
-
-      var raw = Math.max(-5, Math.min(5, e.deltaY));
-      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - raw * 0.06));
-      if (!raf) {
-        raf = requestAnimationFrame(() => {
-          map.setZoomAround(pt, targetZoom, { animate: false });
-          raf = null;
-        });
-      }
-    } else {
-      // Two-finger scroll — instant zoom like scrolling a webpage
-      isScrolling = true;
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => { isScrolling = false; }, 150);
-
-      var px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
-      var clamped = Math.max(-20, Math.min(20, px));
-      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - clamped * 0.007));
-      if (!raf) {
-        raf = requestAnimationFrame(() => {
-          map.setZoomAround(pt, targetZoom, { animate: false });
-          raf = null;
-        });
-      }
+    if (!raf) {
+      raf = requestAnimationFrame(() => {
+        map.setZoomAround(pt, targetZoom, { animate: false });
+        raf = null;
+      });
     }
   }, { passive: false });
-
-  // Only sync targetZoom from external zoom changes (buttons, etc.), never mid-gesture
-  map.on('zoomend', () => { if (!isScrolling) targetZoom = map.getZoom(); });
-
 })();
 
 // ── Vipps desktop fallback ───────────────────────────────

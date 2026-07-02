@@ -145,6 +145,7 @@
       transition: opacity 0.18s ease;
     }
     .filter-cell-toggle {
+      grid-column: 1 / -1;
       background: var(--surface); border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; color: var(--text);
@@ -152,6 +153,14 @@
       transition: background 0.12s, transform 0.12s ease;
     }
     .filter-cell-toggle:active { background: var(--s2); transform: scale(0.88); }
+    /* Progress badge — lives below filter toggle, always visible */
+    .filter-progress-badge {
+      width: 44px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1px; padding-top: 5px;
+      transition: opacity 0.18s ease;
+    }
+    .filter-fab.open .filter-progress-badge { opacity: 0; pointer-events: none; }
     /* .filter-grid replaced by .filter-panel above */
     .filter-cell {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -172,9 +181,7 @@
     .filter-cell-bar.active     { color: var(--purple); background: transparent;
       text-shadow: 0 0 8px rgba(124,58,237,0.6); }
     .filter-cell-bar.active svg { stroke: var(--purple); fill: rgba(124,58,237,0.22); }
-    .filter-cell-progress { flex-direction: column; gap: 2px; cursor: default; }
-    .filter-cell-progress:active { background: var(--surface); }
-    .progress-fraction { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
+    .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
     .filter-cell-fav      { color: rgba(255,59,48,0.35);   font-size: 10px; }
     .filter-cell-verified { color: rgba(52,199,89,0.35);   font-size: 7px; letter-spacing: -0.8px; }
     .filter-cell-roof     { color: rgba(100,160,255,0.35); font-size: 11px; }
@@ -1031,6 +1038,15 @@
     <span class="filter-toggle-label">FILTER</span>
   </button>
   <span class="filter-dot" id="filterDot"></span>
+  <!-- Verified-count badge — always visible under filter button -->
+  <div class="filter-progress-badge" id="filterProgress">
+    <svg width="28" height="28" viewBox="0 0 26 26">
+      <circle cx="13" cy="13" r="9" fill="none" stroke="var(--border)" stroke-width="2"/>
+      <circle id="progressArc" cx="13" cy="13" r="9" fill="none" stroke="var(--green)" stroke-width="2"
+              stroke-dasharray="0 56.55" stroke-linecap="round" transform="rotate(-90 13 13)"/>
+    </svg>
+    <span class="progress-fraction" id="progressFraction">0/0</span>
+  </div>
   <div class="filter-panel">
     <div class="filter-cell-toggle" onclick="toggleFilterFab()" title="Close filters">
       <svg width="20" height="16" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -1038,14 +1054,6 @@
       <line x1="3" y1="6.5" x2="13" y2="6.5"/>
       <line x1="5" y1="11.5" x2="11" y2="11.5"/>
     </svg>
-    </div>
-    <div class="filter-cell filter-cell-progress" id="filterProgress">
-      <svg width="30" height="30" viewBox="0 0 26 26">
-        <circle cx="13" cy="13" r="9" fill="none" stroke="var(--border)" stroke-width="2.5"/>
-        <circle id="progressArc" cx="13" cy="13" r="9" fill="none" stroke="var(--green)" stroke-width="2.5"
-                stroke-dasharray="0 56.55" stroke-linecap="round" transform="rotate(-90 13 13)"/>
-      </svg>
-      <span class="progress-fraction" id="progressFraction">0/0</span>
     </div>
     <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 14h6l-3 6h12l-3-6h6L12 3z"/><line x1="12" y1="20" x2="12" y2="23"/></svg>
@@ -1087,13 +1095,23 @@
     <div class="profile-logo-wrap">
       <div class="profile-logo-circle">
         <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <!-- paddle -->
-          <ellipse cx="38" cy="38" rx="28" ry="28" fill="white" opacity="0.95"/>
-          <ellipse cx="38" cy="38" rx="18" ry="18" fill="#FF9500" opacity="0.85"/>
-          <!-- handle -->
-          <rect x="58" y="55" width="10" height="30" rx="5" fill="white" opacity="0.95" transform="rotate(-45 63 70)"/>
-          <!-- ball -->
-          <circle cx="78" cy="22" r="10" fill="white" opacity="0.95"/>
+          <!-- Whole paddle rotates as one unit -->
+          <g transform="rotate(-35 50 54)">
+            <!-- Blade (white rim) -->
+            <circle cx="50" cy="37" r="27" fill="white" opacity="0.95"/>
+            <!-- Rubber face (orange) -->
+            <circle cx="50" cy="37" r="20" fill="#FF9500" opacity="0.88"/>
+            <!-- Rubber sheen -->
+            <ellipse cx="42" cy="30" rx="8" ry="5" fill="rgba(255,255,255,0.22)" transform="rotate(-20 42 30)"/>
+            <!-- Handle -->
+            <rect x="44" y="62" width="12" height="26" rx="6" fill="white" opacity="0.95"/>
+            <!-- Handle wood-grain detail -->
+            <rect x="48" y="64" width="4" height="22" rx="2" fill="rgba(255,149,0,0.30)"/>
+          </g>
+          <!-- Ball (outside rotation group, fixed position) -->
+          <circle cx="80" cy="17" r="10" fill="white" opacity="0.95"/>
+          <!-- Ball curve suggesting 3D form -->
+          <path d="M73 14 Q80 8 86 15" stroke="rgba(255,149,0,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="profile-app-name">PinPong</div>
@@ -1128,7 +1146,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </span>
           <div>
-            <div data-i18n="profile.tips">Tips oss om et bord! 🏓</div>
+            <div data-i18n="profile.tips">Kjenner du et bord? 🏓</div>
             <div class="profile-item-sub" data-i18n="profile.tips.sub">Tips oss om et sted!</div>
           </div>
         </div>
@@ -2337,7 +2355,7 @@ var LANG = {
     'filter.lys':           'LYS',
     'profile.favoritter':   'Favoritter',
     'profile.innstillinger':'Innstillinger',
-    'profile.tips':         'Tips oss om et bord! 🏓',
+    'profile.tips':         'Kjenner du et bord? 🏓',
     'profile.tips.sub':     'Tips oss om et sted!',
     'profile.sub':          'Bordtennis bord i Oslo, Lørenskog og Lillestrøm!',
     'fav.title':            '❤ Favoritter',
@@ -2401,7 +2419,7 @@ var LANG = {
     'filter.lys':           'LIGHT',
     'profile.favoritter':   'Favorites',
     'profile.innstillinger':'Settings',
-    'profile.tips':         'Tip us about a table! 🏓',
+    'profile.tips':         'Know a table? 🏓',
     'profile.tips.sub':     'Tip us about a spot!',
     'profile.sub':          'Ping pong tables in Oslo, Lørenskog and Lillestrøm!',
     'fav.title':            '❤ Favorites',

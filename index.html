@@ -3188,12 +3188,15 @@ map.scrollWheelZoom.disable();
     pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
 
     if (e.ctrlKey) {
-      // Mac trackpad pinch — mark active so zoomend can't reset targetZoom mid-gesture
+      // Mac trackpad pinch — normalize delta so slow/fast gestures feel proportional
+      // Clamp raw deltaY to ±5 to prevent wild zoom jumps on fast gestures,
+      // then apply a small multiplier for fine control.
       isPinching = true;
       clearTimeout(pinchTimer);
       pinchTimer = setTimeout(() => { isPinching = false; }, 150);
 
-      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - e.deltaY * 0.05));
+      var raw = Math.max(-5, Math.min(5, e.deltaY));
+      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - raw * 0.06));
       if (!raf) {
         raf = requestAnimationFrame(() => {
           map.setZoomAround(pt, targetZoom, { animate: false });

@@ -3175,12 +3175,10 @@ document.addEventListener('gesturechange', e => e.preventDefault(), { passive: f
 document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
 
 // ── Smooth trackpad / mouse-wheel zoom ───────────────────
-// Uses Leaflet's CSS-transition animation (no tile blink) with per-frame
-// delta accumulation. Pinch (ctrlKey) and scroll use separate sensitivities.
 map.scrollWheelZoom.disable();
 (function () {
   var targetZoom = map.getZoom();
-  var pt  = null;
+  var pt = null;
   var raf = null;
 
   map.getContainer().addEventListener('wheel', e => {
@@ -3188,28 +3186,24 @@ map.scrollWheelZoom.disable();
     pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
 
     if (e.ctrlKey) {
-      // Mac trackpad pinch — apply immediately per frame, no animation lag
-      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - e.deltaY * 0.025));
-      if (!raf) {
-        raf = requestAnimationFrame(() => {
-          map.setZoomAround(pt, targetZoom, { animate: false });
-          raf = null;
-        });
-      }
+      // Mac trackpad pinch — fire every event directly, no RAF gating
+      // Higher sensitivity (0.05) so small pinch gestures register immediately
+      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - e.deltaY * 0.05));
+      map.setZoomAround(pt, targetZoom, { animate: false });
     } else {
       // Two-finger scroll or mouse wheel — smooth CSS-animated zoom
       var px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
       targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - px / 150));
       if (!raf) {
         raf = requestAnimationFrame(() => {
-          map.setZoomAround(pt, targetZoom); // animate:true → CSS scale, no tile blink
+          map.setZoomAround(pt, targetZoom);
           raf = null;
         });
       }
     }
   }, { passive: false });
 
-  map.on('zoomend', () => { if (!raf) targetZoom = map.getZoom(); });
+  map.on('zoomend', () => { targetZoom = map.getZoom(); });
 
 })();
 

@@ -1705,7 +1705,7 @@ map.attributionControl.setPrefix(false);
 var _tileOpts = {
   attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
   maxZoom: 19, subdomains: 'abcd',
-  updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 8, crossOrigin: true,
+  updateWhenIdle: false, updateWhenZooming: false, keepBuffer: 8, crossOrigin: true,
   detectRetina: true,
 };
 var _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
@@ -3195,7 +3195,7 @@ map.scrollWheelZoom.enable();
 
     if (!raf) {
       raf = requestAnimationFrame(() => {
-        map.setZoomAround(pt, targetZoom, { animate: false });
+        map.setZoomAround(pt, targetZoom);
         raf = null;
       });
     }

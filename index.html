@@ -3180,20 +3180,17 @@ map.scrollWheelZoom.disable();
   var targetZoom = map.getZoom();
   var pt = null;
   var raf = null;
-  var isPinching = false;
-  var pinchTimer = null;
+  var isScrolling = false;
+  var scrollTimer = null;
 
   map.getContainer().addEventListener('wheel', e => {
     e.preventDefault();
     pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
 
     if (e.ctrlKey) {
-      // Mac trackpad pinch — normalize delta so slow/fast gestures feel proportional
-      // Clamp raw deltaY to ±5 to prevent wild zoom jumps on fast gestures,
-      // then apply a small multiplier for fine control.
-      isPinching = true;
-      clearTimeout(pinchTimer);
-      pinchTimer = setTimeout(() => { isPinching = false; }, 150);
+      isScrolling = true;
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => { isScrolling = false; }, 150);
 
       var raw = Math.max(-5, Math.min(5, e.deltaY));
       targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - raw * 0.06));
@@ -3204,20 +3201,25 @@ map.scrollWheelZoom.disable();
         });
       }
     } else {
-      // Two-finger scroll or mouse wheel — smooth CSS-animated zoom
+      // Two-finger scroll — instant zoom like scrolling a webpage
+      isScrolling = true;
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => { isScrolling = false; }, 150);
+
       var px = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1);
-      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - px / 150));
+      var clamped = Math.max(-20, Math.min(20, px));
+      targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), targetZoom - clamped * 0.007));
       if (!raf) {
         raf = requestAnimationFrame(() => {
-          map.setZoomAround(pt, targetZoom);
+          map.setZoomAround(pt, targetZoom, { animate: false });
           raf = null;
         });
       }
     }
   }, { passive: false });
 
-  // Only sync targetZoom from external zoom changes (buttons, etc.), never mid-pinch
-  map.on('zoomend', () => { if (!isPinching) targetZoom = map.getZoom(); });
+  // Only sync targetZoom from external zoom changes (buttons, etc.), never mid-gesture
+  map.on('zoomend', () => { if (!isScrolling) targetZoom = map.getZoom(); });
 
 })();
 

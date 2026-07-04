@@ -1002,6 +1002,7 @@
       animation: wordmark-glow 3s ease-in-out infinite;
     }
     .cluster-icon {
+      position: relative;
       width: 30px; height: 30px; background: #FF9500;
       border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);
       display: flex; align-items: center; justify-content: center;
@@ -1782,8 +1783,16 @@ function makeClusterGroup(color) {
   var group = L.markerClusterGroup({
     iconCreateFunction: cluster => {
       var count = cluster.getChildCount();
+      var cms = cluster.getAllChildMarkers();
+      var allVerified = cms.length > 0 && cms.every(m => {
+        var t = TABLES[m._tableIndex];
+        return t && t.verifisert === 'ja';
+      });
+      var badge = allVerified
+        ? `<div style="position:absolute;top:-5px;right:-5px;width:14px;height:14px;background:#34C759;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.5);"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>`
+        : '';
       return L.divIcon({
-        html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}</div>`,
+        html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}${badge}</div>`,
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
       });
     },

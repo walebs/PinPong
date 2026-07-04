@@ -27,6 +27,8 @@
   <meta name="twitter:image"       content="https://pinpong.no/icons/icon-512.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin />
+  <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="anonymous" />
@@ -1019,6 +1021,17 @@
       0%   { transform: scale(1);   opacity: 0.5; }
       100% { transform: scale(2.4); opacity: 0; }
     }
+    /* Respect the user's reduced-motion preference: stop decorative
+       animations and make UI transitions near-instant (same end states). */
+    @media (prefers-reduced-motion: reduce) {
+      .nearby-label, .profile-app-name, .app-wordmark { animation: none; }
+      .user-dot-ring { animation: none; }
+      .leaflet-marker-pane * { animation: none !important; }
+      .filter-panel, .filter-toggle, .bottom-sheet, .profile-page,
+      .search-wrap, .donate-nudge, .donate-nudge-bg, .loc-toast,
+      .vipps-modal, .vipps-modal-bg, .maps-modal, .nearby-container,
+      .fab-stack { transition-duration: 0.01ms !important; }
+    }
   </style>
 </head>
 <body>
@@ -1084,7 +1097,7 @@
 <!-- Profile Page -->
 <div class="profile-page" id="profilePage">
   <div class="profile-header">
-    <button class="profile-back" onclick="closeProfile()">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeProfile()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div class="profile-logo-wrap">
@@ -1174,7 +1187,7 @@
 <!-- Innstillinger Page -->
 <div class="profile-page" id="settingsPage">
   <div class="fav-header">
-    <button class="profile-back" onclick="closeSettings()">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeSettings()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="fav-header-title" data-i18n="settings.title">Innstillinger</span>
@@ -1225,7 +1238,7 @@
 <!-- Rapporter Page -->
 <div class="profile-page" id="rapportPage">
   <div class="fav-header">
-    <button class="profile-back" onclick="closeRapport()">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeRapport()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="fav-header-title" data-i18n="rapport.title">Tips oss om et bord!</span>
@@ -1285,7 +1298,7 @@
 <!-- Rapporter Feil Page -->
 <div class="profile-page" id="feilPage">
   <div class="fav-header">
-    <button class="profile-back" onclick="closeFeilPage()">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeFeilPage()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="fav-header-title" data-i18n="feil.title">Rapporter feil</span>
@@ -1330,7 +1343,7 @@
 <!-- Favoritter Page -->
 <div class="profile-page" id="favPage">
   <div class="fav-header">
-    <button class="profile-back" onclick="closeFavPage()">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeFavPage()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="fav-header-title">❤ Favoritter</span>
@@ -1342,12 +1355,12 @@
 
 <div class="search-wrap" id="searchWrap">
   <div class="search-field" onclick="expandSearch()">
-    <button class="search-icon-btn">
+    <button class="search-icon-btn" aria-label="Søk">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
     <span class="search-label">Søk…</span>
-    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onclick="event.stopPropagation()" oninput="scheduleSearch()" onkeyup="scheduleSearch()" />
-    <button class="search-close" onclick="event.stopPropagation(); collapseSearch()">
+    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onclick="event.stopPropagation()" oninput="scheduleSearch()" enterkeyhint="search" />
+    <button class="search-close" aria-label="Lukk søk" onclick="event.stopPropagation(); collapseSearch()">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
@@ -1355,9 +1368,9 @@
 <div class="search-results" id="searchResults"></div>
 <div class="zoom-btns">
   <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;margin-left:-5px;letter-spacing:-3px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
-  <button class="zoom-btn" onclick="map.zoomIn()">+</button>
-  <button class="zoom-btn" onclick="map.zoomOut()">−</button>
-  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema">
+  <button class="zoom-btn" onclick="map.zoomIn(1)" aria-label="Zoom inn">+</button>
+  <button class="zoom-btn" onclick="map.zoomOut(1)" aria-label="Zoom ut">−</button>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema" aria-label="Bytt tema">
     <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <!-- Sun icon (shown in dark mode to switch to light) -->
       <circle cx="12" cy="12" r="5"/>
@@ -1370,13 +1383,13 @@
 </div>
 <div id="map"></div>
 <div class="nearby-container" id="nearbyContainer">
-  <button class="nearby-profile-btn" onclick="openProfile()">
+  <button class="nearby-profile-btn" aria-label="Profil" onclick="openProfile()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="8" r="4"/>
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
     </svg>
   </button>
-  <button class="nearby-locate-btn" onclick="locateMe()">
+  <button class="nearby-locate-btn" aria-label="Min posisjon" onclick="locateMe()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
     </svg>
@@ -1388,25 +1401,25 @@
   <div class="nearby-strip" id="nearbyStrip"></div>
 </div>
 <div class="fab-stack">
-  <button class="fab-locate" onclick="locateMe()">
+  <button class="fab-locate" aria-label="Min posisjon" onclick="locateMe()">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
     </svg>
   </button>
 </div>
 <div class="bottom-sheet" id="bottomSheet">
-  <button class="sheet-close-top" onclick="closeSheet()">
+  <button class="sheet-close-top" aria-label="Lukk" onclick="closeSheet()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
   <div id="sheetCard" style="display:flex;flex-direction:column;flex:1;min-height:0;">
   <div class="sheet-photo-wrap" id="sheetPhotoWrap">
-    <img class="sheet-photo" id="sheetPhoto" src="" alt="" />
+    <img class="sheet-photo" id="sheetPhoto" src="" alt="" decoding="async" />
   </div>
   <div class="sheet-body">
     <div class="sheet-type" id="sheetType"></div>
     <div class="sheet-name-row">
       <div class="sheet-name" id="sheetName"></div>
-      <button class="btn-heart-inline" id="btnHeart" onclick="toggleFavorite()" title="Favoritt">
+      <button class="btn-heart-inline" id="btnHeart" onclick="toggleFavorite()" title="Favoritt" aria-label="Favoritt">
         <svg id="heartIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </button>
     </div>
@@ -1419,18 +1432,18 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
         <span data-i18n="sheet.directions">Veibeskrivelse</span>
       </button>
-      <button class="btn-share" onclick="shareTable()" title="Del">
+      <button class="btn-share" onclick="shareTable()" title="Del" aria-label="Del">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
     </div>
   </div>
   <!-- Nav bar pinned to bottom of card, outside scrollable body -->
   <div class="sheet-nav-bar" id="sheetNavBar">
-    <button class="sheet-nav-btn" id="sheetNavPrev" onclick="sheetNav(-1)" title="Forrige bord">
+    <button class="sheet-nav-btn" id="sheetNavPrev" onclick="sheetNav(-1)" title="Forrige bord" aria-label="Forrige bord">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="sheet-nav-label" id="sheetNavLabel">1 / 1 bord</span>
-    <button class="sheet-nav-btn" id="sheetNavNext" onclick="sheetNav(1)" title="Neste bord">
+    <button class="sheet-nav-btn" id="sheetNavNext" onclick="sheetNav(1)" title="Neste bord" aria-label="Neste bord">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
@@ -1887,9 +1900,12 @@ function showNearbyStrip(lat, lng) {
   _fabStack.classList.add('strip-visible');
 }
 
+var _pendingOpenTimer = null;
 function selectNearby(idx) {
+  clearTimeout(_pendingOpenTimer);
   map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
-  setTimeout(() => openSheet(idx), 600);
+  // Open after the flight completes — opening mid-flight cancels the zoom leg
+  _pendingOpenTimer = setTimeout(() => openSheet(idx), 850);
 }
 
 // ── Continuous location watch ────────────────────────────
@@ -1901,6 +1917,8 @@ var _lastNearbyLat = null, _lastNearbyLng = null;
 
 // Smooth dot animation between GPS fixes
 function _animateMarker(marker, toLat, toLng) {
+  // Cancel any in-flight glide so overlapping GPS fixes don't fight each other
+  if (marker._animRaf) { cancelAnimationFrame(marker._animRaf); marker._animRaf = null; }
   var from = marker.getLatLng();
   var dist  = haversine(from.lat, from.lng, toLat, toLng);
   // Large jumps (GPS correction) snap instantly; small movements glide
@@ -1911,9 +1929,9 @@ function _animateMarker(marker, toLat, toLng) {
     var t = Math.min((now - start) / duration, 1);
     var e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
     marker.setLatLng([from.lat + (toLat - from.lat)*e, from.lng + (toLng - from.lng)*e]);
-    if (t < 1) requestAnimationFrame(step);
+    marker._animRaf = t < 1 ? requestAnimationFrame(step) : null;
   }
-  requestAnimationFrame(step);
+  marker._animRaf = requestAnimationFrame(step);
 }
 
 function onPositionUpdate(pos) {
@@ -2049,7 +2067,7 @@ function openSheet(idx, _fromNav) {
   var t = TABLES[idx];
   selectedIdx = idx;
   closeMapsPicker();
-  history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`);
+  try { history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`); } catch(e) {}
   if (t.bilde_url) {
     _sheetPhoto.src = t.bilde_url;
     _sheetPhoto.className = 'sheet-photo visible';
@@ -2117,6 +2135,8 @@ function openSheet(idx, _fromNav) {
 }
 
 function closeSheet() {
+  // No-op when nothing is open — avoids marker icon churn + history writes on every map tap
+  if (selectedIdx === null && !_bottomSheet.classList.contains('open')) return;
   // Always clear any lingering swipe/animation state
   _hSwipeActive = false;
   _cardAnimating = false;
@@ -2131,18 +2151,21 @@ function closeSheet() {
   closeMapsPicker();
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false, index)));
   selectedIdx = null;
-  history.replaceState(null,'', location.pathname);
+  try { history.replaceState(null,'', location.pathname); } catch(e) {}
 }
 
 map.on('click', closeSheet);
 
 var zoomTimer, _lastClusterZoom = map.getZoom(), _clusterRaf;
 map.on('zoom', () => {
-  // Refresh marker icons (debounced)
+  // Refresh marker icons (debounced) — icons don't depend on zoom, so only
+  // refresh while a marker is highlighted (keeps the pulse/selection correct)
   clearTimeout(zoomTimer);
-  zoomTimer = setTimeout(() => {
-    leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx, index)));
-  }, 80);
+  if (selectedIdx !== null) {
+    zoomTimer = setTimeout(() => {
+      leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx, index)));
+    }, 80);
+  }
   // Dynamic cluster split/merge during pinch zoom
   var z = Math.round(map.getZoom());
   if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
@@ -2178,14 +2201,16 @@ function shareTable() {
   var navn = TABLES[selectedIdx].navn;
   var url = `${location.origin}${location.pathname}?bord=${encodeURIComponent(navn)}`;
   if (navigator.share) {
-    navigator.share({ title: navn, text: `Sjekk ut dette bordtennisbordet: ${navn}`, url });
-  } else {
+    navigator.share({ title: navn, text: `Sjekk ut dette bordtennisbordet: ${navn}`, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(() => {
       var btn = document.querySelector('.btn-share');
       var orig = btn.innerHTML;
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
       setTimeout(() => btn.innerHTML = orig, 1800);
-    });
+    }).catch(() => { window.prompt('Kopier lenken:', url); });
+  } else {
+    window.prompt('Kopier lenken:', url);
   }
 }
 
@@ -2221,7 +2246,7 @@ function profileFavoritter() {
       var distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
       var verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
       var imgHtml = t.bilde_url
-        ? `<img src="${t.bilde_url}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover"/>`
+        ? `<img src="${t.bilde_url}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover"/>`
         : `🏓`;
       return `<div class="fav-card" data-idx="${i}">
         <div class="fav-card-img">${imgHtml}</div>
@@ -2612,7 +2637,8 @@ function submitFeil() {
   var desc    = document.getElementById('feilDesc').value.trim();
   if (!desc) { document.getElementById('feilDesc').focus(); return; }
   var body = [`Kategori: ${subject}`, '', desc, '', '(Legg ved bilde som vedlegg hvis relevant)'].join('\n');
-  window.open(`mailto:pinpongnorge@outlook.com?subject=${encodeURIComponent('PinPong – ' + subject)}&body=${encodeURIComponent(body)}`, '_blank');
+  // mailto via location.href — window.open('_blank') leaves a blank tab / gets popup-blocked on iOS
+  location.href = `mailto:pinpongnorge@outlook.com?subject=${encodeURIComponent('PinPong – ' + subject)}&body=${encodeURIComponent(body)}`;
   _feilRecord();
   closeFeilPage();
 }
@@ -2620,10 +2646,13 @@ function rapportSegPick(btn) {
   btn.closest('.rapport-seg').querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+var _rapportPhotoUrl = null;
 function rapportPhotoChosen(input) {
   var file = input.files[0];
   if (!file) return;
-  var url = URL.createObjectURL(file);
+  // Release the previous preview blob so re-picking photos doesn't leak memory
+  if (_rapportPhotoUrl) URL.revokeObjectURL(_rapportPhotoUrl);
+  var url = _rapportPhotoUrl = URL.createObjectURL(file);
   document.getElementById('rapportPhotoPreview').innerHTML = `<img src="${url}" alt="Bilde"/>`;
 }
 function submitRapport() {
@@ -2646,7 +2675,8 @@ function submitRapport() {
     '',
     '⚠️ Husk å legge ved bilde som vedlegg!'
   ].join('\n');
-  window.open(`mailto:pinpongnorge@outlook.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`, '_blank');
+  // mailto via location.href — window.open('_blank') leaves a blank tab / gets popup-blocked on iOS
+  location.href = `mailto:pinpongnorge@outlook.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`;
   _rapportRecord();
   closeRapport();
 }
@@ -2776,6 +2806,11 @@ document.addEventListener('click', e => {
   }
 });
 
+// Map pans don't produce click events — close the filter panel on drag too
+map.on('dragstart', () => {
+  if (filterFab.classList.contains('open')) filterFab.classList.remove('open');
+});
+
 function expandSearch() {
   searchWrap.classList.add('expanded');
   filterFab.classList.remove('open');
@@ -2797,8 +2832,17 @@ searchInput.addEventListener('blur', () => {
 var _searchTimer = null;
 function scheduleSearch() {
   clearTimeout(_searchTimer);
-  _searchTimer = setTimeout(runSearch, 30);
+  _searchTimer = setTimeout(runSearch, 120);
 }
+
+// Enter selects the top result (keyboard / "søk" key on mobile keyboards)
+searchInput.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  clearTimeout(_searchTimer);
+  runSearch();
+  var first = searchResults.querySelector('.search-result-item');
+  if (first) first.click();
+});
 
 function runSearch() {
   var q = (searchInput.value || '').toLowerCase().trim();
@@ -2834,8 +2878,10 @@ function runSearch() {
 
 function selectSearch(idx) {
   collapseSearch();
+  clearTimeout(_pendingOpenTimer);
   map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
-  setTimeout(() => openSheet(idx), 600);
+  // Open after the flight completes — opening mid-flight cancels the zoom leg
+  _pendingOpenTimer = setTimeout(() => openSheet(idx), 850);
 }
 
 function selectArea(idx) {
@@ -2863,7 +2909,16 @@ function toggleFilter(type) {
   var stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly, light:showLightOnly };
   document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
 
-  renderMarkers(); closeSheet();
+  renderMarkers();
+  // Keep the sheet open when the selected table still passes the active filters
+  if (selectedIdx !== null && leafletMarkers.some(m => m.index === selectedIdx)) {
+    var _selEntry = leafletMarkers.find(m => m.index === selectedIdx);
+    _selEntry.lm.setIcon(makeIcon(TABLES[selectedIdx], true, selectedIdx));
+    buildSwipeList(selectedIdx);
+    if (typeof updateSheetNav === 'function') updateSheetNav();
+  } else {
+    closeSheet();
+  }
   if (userLat !== null) showNearbyStrip(userLat, userLng);
   updateMiniIndicators();
 }
@@ -2876,6 +2931,9 @@ try {
 
   _bottomSheet.addEventListener('touchstart', e => {
     if (!_bottomSheet.classList.contains('open')) return;
+    // Don't hijack drags that should scroll the sheet body
+    var sb = e.target.closest && e.target.closest('.sheet-body');
+    if (sb && sb.scrollTop > 0) { dragging = false; return; }
     startY = e.touches[0].clientY;
     startTime = Date.now();
     currentY = 0;
@@ -2910,7 +2968,7 @@ try {
         closeMapsPicker();
         leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false, index)));
         selectedIdx = null;
-        history.replaceState(null, '', location.pathname);
+        try { history.replaceState(null, '', location.pathname); } catch(e) {}
       }, 320);
     } else {
       _bottomSheet.style.transition = '';
@@ -3215,6 +3273,23 @@ document.querySelectorAll('a.vipps-btn').forEach(function(el) {
   el.addEventListener('click', handleVippsClick);
 });
 
+// ── Escape closes the topmost overlay (desktop keyboards) ──
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('vippsModalBg')?.classList.contains('visible')) { closeVippsModal(); return; }
+  if (document.getElementById('donateNudge')?.classList.contains('visible'))  { dismissDonateNudge(); return; }
+  var pages = [['feilPage', closeFeilPage], ['rapportPage', closeRapport],
+               ['settingsPage', closeSettings], ['favPage', closeFavPage], ['profilePage', closeProfile]];
+  for (var i = 0; i < pages.length; i++) {
+    var el = document.getElementById(pages[i][0]);
+    if (el && el.classList.contains('open')) { pages[i][1](); return; }
+  }
+  if (_mapsModal.classList.contains('open'))        { closeMapsPicker(); return; }
+  if (searchWrap.classList.contains('expanded'))    { collapseSearch(); return; }
+  if (filterFab.classList.contains('open'))         { filterFab.classList.remove('open'); return; }
+  if (_bottomSheet.classList.contains('open'))      closeSheet();
+});
+
 // ── Donation nudge ───────────────────────────────────────
 (function() {
   try {
@@ -3225,6 +3300,8 @@ document.querySelectorAll('a.vipps-btn').forEach(function(el) {
     var repeat    = lastShown > 0 && (sessions - lastShown) >= 15;
     if (firstTime || repeat) {
       setTimeout(function() {
+        // Don't interrupt an active task — try again another session instead
+        if (_bottomSheet.classList.contains('open') || document.querySelector('.profile-page.open')) return;
         var el = document.getElementById('donateNudge');
         var bg = document.getElementById('donateNudgeBg');
         if (el) el.classList.add('visible');
@@ -3254,9 +3331,9 @@ function dismissDonateNudge() {
   </div>
 </div>
 
-<div class="donate-nudge-bg" id="donateNudgeBg"></div>
+<div class="donate-nudge-bg" id="donateNudgeBg" onclick="dismissDonateNudge()"></div>
 <div class="donate-nudge" id="donateNudge">
-  <button class="donate-nudge-close" onclick="dismissDonateNudge()">✕</button>
+  <button class="donate-nudge-close" aria-label="Lukk" onclick="dismissDonateNudge()">✕</button>
   <div class="donate-nudge-title" data-i18n="vipps.nudge.title">Lyst til å støtte arbeidet? 🏓</div>
   <div class="donate-nudge-sub" data-i18n="vipps.nudge.sub">Vi tar gjerne en Vipps ☕</div>
   <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" onclick="dismissDonateNudge()" style="margin-bottom:0">

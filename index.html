@@ -1103,19 +1103,18 @@
     <div class="profile-logo-wrap">
       <div class="profile-logo-circle">
         <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <!-- Ground shadow, anchors the pin like on a map -->
-          <ellipse cx="50" cy="92" rx="11" ry="2.4" fill="rgba(255,255,255,0.22)"/>
-          <!-- Map pin -->
-          <path d="M50 90 C40 75 24 59 24 40 A26 26 0 1 1 76 40 C76 59 60 75 50 90 Z" fill="white" opacity="0.97"/>
-          <!-- Table tennis table, top-down view -->
-          <rect x="35" y="31.5" width="30" height="17" rx="2.5" fill="#FF9500" opacity="0.92"/>
-          <!-- Net (posts overhang the table edges) -->
-          <line x1="50" y1="29.5" x2="50" y2="50.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
-          <!-- Ball in play -->
-          <circle cx="58.5" cy="36" r="2.8" fill="white"/>
+          <g transform="rotate(-35 50 54)">
+            <circle cx="50" cy="37" r="27" fill="white" opacity="0.95"/>
+            <circle cx="50" cy="37" r="20" fill="#FF9500" opacity="0.88"/>
+            <ellipse cx="42" cy="30" rx="8" ry="5" fill="rgba(255,255,255,0.22)" transform="rotate(-20 42 30)"/>
+            <rect x="44" y="62" width="12" height="34" rx="6" fill="white" opacity="0.95"/>
+            <rect x="48" y="64" width="4" height="30" rx="2" fill="rgba(255,149,0,0.30)"/>
+          </g>
+          <circle cx="80" cy="17" r="10" fill="white" opacity="0.95"/>
+          <path d="M73 14 Q80 8 86 15" stroke="rgba(255,149,0,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="profile-app-name">P<span style="font-size:18px;vertical-align:1px;margin-left:-7px;margin-right:-5px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+      <div class="profile-app-name">P<span style="font-size:18px;vertical-align:1px;margin-left:-5px;margin-right:-3px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
       <div class="profile-app-sub" data-i18n="profile.sub">Bordtennis bord i Oslo, Lørenskog og Lillestrøm!</div>
     </div>
   </div>
@@ -1360,7 +1359,7 @@
 </div>
 <div class="search-results" id="searchResults"></div>
 <div class="zoom-btns">
-  <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;margin-left:-7px;margin-right:-5px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+  <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;margin-left:-5px;margin-right:-3px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
   <button class="zoom-btn" onclick="map.zoomIn(1)" aria-label="Zoom inn">+</button>
   <button class="zoom-btn" onclick="map.zoomOut(1)" aria-label="Zoom ut">−</button>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema" aria-label="Bytt tema">

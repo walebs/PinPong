@@ -34,7 +34,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { background: #0c0c0f; }
-    body.light ~ html, html:has(body.light) { background: #f2f2f7; }
+    html:has(body.light) { background: #f2f2f7; }
     :root {
       --bg:      #0c0c0f;
       --surface: #17171c;
@@ -66,13 +66,6 @@
     }
     button { touch-action: manipulation; }
     #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
-    /* Dark mode: filter only tile pane so markers stay vivid */
-    .leaflet-tile-pane { filter: brightness(1.45) contrast(1.12); transition: filter 0.4s ease; }
-    /* Light mode: boost tile saturation on tile pane only — markers are untouched */
-    body.light .leaflet-tile-pane { filter: brightness(0.93) contrast(1.12) saturate(1.8); }
-    @media (hover: none) and (pointer: coarse) {
-      body.light .leaflet-tile-pane { filter: brightness(0.86) contrast(1.15) saturate(1.9); }
-    }
     /* Light mode: white search field */
     body.light .search-field {
       background: rgba(255,255,255,0.92);
@@ -163,7 +156,6 @@
       transition: opacity 0.18s ease;
     }
     .filter-fab.open .filter-progress-badge { opacity: 0; pointer-events: none; }
-    /* .filter-grid replaced by .filter-panel above */
     .filter-cell {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 4px;
@@ -590,10 +582,10 @@
     }
     .nearby-divider {
       height: 1px; background: var(--border);
-      margin: 0 16px 0 16px;
+      margin: 0 16px;
     }
     .nearby-strip {
-      display: flex; gap: 9px; padding: 10px 16px 10px 16px;
+      display: flex; gap: 9px; padding: 10px 16px;
       overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
       scroll-snap-type: x mandatory;
       scroll-padding-left: 16px;
@@ -752,7 +744,7 @@
     }
     .search-result-item:last-child { border-bottom: none; }
     .search-result-item:active { background: var(--s2); }
-    .sheet-photo-wrap { flex-shrink: 0; }
+    .sheet-photo-wrap { position: relative; overflow: hidden; flex-shrink: 0; }
     .sheet-photo { width: 100%; height: 220px; object-fit: cover; display: none; background: var(--s2); }
     .sheet-photo.visible { display: block; }
     .sheet-body {
@@ -769,7 +761,6 @@
       background: var(--s2); border-radius: 10px; overflow: hidden;
       margin-bottom: 0;
     }
-    .sheet-notes-col { /* full width below stats */ }
     .stat-item {
       flex: 1; min-width: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -812,8 +803,6 @@
       transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
     .btn-share:active { opacity: 0.7; }
-    /* Photo wrap */
-    .sheet-photo-wrap { position: relative; overflow: hidden; }
     /* When no photo, push sheet-body down so X button doesn't overlap the heart */
     #sheetCard:not(:has(.sheet-photo.visible)) .sheet-body {
       padding-top: 52px;
@@ -924,7 +913,7 @@
       justify-content: center; color: #777; -webkit-tap-highlight-color: transparent;
     }
     .btn-close:active { background: var(--border); }
-    .leaflet-tile-pane { filter: brightness(1.22) contrast(1.1) saturate(0.5); will-change: transform; }
+    .leaflet-tile-pane { will-change: transform; }
     .leaflet-map-pane  { will-change: transform; }
     /* Prevent tile seam flicker on zoom (sub-pixel anti-aliasing gaps) */
     .leaflet-tile { outline: 1px solid transparent; }
@@ -1281,9 +1270,9 @@
       <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between">
         <label class="rapport-label" style="margin-bottom:0">Har bordet belysning?</label>
         <div class="rapport-seg" id="rBelysingSeg">
-          <button class="rapport-seg-btn active" data-val="ja" onclick="rapportSegPick2(this)">Ja</button>
-          <button class="rapport-seg-btn" data-val="nei" onclick="rapportSegPick2(this)">Nei</button>
-          <button class="rapport-seg-btn" data-val="ukjent" onclick="rapportSegPick2(this)">Vet ikke</button>
+          <button class="rapport-seg-btn active" data-val="ja" onclick="rapportSegPick(this)">Ja</button>
+          <button class="rapport-seg-btn" data-val="nei" onclick="rapportSegPick(this)">Nei</button>
+          <button class="rapport-seg-btn" data-val="ukjent" onclick="rapportSegPick(this)">Vet ikke</button>
         </div>
       </div>
     </div>
@@ -1726,7 +1715,6 @@ var _tileOpts = {
 var _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', _tileOpts);
 var _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', _tileOpts);
 _darkTiles.addTo(map);
-var _currentTiles = _darkTiles;
 
 function iconSize(highlighted=false) {
   return highlighted ? 36 : 28;
@@ -1753,7 +1741,7 @@ function updateHeartBtn() {
   var faved = FAVORITES.has(selectedIdx);
   btn.classList.toggle('faved', faved);
   icon.setAttribute('fill', faved ? '#ff3b30' : 'none');
-  icon.setAttribute('stroke', faved ? '#ff3b30' : '#ff3b30');
+  icon.setAttribute('stroke', '#ff3b30');
 }
 
 function makeIcon(t, highlighted=false, tableIdx=-1) {
@@ -1888,11 +1876,10 @@ function showNearbyStrip(lat, lng) {
     var check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     var glow     = idx === 0 ? ' nearest-glow' : '';
     var typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
-    var roofBadge = '';
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
-      <div class="nearby-card-type">${typeLabel}${roofBadge}</div>
+      <div class="nearby-card-type">${typeLabel}</div>
     </div>`;
   }).join('');
 
@@ -2145,7 +2132,6 @@ function closeSheet() {
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false, index)));
   selectedIdx = null;
   history.replaceState(null,'', location.pathname);
-  if (typeof resetSheetHistory === 'function') resetSheetHistory();
 }
 
 map.on('click', closeSheet);
@@ -2530,17 +2516,6 @@ function syncSettingsUI() {
   document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
   document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
   document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
-  var hv = localStorage.getItem('pinpong-hide-visited') === 'true';
-  var tog = document.getElementById('toggleHideVisited');
-  if (tog) tog.checked = hv;
-}
-
-// ── Hide visited toggle ──────────────────────────────────
-function applyHideVisited(val) {
-  hideVisited = val;
-  localStorage.setItem('pinpong-hide-visited', val);
-  renderMarkers();
-  if (userLat !== null) showNearbyStrip(userLat, userLng);
 }
 
 function profileSettings() {
@@ -2574,23 +2549,12 @@ function _rapportRecord() {
     localStorage.setItem(_RAPPORT_RL_KEY, JSON.stringify({ date: today, count }));
   } catch {}
 }
-function _rapportRemaining() {
-  try {
-    var d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
-    var today = new Date().toDateString();
-    if (d.date !== today) return 3;
-    return Math.max(0, 3 - (d.count || 0));
-  } catch { return 3; }
-}
-
 function profileRapporter() {
   // Reset form
   ['rNavn','rAdresse'].forEach(id => document.getElementById(id).value = '');
   document.querySelectorAll('#rTypeSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
   document.querySelectorAll('#rBelysingSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ja'));
   document.getElementById('rapportPhotoPreview').innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Ta bilde av bordet</span>`;
-  // Update submit button with remaining count
-  var rem = _rapportRemaining();
   var btn = document.querySelector('.rapport-submit');
   if (btn) btn.textContent = 'Send inn';
   document.getElementById('rapportPage').classList.add('open');
@@ -2656,7 +2620,6 @@ function rapportSegPick(btn) {
   btn.closest('.rapport-seg').querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
-function rapportSegPick2(btn) { rapportSegPick(btn); }
 function rapportPhotoChosen(input) {
   var file = input.files[0];
   if (!file) return;
@@ -3062,8 +3025,6 @@ function updateSheetNav() {
   next.disabled = _swipePos >= total - 1;
 }
 
-window.resetSheetHistory = () => {}; // kept for compat
-
 // ── Live horizontal card swipe ───────────────────────────
 (function() {
   var sx = 0, sy = 0, liveDx = 0, dirLocked = null, active = false;
@@ -3183,7 +3144,6 @@ window.resetSheetHistory = () => {}; // kept for compat
     var rem = light ? _darkTiles  : _lightTiles;
     if (!map.hasLayer(add)) map.addLayer(add);
     if (map.hasLayer(rem)) map.removeLayer(rem);
-    _currentTiles = add;
   };
 
   window.toggleTheme = function() {

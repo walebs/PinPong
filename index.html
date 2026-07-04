@@ -1639,7 +1639,8 @@ async function loadSheetData() {
     return;
   }
   try {
-    var res = await fetchWithRetry(SHEETS_CSV_URL + '&t=' + Date.now(), 3);
+    var sep = SHEETS_CSV_URL.includes('?') ? '&' : '?';
+    var res = await fetchWithRetry(SHEETS_CSV_URL + sep + 't=' + Date.now(), 3);
     if (!res) { updateProgress(); return; }
     var text = await res.text();
     var rows = parseCSV(text);

@@ -462,7 +462,7 @@
       color: var(--muted); font-size: 13px; font-weight: 500;
     }
     .rapport-photo-preview img {
-      width: 100%; height: 200px; object-fit: cover;
+      width: 100%; height: auto; max-height: 320px; object-fit: cover;
       display: block;
     }
     .rapport-card {
@@ -1273,7 +1273,7 @@
     </div>
 
     <div class="rapport-card">
-      <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between">
+      <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <label class="rapport-label" style="margin-bottom:0">Har bordet belysning?</label>
         <div class="rapport-seg" id="rBelysingSeg">
           <button class="rapport-seg-btn active" data-val="ja" onclick="rapportSegPick(this)">Ja</button>
@@ -1323,8 +1323,8 @@
       <div class="rapport-field">
         <label class="rapport-label" data-i18n="feil.label.desc">Beskriv problemet</label>
         <textarea class="rapport-input" id="feilDesc" rows="4"
-          style="resize:none;min-height:90px;font-family:inherit;font-size:15px;line-height:1.4"
-          placeholder="…"></textarea>
+          style="resize:none;min-height:90px;font-family:inherit;font-size:15px;line-height:1.4;overflow:hidden"
+          placeholder="…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       </div>
     </div>
 
@@ -2647,6 +2647,11 @@ async function submitFeil() {
   var desc       = document.getElementById('feilDesc').value.trim();
   var replyEmail = (document.getElementById('feilEmail').value || '').trim();
   if (!desc) { document.getElementById('feilDesc').focus(); return; }
+  if (replyEmail && !replyEmail.includes('@')) {
+    document.getElementById('feilEmail').focus();
+    showLocToast('Ugyldig e-post', 'E-postadressen må inneholde @');
+    return;
+  }
 
   var btn = document.getElementById('feilSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sender…';
@@ -2692,6 +2697,11 @@ async function submitRapport() {
   var belysning  = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
   var replyEmail = (document.getElementById('rEmail').value || '').trim();
   if (!navn) { document.getElementById('rNavn').focus(); return; }
+  if (replyEmail && !replyEmail.includes('@')) {
+    document.getElementById('rEmail').focus();
+    showLocToast('Ugyldig e-post', 'E-postadressen må inneholde @');
+    return;
+  }
 
   var btn = document.getElementById('rapportSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sender…';

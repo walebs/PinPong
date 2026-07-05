@@ -1,5 +1,7 @@
-const CACHE_TTL_MS = 5 * 60 * 1000;
-let _cache = null;
+// In-memory cache: one fetch to Google Sheets serves all concurrent users
+// for up to CACHE_TTL_MS milliseconds.
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let _cache = null; // { csv: string, at: number }
 
 export default async function handler(req, res) {
   const url = process.env.SHEETS_CSV_URL;
@@ -8,6 +10,7 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Serve from in-memory cache if fresh
   if (_cache && Date.now() - _cache.at < CACHE_TTL_MS) {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
@@ -18,6 +21,7 @@ export default async function handler(req, res) {
   try {
     const upstream = await fetch(url, { cache: 'no-store' });
     if (!upstream.ok) {
+      // If Google fails but we have stale cache, serve it rather than erroring
       if (_cache) {
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Cache-Control', 'public, max-age=60');

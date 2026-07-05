@@ -2696,14 +2696,15 @@ function feilPhotoChosen(input) {
 }
 async function submitFeil() {
   if (!_feilCanSubmit()) {
-    showLocToast(tr('feil.title'), 'Maks 2 rapporter per dag. Prøv igjen i morgen.');
+    showLocToast('For mange rapporter', 'Du har sendt inn for mange i dag! Prøv igjen i morgen.');
     return;
   }
   var subject    = document.getElementById('feilSubject').value;
   var desc       = document.getElementById('feilDesc').value.trim();
   var replyEmail = (document.getElementById('feilEmail').value || '').trim();
-  if (!desc) { document.getElementById('feilDesc').focus(); showLocToast('Mangler beskrivelse', 'Fortell oss hva problemet er.'); return; }
-  if (!replyEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('feilEmail').focus(); showLocToast('Ugyldig mail!', 'Prøv igjen'); return; }
+  if (!desc) { document.getElementById('feilDesc').focus(); showLocToast('Beskrivelse mangler', 'Forklar kort hva problemet er.'); return; }
+  if (!replyEmail) { document.getElementById('feilEmail').focus(); showLocToast('E-post mangler', 'Vi trenger adressen din for å svare.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('feilEmail').focus(); showLocToast('Ugyldig e-post', 'Sjekk at adressen er riktig.'); return; }
 
   var btn = document.getElementById('feilSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sender…';
@@ -2748,8 +2749,9 @@ async function submitRapport() {
   var type       = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
   var belysning  = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
   var replyEmail = (document.getElementById('rEmail').value || '').trim();
-  if (!navn) { document.getElementById('rNavn').focus(); showLocToast('Mangler navn', 'Skriv inn navn eller sted for bordet.'); return; }
-  if (!replyEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('rEmail').focus(); showLocToast('Ugyldig mail!', 'Prøv igjen'); return; }
+  if (!navn) { document.getElementById('rNavn').focus(); showLocToast('Navn/sted mangler', 'Fortell oss hvor bordet er.'); return; }
+  if (!replyEmail) { document.getElementById('rEmail').focus(); showLocToast('E-post mangler', 'Vi trenger adressen din for å svare.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('rEmail').focus(); showLocToast('Ugyldig e-post', 'Sjekk at adressen er riktig.'); return; }
 
   var btn = document.getElementById('rapportSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sender…';

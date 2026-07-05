@@ -6,13 +6,10 @@ export default async function handler(req, res) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return res.status(500).json({ error: 'RESEND_API_KEY not set' });
 
-  // RECIPIENT_EMAIL must match the email you used to sign up for Resend.
-  // Without a verified sending domain, onboarding@resend.dev can only
-  // deliver to your own verified Resend account email.
   const recipient = process.env.RECIPIENT_EMAIL;
   if (!recipient) return res.status(500).json({ error: 'RECIPIENT_EMAIL not set' });
 
-  const { type, subject, messageBody, replyEmail } = req.body || {};
+  const { type, subject, messageBody, replyEmail, photoData } = req.body || {};
   if (!messageBody) return res.status(400).json({ error: 'messageBody required' });
 
   const emailSubject = type === 'rapport'
@@ -22,12 +19,18 @@ export default async function handler(req, res) {
   const fullBody = messageBody
     + (replyEmail ? `\n\n---\nSvar til: ${replyEmail}` : '\n\n---\nIngen e-post oppgitt');
 
+  // Strip data URL prefix and build attachment if photo was included
+  const attachments = photoData
+    ? [{ filename: 'bilde.jpg', content: photoData.replace(/^data:image\/\w+;base64,/, '') }]
+    : [];
+
   const payload = {
     from: 'PinPong <noreply@pinpong.no>',
     to: [recipient],
     subject: emailSubject,
     text: fullBody,
-    ...(replyEmail ? { reply_to: replyEmail } : {})
+    ...(replyEmail ? { reply_to: replyEmail } : {}),
+    ...(attachments.length ? { attachments } : {})
   };
 
   let resendStatus, resendBody;

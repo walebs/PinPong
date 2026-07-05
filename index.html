@@ -115,30 +115,40 @@
     .filter-fab.open .filter-dot { opacity: 0; transform: scale(0); }
     .filter-toggle:active { background: var(--s2); transform: scale(0.93); }
     .filter-panel {
-      position: absolute; top: 56px; left: 0;
+      position: absolute; top: 0; left: 0;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
       padding: 3px;
       display: grid; gap: 3px;
       grid-template-columns: repeat(3, 44px);
-      grid-template-rows: 44px 44px;
+      grid-template-rows: 44px 44px 44px;
       opacity: 0; pointer-events: none;
       transform: scale(0.72);
       transform-origin: top left;
+      /* close curve — smooth ease-in-out */
       transition: opacity 0.26s ease,
                   transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .filter-fab.open .filter-panel {
       opacity: 1; pointer-events: auto;
       transform: scale(1);
+      /* open curve — spring bounce */
       transition: opacity 0.22s ease,
                   transform 0.42s cubic-bezier(0.34, 1.4, 0.64, 1);
     }
     .filter-fab.open .filter-toggle {
-      background: var(--s2);
-      transition: background 0.12s;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease;
     }
-    .filter-cell-toggle { display: none; }
+    .filter-cell-toggle {
+      grid-column: 1 / -1;
+      background: var(--surface); border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, transform 0.12s ease;
+    }
+    .filter-cell-toggle:active { background: var(--s2); transform: scale(0.88); }
     /* Progress badge — lives below filter toggle, plain arc + number */
     .filter-progress-badge {
       width: 44px;
@@ -3068,59 +3078,11 @@ function updateSheetNav() {
 // ── Live horizontal card swipe ───────────────────────────
 (function() {
   var sx = 0, sy = 0, liveDx = 0, dirLocked = null, active = false;
-  var LOCK_PX     = 7;
-  var COMMIT_FRAC = 0.28;
-  var RESIST      = 0.18;
-
-  // Peek card — shows adjacent table during drag
-  var _peek = null, _peekIdx = -1, _peekBase = 0;
+  var LOCK_PX     = 7;    // px before direction is committed
+  var COMMIT_FRAC = 0.28; // fraction of card width needed to commit
+  var RESIST      = 0.18; // rubber-band at first/last card
 
   function getCard() { return document.getElementById('sheetCard'); }
-
-  function removePeek() {
-    if (_peek && _peek.parentNode) _peek.parentNode.removeChild(_peek);
-    _peek = null; _peekIdx = -1; _peekBase = 0;
-  }
-
-  function updatePeek(dx, sheetW) {
-    var peekDir = dx < 0 ? 1 : -1;
-    var pi = _swipePos + peekDir;
-    if (pi < 0 || pi >= _swipeList.length) { removePeek(); return; }
-
-    if (!_peek) {
-      _peek = document.createElement('div');
-      _peek.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;'
-        + 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;'
-        + 'background:var(--surface);border-radius:inherit;pointer-events:none;z-index:0;';
-      var card = getCard();
-      if (card && card.parentNode) card.parentNode.insertBefore(_peek, card);
-    }
-
-    if (_peekIdx !== pi) {
-      _peekIdx = pi;
-      var t = TABLES[_swipeList[pi]];
-      _peekBase = peekDir > 0 ? sheetW : -sheetW;
-      if (t) {
-        // Preload image so it's in cache at commit time
-        if (typeof resolveImage === 'function') {
-          var pre = new Image(); pre.src = resolveImage(t);
-        }
-        _peek.innerHTML =
-          '<div style="font-size:16px;font-weight:700;color:var(--text);'
-          + 'text-align:center;padding:0 28px;line-height:1.3">'
-          + (t.navn || '') + '</div>'
-          + '<div style="font-size:11px;font-weight:600;letter-spacing:0.4px;color:var(--muted)">'
-          + (pi + 1) + ' / ' + _swipeList.length + ' bord</div>';
-      } else {
-        _peek.innerHTML = '';
-      }
-      _peek.style.transition = 'none';
-      _peek.style.transform  = 'translateX(' + _peekBase + 'px)';
-      _peek.style.opacity    = '1';
-    }
-    // Slide peek in parallel with the main card
-    _peek.style.transform = 'translateX(' + (_peekBase + dx) + 'px)';
-  }
 
   _bottomSheet.addEventListener('touchstart', e => {
     if (!_bottomSheet.classList.contains('open') || selectedIdx === null) return;
@@ -3144,101 +3106,67 @@ function updateSheetNav() {
     var card = getCard();
     if (!card || _cardAnimating) return;
 
-    var sheetW = _bottomSheet.offsetWidth;
     var atEdge = (dx > 0 && _swipePos <= 0) || (dx < 0 && _swipePos >= _swipeList.length - 1);
     liveDx = atEdge ? dx * RESIST : dx;
 
     card.style.transition = 'none';
-    card.style.transform  = 'translateX(' + liveDx + 'px)';
-
-    if (!atEdge) updatePeek(liveDx, sheetW);
-    else removePeek();
+    card.style.transform  = `translateX(${liveDx}px)`;
   }, { passive: true });
 
-  // Safety: touchcancel clears all state
+  // Safety: touchcancel clears all state (phone call, scroll lock, etc.)
   _bottomSheet.addEventListener('touchcancel', () => {
     if (!active) return;
     active = false; dirLocked = null; liveDx = 0; _hSwipeActive = false;
     var card = getCard();
     if (card) { card.style.transition = ''; card.style.transform = ''; }
-    removePeek();
   });
 
   _bottomSheet.addEventListener('touchend', () => {
     if (!active) return;
     active = false;
 
-    if (dirLocked !== 'h') { _hSwipeActive = false; liveDx = 0; removePeek(); return; }
+    if (dirLocked !== 'h') { _hSwipeActive = false; liveDx = 0; return; }
 
-    var card   = getCard();
+    var card = getCard();
     var sheetW = _bottomSheet.offsetWidth;
     var threshold = sheetW * COMMIT_FRAC;
-    var dir    = liveDx < 0 ? 1 : -1;
-    var next   = _swipePos + dir;
+    var dir  = liveDx < 0 ? 1 : -1;
+    var next = _swipePos + dir;
     var commit = Math.abs(liveDx) >= threshold && !_cardAnimating
                    && next >= 0 && next < _swipeList.length;
 
     if (commit) {
       _cardAnimating = true;
-      _hSwipeActive  = false;
+      _hSwipeActive  = false; // release immediately so X / dismiss always work
       _swipePos = next;
-      var exitX  = dir < 0 ? -sheetW : sheetW;
-      var entryX = dir < 0 ?  sheetW : -sheetW;
 
-      if (card && _peek && _peekIdx === next) {
-        // ── PEEK PATH: parallel animations ─────────────────────────
-        // Peek slides to center; current card exits
-        _peek.style.transition = 'transform 0.34s cubic-bezier(0.22,1,0.36,1)';
-        _peek.style.transform  = '';
-        card.style.transition  = 'transform 0.22s cubic-bezier(0.4,0,1,1)';
-        card.style.transform   = 'translateX(' + exitX + 'px)';
+      // Fly current card off-screen from its dragged position
+      if (card) {
+        card.style.transition = 'transform 0.2s ease-in';
+        card.style.transform  = `translateX(${dir < 0 ? sheetW : -sheetW}px)`;
+      }
 
-        setTimeout(function() {
-          if (!card) { removePeek(); _cardAnimating = false; return; }
-          // Snap real card behind peek (both at center, peek on top)
+      setTimeout(() => {
+        openSheet(_swipeList[_swipePos], true);
+        if (card) {
           card.style.transition = 'none';
+          card.style.transform  = `translateX(${dir < 0 ? -sheetW : sheetW}px)`;
+          void card.offsetWidth;
+          card.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
           card.style.transform  = '';
-          openSheet(_swipeList[_swipePos], true);
-          // Fade peek out → real card reveals beneath
-          _peek.style.transition = 'opacity 0.14s ease';
-          _peek.style.opacity    = '0';
-          setTimeout(function() {
-            removePeek();
-            if (card) card.style.transition = '';
-            _cardAnimating = false;
-          }, 150);
-        }, 360);
-
-      } else if (card) {
-        // ── SNAP PATH: instant exit → slide in ──────────────────────
-        removePeek();
-        card.style.transition = 'none';
-        card.style.transform  = 'translateX(' + exitX + 'px)';
-        void card.offsetWidth;                       // flush layout at exit pos
-        openSheet(_swipeList[_swipePos], true);      // load new content off-screen
-        card.style.transform = 'translateX(' + entryX + 'px)';
-        void card.offsetWidth;                       // flush layout at entry pos
-        card.style.transition = 'transform 0.38s cubic-bezier(0.22,1,0.36,1)';
-        card.style.transform  = '';
-        setTimeout(function() {
+        }
+        setTimeout(() => {
           if (card) card.style.transition = '';
           _cardAnimating = false;
-        }, 400);
-      }
+        }, 360);
+      }, 185);
 
     } else {
       // Spring back to center
       if (card) {
-        card.style.transition = 'transform 0.35s cubic-bezier(0.22,1,0.36,1)';
+        card.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
         card.style.transform  = '';
-        setTimeout(function() { if (card) card.style.transition = ''; }, 360);
-      }
-      // Peek springs back then fades
-      if (_peek) {
-        _peek.style.transition = 'transform 0.35s cubic-bezier(0.22,1,0.36,1),opacity 0.2s ease 0.15s';
-        _peek.style.transform  = 'translateX(' + _peekBase + 'px)';
-        _peek.style.opacity    = '0';
-        setTimeout(removePeek, 380);
+        setTimeout(() => { if (card) card.style.transition = ''; }, 360);
       }
       _hSwipeActive = false;
       liveDx = 0;

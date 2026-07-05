@@ -491,9 +491,11 @@
       display: flex; background: var(--s2); border-radius: 9px;
       padding: 3px; gap: 2px;
     }
+    .rapport-seg-full { width: 100%; }
+    .rapport-seg-full .rapport-seg-btn { flex: 1; }
     .rapport-seg-btn {
       border: none; background: none; border-radius: 7px;
-      padding: 6px 14px; font-size: 13px; font-weight: 600;
+      padding: 9px 14px; font-size: 14px; font-weight: 600;
       color: var(--muted); cursor: pointer;
       transition: background 0.15s, color 0.15s;
       -webkit-tap-highlight-color: transparent;
@@ -1257,33 +1259,38 @@
       </div>
     </div>
 
-    <!-- Form fields -->
+    <!-- Navn -->
     <div class="rapport-card">
       <div class="rapport-field">
         <label class="rapport-label">Navn / Sted</label>
         <input class="rapport-input" id="rNavn" type="text" placeholder="f.eks. Grünerløkka park" autocomplete="off"/>
       </div>
-      <div class="rapport-divider"></div>
+    </div>
+
+    <!-- Adresse -->
+    <div class="rapport-card">
       <div class="rapport-field">
         <label class="rapport-label">Adresse</label>
         <input class="rapport-input" id="rAdresse" type="text" placeholder="Gateadresse eller område" autocomplete="off"/>
       </div>
     </div>
 
+    <!-- Type -->
     <div class="rapport-card">
-      <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between">
-        <label class="rapport-label" style="margin-bottom:0">Type</label>
-        <div class="rapport-seg" id="rTypeSeg">
+      <div class="rapport-field">
+        <label class="rapport-label">Type bord</label>
+        <div class="rapport-seg rapport-seg-full" id="rTypeSeg">
           <button class="rapport-seg-btn active" data-val="ute" onclick="rapportSegPick(this)">🌳 Ute</button>
           <button class="rapport-seg-btn" data-val="inne" onclick="rapportSegPick(this)">🏠 Inne</button>
         </div>
       </div>
     </div>
 
+    <!-- Belysning -->
     <div class="rapport-card">
-      <div class="rapport-field" style="flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <label class="rapport-label" style="margin-bottom:0">Har bordet belysning?</label>
-        <div class="rapport-seg" id="rBelysingSeg">
+      <div class="rapport-field">
+        <label class="rapport-label">Belysning</label>
+        <div class="rapport-seg rapport-seg-full" id="rBelysingSeg">
           <button class="rapport-seg-btn active" data-val="ja" onclick="rapportSegPick(this)">Ja</button>
           <button class="rapport-seg-btn" data-val="nei" onclick="rapportSegPick(this)">Nei</button>
           <button class="rapport-seg-btn" data-val="ukjent" onclick="rapportSegPick(this)">Vet ikke</button>
@@ -1291,6 +1298,7 @@
       </div>
     </div>
 
+    <!-- E-post -->
     <div class="rapport-card">
       <div class="rapport-field">
         <label class="rapport-label">Din e-post</label>
@@ -2695,8 +2703,7 @@ async function submitFeil() {
   var desc       = document.getElementById('feilDesc').value.trim();
   var replyEmail = (document.getElementById('feilEmail').value || '').trim();
   if (!desc) { document.getElementById('feilDesc').focus(); showLocToast('Mangler beskrivelse', 'Fortell oss hva problemet er.'); return; }
-  if (!replyEmail) { document.getElementById('feilEmail').focus(); showLocToast('Mangler e-post', 'Legg inn e-postadressen din.'); return; }
-  if (!replyEmail.includes('@')) { document.getElementById('feilEmail').focus(); showLocToast('Ugyldig e-post', 'E-postadressen må inneholde @'); return; }
+  if (!replyEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('feilEmail').focus(); showLocToast('Ugyldig mail!', 'Prøv igjen'); return; }
 
   var btn = document.getElementById('feilSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sender…';
@@ -2733,7 +2740,7 @@ function rapportPhotoChosen(input) {
 }
 async function submitRapport() {
   if (!_rapportCanSubmit()) {
-    showLocToast('For mange innsendelser', 'Du har sendt inn for mange bord i dag. Prøv igjen om 24t.');
+    showLocToast('For mange innsendelser', 'Du har sendt inn for mange bord i dag! Prøv igjen i morgen.');
     return;
   }
   var navn       = document.getElementById('rNavn').value.trim();
@@ -2742,8 +2749,7 @@ async function submitRapport() {
   var belysning  = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
   var replyEmail = (document.getElementById('rEmail').value || '').trim();
   if (!navn) { document.getElementById('rNavn').focus(); showLocToast('Mangler navn', 'Skriv inn navn eller sted for bordet.'); return; }
-  if (!replyEmail) { document.getElementById('rEmail').focus(); showLocToast('Mangler e-post', 'Legg inn e-postadressen din.'); return; }
-  if (!replyEmail.includes('@')) { document.getElementById('rEmail').focus(); showLocToast('Ugyldig e-post', 'E-postadressen må inneholde @'); return; }
+  if (!replyEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('rEmail').focus(); showLocToast('Ugyldig mail!', 'Prøv igjen'); return; }
 
   var btn = document.getElementById('rapportSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sender…';

@@ -120,7 +120,7 @@
       border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
       padding: 3px;
       display: grid; gap: 3px;
-      grid-template-columns: repeat(2, 44px);
+      grid-template-columns: 44px;
       grid-auto-rows: 44px;
       opacity: 0; pointer-events: none;
       transform: scale(0.72);
@@ -3137,41 +3137,58 @@ function updateSheetNav() {
 
     if (commit) {
       _cardAnimating = true;
-      _hSwipeActive  = false;
+      _hSwipeActive  = false; // release immediately so X / dismiss always work
       _swipePos = next;
 
       if (card) {
         var exitX  = dir < 0 ? -sheetW : sheetW;
         var entryX = dir < 0 ?  sheetW : -sheetW;
 
-        // Ghost clone flies out from dragged position
+        // 1. Snapshot current card as an absolutely-positioned ghost
         var ghost = card.cloneNode(true);
         ghost.removeAttribute('id');
-        ghost.style.cssText += ';position:absolute;top:0;left:0;width:100%;z-index:10;pointer-events:none;';
-        ghost.style.transform  = `translateX(${liveDx}px)`;
+        ghost.style.position   = 'absolute';
+        ghost.style.top        = '0';
+        ghost.style.left       = '0';
+        ghost.style.width      = card.offsetWidth + 'px';
+        ghost.style.height     = card.offsetHeight + 'px';
+        ghost.style.zIndex     = '20';
+        ghost.style.pointerEvents = 'none';
         ghost.style.transition = 'none';
-        card.parentNode.style.position = 'relative';
-        card.parentNode.insertBefore(ghost, card.nextSibling);
+        ghost.style.transform  = `translateX(${liveDx}px)`;
+        var par = card.parentNode;
+        var oldParPos = par.style.position;
+        par.style.position = 'relative';
+        par.style.overflow = 'hidden';
+        par.appendChild(ghost);
+
+        // 2. Fly ghost out
         requestAnimationFrame(() => {
-          ghost.style.transition = 'transform 0.25s cubic-bezier(0.4,0,1,1)';
+          ghost.style.transition = 'transform 0.26s cubic-bezier(0.4, 0, 1, 1)';
           ghost.style.transform  = `translateX(${exitX}px)`;
         });
 
-        // Real card gets new content and slides in simultaneously
+        // 3. Load new content into real card, positioned at entry edge
         card.style.transition = 'none';
         card.style.transform  = `translateX(${entryX}px)`;
         openSheet(_swipeList[_swipePos], true);
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          card.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
-          card.style.transform  = '';
-        }));
 
+        // 4. Slide real card in — two rAF frames to guarantee paint after openSheet
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            card.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
+            card.style.transform  = '';
+          });
+        });
+
+        // 5. Cleanup after both animations complete
         setTimeout(() => {
-          ghost.remove();
-          card.parentNode.style.position = '';
+          if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+          par.style.position = oldParPos;
+          par.style.overflow = '';
           if (card) card.style.transition = '';
           _cardAnimating = false;
-        }, 380);
+        }, 400);
       }
 
     } else {

@@ -1286,7 +1286,7 @@
     <div class="rapport-card">
       <div class="rapport-field">
         <label class="rapport-label">Din e-post (valgfritt)</label>
-        <input class="rapport-input" id="rEmail" type="email" placeholder="slik at vi kan svare deg" autocomplete="email"/>
+        <input class="rapport-input" id="rEmail" type="email" placeholder="din@epost.no" autocomplete="email"/>
       </div>
     </div>
 
@@ -1339,7 +1339,7 @@
     <div class="rapport-card">
       <div class="rapport-field">
         <label class="rapport-label">Din e-post (valgfritt)</label>
-        <input class="rapport-input" id="feilEmail" type="email" placeholder="slik at vi kan svare deg" autocomplete="email"/>
+        <input class="rapport-input" id="feilEmail" type="email" placeholder="din@epost.no" autocomplete="email"/>
       </div>
     </div>
 
@@ -2587,8 +2587,8 @@ function profileRapporter() {
   document.querySelectorAll('#rTypeSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
   document.querySelectorAll('#rBelysingSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ja'));
   document.getElementById('rapportPhotoPreview').innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Ta bilde av bordet</span>`;
-  var btn = document.querySelector('.rapport-submit');
-  if (btn) btn.textContent = 'Send inn';
+  var btn = document.getElementById('rapportSubmitBtn');
+  if (btn) { btn.textContent = 'Send inn'; btn.disabled = false; }
   document.getElementById('rapportPage').classList.add('open');
 }
 function closeRapport() {
@@ -2619,6 +2619,8 @@ function openFeilPage() {
   document.getElementById('feilSubject').selectedIndex = 0;
   document.getElementById('feilPhotoPreview').innerHTML =
     `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>${tr('feil.photo')}</span>`;
+  var btn = document.getElementById('feilSubmitBtn');
+  btn.disabled = false; btn.textContent = 'Send rapport';
   var fp = document.getElementById('feilPage');
   fp.style.transition = '';
   fp.style.transform  = '';
@@ -2660,7 +2662,7 @@ async function submitFeil() {
     if (!r.ok) throw new Error('server');
     _feilRecord();
     btn.textContent = '✓ Sendt!';
-    setTimeout(() => { closeFeilPage(); btn.disabled = false; btn.textContent = 'Send rapport'; }, 1400);
+    setTimeout(() => { closeFeilPage(); }, 1400);
   } catch {
     btn.disabled = false; btn.textContent = 'Send rapport';
     showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');
@@ -2712,7 +2714,7 @@ async function submitRapport() {
     if (!r.ok) throw new Error('server');
     _rapportRecord();
     btn.textContent = '✓ Sendt!';
-    setTimeout(() => { closeRapport(); btn.disabled = false; btn.textContent = 'Send inn'; }, 1400);
+    setTimeout(() => { closeRapport(); }, 1400);
   } catch {
     btn.disabled = false; btn.textContent = 'Send inn';
     showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');

@@ -1283,7 +1283,14 @@
       </div>
     </div>
 
-    <button class="rapport-submit" onclick="submitRapport()">Send inn</button>
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Din e-post (valgfritt)</label>
+        <input class="rapport-input" id="rEmail" type="email" placeholder="slik at vi kan svare deg" autocomplete="email"/>
+      </div>
+    </div>
+
+    <button class="rapport-submit" id="rapportSubmitBtn" onclick="submitRapport()">Send inn</button>
 
   </div>
 </div>
@@ -1326,6 +1333,13 @@
       <div class="rapport-photo-preview" id="feilPhotoPreview">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span data-i18n="feil.photo">Legg til bilde (valgfritt)</span>
+      </div>
+    </div>
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Din e-post (valgfritt)</label>
+        <input class="rapport-input" id="feilEmail" type="email" placeholder="slik at vi kan svare deg" autocomplete="email"/>
       </div>
     </div>
 
@@ -2569,7 +2583,7 @@ function _rapportRecord() {
 }
 function profileRapporter() {
   // Reset form
-  ['rNavn','rAdresse'].forEach(id => document.getElementById(id).value = '');
+  ['rNavn','rAdresse','rEmail'].forEach(id => document.getElementById(id).value = '');
   document.querySelectorAll('#rTypeSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
   document.querySelectorAll('#rBelysingSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ja'));
   document.getElementById('rapportPhotoPreview').innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Ta bilde av bordet</span>`;
@@ -2601,6 +2615,7 @@ function _feilRecord() {
 }
 function openFeilPage() {
   document.getElementById('feilDesc').value = '';
+  document.getElementById('feilEmail').value = '';
   document.getElementById('feilSubject').selectedIndex = 0;
   document.getElementById('feilPhotoPreview').innerHTML =
     `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>${tr('feil.photo')}</span>`;
@@ -2621,19 +2636,35 @@ function feilPhotoChosen(input) {
   };
   reader.readAsDataURL(input.files[0]);
 }
-function submitFeil() {
+async function submitFeil() {
   if (!_feilCanSubmit()) {
     showLocToast(tr('feil.title'), 'Maks 2 rapporter per dag. Prøv igjen i morgen.');
     return;
   }
-  var subject = document.getElementById('feilSubject').value;
-  var desc    = document.getElementById('feilDesc').value.trim();
+  var subject    = document.getElementById('feilSubject').value;
+  var desc       = document.getElementById('feilDesc').value.trim();
+  var replyEmail = (document.getElementById('feilEmail').value || '').trim();
   if (!desc) { document.getElementById('feilDesc').focus(); return; }
-  var body = [`Kategori: ${subject}`, '', desc, '', '(Legg ved bilde som vedlegg hvis relevant)'].join('\n');
-  // mailto via location.href — window.open('_blank') leaves a blank tab / gets popup-blocked on iOS
-  location.href = `mailto:pinpongnorge@outlook.com?subject=${encodeURIComponent('PinPong – ' + subject)}&body=${encodeURIComponent(body)}`;
-  _feilRecord();
-  closeFeilPage();
+
+  var btn = document.getElementById('feilSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sender…';
+
+  var messageBody = ['Kategori: ' + subject, '', desc].join('\n');
+
+  try {
+    var r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'feil', subject, messageBody, replyEmail: replyEmail || null })
+    });
+    if (!r.ok) throw new Error('server');
+    _feilRecord();
+    btn.textContent = '✓ Sendt!';
+    setTimeout(() => { closeFeilPage(); btn.disabled = false; btn.textContent = 'Send rapport'; }, 1400);
+  } catch {
+    btn.disabled = false; btn.textContent = 'Send rapport';
+    showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');
+  }
 }
 function rapportSegPick(btn) {
   btn.closest('.rapport-seg').querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
@@ -2648,30 +2679,44 @@ function rapportPhotoChosen(input) {
   var url = _rapportPhotoUrl = URL.createObjectURL(file);
   document.getElementById('rapportPhotoPreview').innerHTML = `<img src="${url}" alt="Bilde"/>`;
 }
-function submitRapport() {
+async function submitRapport() {
   if (!_rapportCanSubmit()) {
     showLocToast('For mange innsendelser', 'Du har sendt inn for mange bord i dag. Prøv igjen om 24t.');
     return;
   }
-  var navn     = document.getElementById('rNavn').value.trim();
-  var adresse  = document.getElementById('rAdresse').value.trim();
-  var type     = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
-  var belysning = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
+  var navn       = document.getElementById('rNavn').value.trim();
+  var adresse    = document.getElementById('rAdresse').value.trim();
+  var type       = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
+  var belysning  = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
+  var replyEmail = (document.getElementById('rEmail').value || '').trim();
   if (!navn) { document.getElementById('rNavn').focus(); return; }
-  var typeLabel = type === 'ute' ? 'Utebord' : 'Innebord';
+
+  var btn = document.getElementById('rapportSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sender…';
+
+  var typeLabel  = type === 'ute' ? 'Utebord' : 'Innebord';
   var belysLabel = belysning === 'ja' ? 'Ja' : belysning === 'nei' ? 'Nei' : 'Vet ikke';
-  var body = [
-    `Navn / Sted: ${navn}`,
-    `Adresse: ${adresse || '–'}`,
-    `Type: ${typeLabel}`,
-    `Belysning: ${belysLabel}`,
-    '',
-    '⚠️ Husk å legge ved bilde som vedlegg!'
+  var messageBody = [
+    'Navn / Sted: ' + navn,
+    'Adresse: ' + (adresse || '–'),
+    'Type: ' + typeLabel,
+    'Belysning: ' + belysLabel
   ].join('\n');
-  // mailto via location.href — window.open('_blank') leaves a blank tab / gets popup-blocked on iOS
-  location.href = `mailto:pinpongnorge@outlook.com?subject=PinPong – Nytt bord: ${encodeURIComponent(navn)}&body=${encodeURIComponent(body)}`;
-  _rapportRecord();
-  closeRapport();
+
+  try {
+    var r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'rapport', subject: navn, messageBody, replyEmail: replyEmail || null })
+    });
+    if (!r.ok) throw new Error('server');
+    _rapportRecord();
+    btn.textContent = '✓ Sendt!';
+    setTimeout(() => { closeRapport(); btn.disabled = false; btn.textContent = 'Send inn'; }, 1400);
+  } catch {
+    btn.disabled = false; btn.textContent = 'Send inn';
+    showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');
+  }
 }
 
 function locateMe() {

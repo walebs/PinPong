@@ -462,7 +462,7 @@
       color: var(--muted); font-size: 13px; font-weight: 500;
     }
     .rapport-photo-preview img {
-      width: 100%; height: auto; max-height: 260px; object-fit: cover;
+      width: 100%; height: auto; max-height: 200px; object-fit: cover;
       display: block;
     }
     .rapport-card {
@@ -854,7 +854,7 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 18px; padding: 16px 18px;
       box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-      z-index: 1200;
+      z-index: 1500;
       transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
     }
     .loc-toast.show { transform: translateX(-50%) translateY(0); }
@@ -2635,18 +2635,28 @@ function closeFeilPage() {
 }
 function compressImage(file, callback) {
   var reader = new FileReader();
+  reader.onerror = function() { callback(null); };
   reader.onload = function(e) {
+    var raw = e.target.result;
     var img = new Image();
-    img.onload = function() {
-      var MAX = 1200;
-      var ratio = Math.min(MAX / img.width, MAX / img.height, 1);
-      var canvas = document.createElement('canvas');
-      canvas.width  = Math.round(img.width  * ratio);
-      canvas.height = Math.round(img.height * ratio);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      callback(canvas.toDataURL('image/jpeg', 0.75));
+    img.onerror = function() {
+      // Canvas decode failed (e.g. HEIC on some browsers) — send raw base64
+      callback(raw);
     };
-    img.src = e.target.result;
+    img.onload = function() {
+      try {
+        var MAX = 1200;
+        var ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        var canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.75));
+      } catch(err) {
+        callback(raw); // fall back to uncompressed
+      }
+    };
+    img.src = raw;
   };
   reader.readAsDataURL(file);
 }

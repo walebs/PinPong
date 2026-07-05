@@ -1,3 +1,7 @@
+export const config = {
+  api: { bodyParser: { sizeLimit: '8mb' } }
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -19,9 +23,9 @@ export default async function handler(req, res) {
   const fullBody = messageBody
     + (replyEmail ? `\n\n---\nSvar til: ${replyEmail}` : '\n\n---\nIngen e-post oppgitt');
 
-  // Strip data URL prefix and build attachment if photo was included
+  // Strip data URL prefix: data:image/jpeg;base64,... → raw base64
   const attachments = photoData
-    ? [{ filename: 'bilde.jpg', content: photoData.replace(/^data:image\/\w+;base64,/, '') }]
+    ? [{ filename: 'bilde.jpg', content: photoData.replace(/^data:[^;]+;base64,/, '') }]
     : [];
 
   const payload = {
@@ -54,5 +58,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Network error', message: err.message });
   }
 
-  return res.status(200).json({ ok: true, id: resendBody?.id });
+  return res.status(200).json({ ok: true, id: resendBody?.id, hasPhoto: !!photoData });
 }

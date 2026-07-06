@@ -1659,7 +1659,10 @@ async function fetchWithRetry(url, maxAttempts) {
   var delay = 1200;
   for (var i = 0; i < maxAttempts; i++) {
     try {
-      var r = await fetch(url, { cache: 'no-store' });
+      var ctrl = new AbortController();
+      var timer = setTimeout(() => ctrl.abort(), 10000); // 10s hard timeout per attempt
+      var r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+      clearTimeout(timer);
       if (r.ok) return r;
     } catch (e) {}
     if (i < maxAttempts - 1) await new Promise(res => setTimeout(res, delay));
@@ -1668,6 +1671,7 @@ async function fetchWithRetry(url, maxAttempts) {
   return null;
 }
 
+var _lastDataFetch = 0;
 async function loadSheetData() {
   if (!SHEETS_CSV_URL) {
     updateProgress();
@@ -1677,6 +1681,7 @@ async function loadSheetData() {
     var sep = SHEETS_CSV_URL.includes('?') ? '&' : '?';
     var res = await fetchWithRetry(SHEETS_CSV_URL + sep + 't=' + Date.now(), 3);
     if (!res) { updateProgress(); return; }
+    _lastDataFetch = Date.now();
     var text = await res.text();
     var rows = parseCSV(text);
     var newTables = [];
@@ -2055,9 +2060,42 @@ function startLocationWatch() {
 
 startLocationWatch();
 
-// Restart watch when the page regains focus (iOS pauses GPS on lock/tab-switch)
+// Full recovery when the app becomes visible again (tab switch, lock screen, bfcache restore)
+function _onAppVisible() {
+  // 1. Restart GPS (iOS pauses it on lock/tab-switch)
+  startLocationWatch();
+
+  // 2. Reset any stuck card-swipe animation lock
+  _cardAnimating = false;
+
+  // 3. Re-render map tiles (Leaflet loses track of size while hidden)
+  if (typeof map !== 'undefined') {
+    try { map.invalidateSize(); } catch(e) {}
+  }
+
+  // 4. Re-enable submit buttons if they were disabled mid-flight
+  ['rapportSubmitBtn', 'feilSubmitBtn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.disabled) { el.disabled = false; }
+  });
+
+  // 5. Dispatch touchcancel so any lingering touch state is cleared
+  try { document.dispatchEvent(new TouchEvent('touchcancel')); } catch(e) {}
+
+  // 6. Refresh data if it's been more than 30 minutes
+  if (Date.now() - _lastDataFetch > 30 * 60 * 1000) {
+    loadSheetData();
+  }
+}
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') startLocationWatch();
+  if (document.visibilityState === 'visible') _onAppVisible();
+});
+
+// Safari bfcache: page is restored from memory exactly as-is, visibilitychange
+// does NOT fire. pageshow with persisted=true is the only reliable signal.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) _onAppVisible();
 });
 
 // ── Compass widget ───────────────────────────────────────
@@ -3319,7 +3357,24 @@ function updateSheetNav() {
 })();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // When a new SW is waiting (new deploy is ready), prompt the user to reload
+    var checkWaiting = () => {
+      if (reg.waiting) {
+        showLocToast('Ny versjon tilgjengelig', 'Last inn siden på nytt for å oppdatere appen.');
+      }
+    };
+    reg.addEventListener('updatefound', () => {
+      var newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          checkWaiting();
+        }
+      });
+    });
+    checkWaiting(); // catch the case where SW was waiting before this page load
+  }).catch(() => {});
 }
 
 // Prevent browser-level pinch zoom (iOS Safari ignores user-scalable=no)

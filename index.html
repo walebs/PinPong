@@ -204,7 +204,7 @@
     .nearby-header {
       display: flex; align-items: center; justify-content: center;
       height: 48px;
-      padding-bottom: 0px; padding-top: 10px;
+      padding-bottom: 0px; padding-top: 18px;
     }
     .nearby-label {
       text-align: center;
@@ -1124,7 +1124,7 @@
         </svg>
       </div>
       <div class="profile-app-name">P<span style="font-size:18px;vertical-align:1px;margin-left:-5px;margin-right:-3px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
-      <div class="profile-app-sub" data-i18n="profile.sub">Bordtennis bord i Oslo, Lørenskog og Lillestrøm!</div>
+      <div class="profile-app-sub" data-i18n="profile.sub">Finn ledige bordtennisbord nær deg</div>
     </div>
   </div>
   <div class="profile-body">
@@ -2490,7 +2490,7 @@ var LANG = {
     'profile.innstillinger':'Innstillinger',
     'profile.tips':         'Kjenner du et bord? 🏓',
     'profile.tips.sub':     'Tips oss om et sted!',
-    'profile.sub':          'Bordtennis bord i Oslo, Lørenskog og Lillestrøm!',
+    'profile.sub':          'Finn ledige bordtennisbord nær deg',
     'fav.title':            '❤ Favoritter',
     'fav.empty':            'Du har ingen favoritter ennå.\nTrykk ❤ på et bord for å lagre det her.',
     'settings.title':       'Innstillinger',
@@ -2554,7 +2554,7 @@ var LANG = {
     'profile.innstillinger':'Settings',
     'profile.tips':         'Know a table? 🏓',
     'profile.tips.sub':     'Tip us about a spot!',
-    'profile.sub':          'Ping pong tables in Oslo, Lørenskog and Lillestrøm!',
+    'profile.sub':          'Find available ping pong tables near you',
     'fav.title':            '❤ Favorites',
     'fav.empty':            'No favorites yet.\nTap ❤ on a table to save it here.',
     'settings.title':       'Settings',
@@ -2802,7 +2802,10 @@ async function submitFeil() {
     if (!r.ok) throw new Error('server');
     _feilRecord();
     btn.textContent = '✓ Sendt!';
-    setTimeout(() => { closeFeilPage(); }, 1400);
+    setTimeout(() => {
+      closeFeilPage();
+      setTimeout(() => showLocToast('Takk! 🙏', 'Din rapport er mottatt. Vi ser på det så fort vi kan.'), 350);
+    }, 1400);
   } catch {
     btn.disabled = false; btn.textContent = 'Send rapport';
     showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');
@@ -2863,7 +2866,10 @@ async function submitRapport() {
     if (!r.ok) throw new Error('server');
     _rapportRecord();
     btn.textContent = '✓ Sendt!';
-    setTimeout(() => { closeRapport(); }, 1400);
+    setTimeout(() => {
+      closeRapport();
+      setTimeout(() => showLocToast('Takk! 🙏', 'Bordet er sendt inn. Vi sjekker det og legger det til på kartet!'), 350);
+    }, 1400);
   } catch {
     btn.disabled = false; btn.textContent = 'Send inn';
     showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');

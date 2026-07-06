@@ -115,7 +115,7 @@
     .filter-fab.open .filter-dot { opacity: 0; transform: scale(0); }
     .filter-toggle:active { background: var(--s2); transform: scale(0.93); }
     .filter-panel {
-      position: absolute; top: 58px; left: 0;
+      position: absolute; top: 0; left: 0;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
       padding: 3px;
@@ -137,8 +137,8 @@
                   transform 0.42s cubic-bezier(0.34, 1.4, 0.64, 1);
     }
     .filter-fab.open .filter-toggle {
-      opacity: 1; pointer-events: auto;
-      background: var(--s2);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease;
     }
     .filter-cell-toggle {
       grid-column: 1 / -1;

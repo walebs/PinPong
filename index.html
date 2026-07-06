@@ -1894,6 +1894,19 @@ loadSheetData().then(() => {
       setTimeout(() => openSheet(idx), 400);
     }
   }
+
+  // Warm the image cache in the background so photos are instant on tap.
+  // Batched in groups of 3 to avoid hammering the network at startup.
+  var imgUrls = TABLES.map(t => t.bilde_url).filter(Boolean);
+  var BATCH = 3, i = 0;
+  function _preloadNext() {
+    if (i >= imgUrls.length) return;
+    var batch = imgUrls.slice(i, i + BATCH);
+    i += BATCH;
+    batch.forEach(url => { var im = new Image(); im.src = url; });
+    setTimeout(_preloadNext, 600);
+  }
+  setTimeout(_preloadNext, 1500); // start 1.5s after data loads — tiles first
 });
 
 </script>

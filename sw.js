@@ -1,4 +1,5 @@
-const TILE_CACHE = 'pinpong-tiles-v3';
+const TILE_CACHE  = 'pinpong-tiles-v3';
+const IMAGE_CACHE = 'pinpong-images-v1';
 
 // ── Oslo + Lillestrøm bounding box ───────────────────────
 const BOUNDS = { minLat: 59.82, maxLat: 60.02, minLng: 10.55, maxLng: 11.15 };
@@ -60,7 +61,10 @@ self.addEventListener('activate', event => {
     caches.keys()
       .then(keys => Promise.all(
         keys
-          .filter(k => k.startsWith('pinpong-tiles-') && k !== TILE_CACHE)
+          .filter(k =>
+            (k.startsWith('pinpong-tiles-')  && k !== TILE_CACHE) ||
+            (k.startsWith('pinpong-images-') && k !== IMAGE_CACHE)
+          )
           .map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
@@ -70,19 +74,45 @@ self.addEventListener('activate', event => {
 });
 
 // ── Fetch: serve from cache, fall back to network ────────
+function isImage(url) {
+  return url.includes('i.imgur.com') || url.includes('/images/bord/');
+}
+
 self.addEventListener('fetch', event => {
-  if (!event.request.url.includes('cartocdn.com')) return;
-  event.respondWith(
-    caches.open(TILE_CACHE).then(async cache => {
-      const cached = await cache.match(event.request);
-      if (cached) return cached;
-      try {
-        const response = await fetch(event.request);
-        if (response.ok) cache.put(event.request, response.clone());
-        return response;
-      } catch {
-        return new Response('', { status: 503 });
-      }
-    })
-  );
+  const url = event.request.url;
+
+  // Map tiles — cache-first
+  if (url.includes('cartocdn.com')) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then(async cache => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        try {
+          const response = await fetch(event.request);
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        } catch {
+          return new Response('', { status: 503 });
+        }
+      })
+    );
+    return;
+  }
+
+  // Table images — cache-first, store on first load
+  if (isImage(url)) {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then(async cache => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        try {
+          const response = await fetch(event.request);
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        } catch {
+          return new Response('', { status: 503 });
+        }
+      })
+    );
+  }
 });

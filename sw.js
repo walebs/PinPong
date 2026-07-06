@@ -73,11 +73,23 @@ self.addEventListener('activate', event => {
   caches.open(TILE_CACHE).then(preCacheTiles);
 });
 
-// ── Fetch: serve from cache, fall back to network ────────
+// ── Image cache helpers ──────────────────────────────────
+const IMAGE_MAX = 120; // max cached images before pruning oldest
+
 function isImage(url) {
   return url.includes('i.imgur.com') || url.includes('/images/bord/');
 }
 
+async function cacheImageWithLRU(cache, request, response) {
+  await cache.put(request, response);
+  // Prune if over limit
+  const keys = await cache.keys();
+  if (keys.length > IMAGE_MAX) {
+    await Promise.all(keys.slice(0, keys.length - IMAGE_MAX).map(k => cache.delete(k)));
+  }
+}
+
+// ── Fetch: serve from cache, fall back to network ────────
 self.addEventListener('fetch', event => {
   const url = event.request.url;
 
@@ -99,15 +111,21 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Table images — cache-first, store on first load
+  // Table images — cache-first, store on first load.
+  // Imgur is cross-origin so we fetch no-cors (opaque response, status 0).
+  // Local /images/bord/ is same-origin so response.ok works normally.
   if (isImage(url)) {
+    const isOpaque = url.includes('i.imgur.com');
     event.respondWith(
       caches.open(IMAGE_CACHE).then(async cache => {
         const cached = await cache.match(event.request);
         if (cached) return cached;
         try {
-          const response = await fetch(event.request);
-          if (response.ok) cache.put(event.request, response.clone());
+          const response = await fetch(event.request, isOpaque ? { mode: 'no-cors' } : undefined);
+          // Opaque responses have status 0; same-origin must be ok
+          if (isOpaque ? response.type === 'opaque' : response.ok) {
+            await cacheImageWithLRU(cache, event.request, response.clone());
+          }
           return response;
         } catch {
           return new Response('', { status: 503 });

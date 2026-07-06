@@ -2,8 +2,16 @@ export const config = {
   api: { bodyParser: { sizeLimit: '8mb' } }
 };
 
+const ALLOWED_ORIGIN = 'https://pinpong.no';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Restrict CORS to pinpong.no (and Vercel preview deployments)
+  const origin = req.headers.origin || '';
+  if (origin === ALLOWED_ORIGIN || origin.endsWith('.vercel.app')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -14,13 +22,23 @@ export default async function handler(req, res) {
   if (!recipient) return res.status(500).json({ error: 'RECIPIENT_EMAIL not set' });
 
   const { type, subject, messageBody, replyEmail, photoData } = req.body || {};
-  if (!messageBody) return res.status(400).json({ error: 'messageBody required' });
+
+  // Server-side validation
+  if (!['rapport', 'feil'].includes(type)) return res.status(400).json({ error: 'Invalid type' });
+  if (typeof messageBody !== 'string' || !messageBody.trim() || messageBody.length > 5000)
+    return res.status(400).json({ error: 'messageBody invalid' });
+  if (subject && (typeof subject !== 'string' || subject.length > 200))
+    return res.status(400).json({ error: 'subject invalid' });
+  if (replyEmail && !EMAIL_RE.test(replyEmail))
+    return res.status(400).json({ error: 'Invalid replyEmail' });
+  if (photoData && (typeof photoData !== 'string' || !photoData.startsWith('data:image') || photoData.length > 6_000_000))
+    return res.status(400).json({ error: 'photoData invalid or too large' });
 
   const emailSubject = type === 'rapport'
     ? `[PinPong] Nytt bord – ${subject || 'Ukjent'}`
     : `[PinPong] Feilrapport – ${subject || 'Ukjent'}`;
 
-  const fullBody = messageBody
+  const fullBody = messageBody.trim()
     + (replyEmail ? `\n\n---\nSvar til: ${replyEmail}` : '\n\n---\nIngen e-post oppgitt');
 
   // Strip data URL prefix: data:image/jpeg;base64,... → raw base64

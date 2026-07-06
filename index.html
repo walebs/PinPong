@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0c0c0f" id="metaThemeColor" />
+  <meta name="theme-color" content="#f2f2f7" id="metaThemeColor" />
+  <script>
+    // Set theme-color before first paint to avoid status-bar flash
+    (function(){var l=localStorage.getItem('pinpong-theme')!=='dark';document.getElementById('metaThemeColor').content=l?'#f2f2f7':'#0c0c0f';document.documentElement.style.background=l?'#f2f2f7':'#0c0c0f';})();
+  </script>
   <meta name="color-scheme" content="dark light" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -1658,13 +1662,16 @@ function resolveImage(url) {
 async function fetchWithRetry(url, maxAttempts) {
   var delay = 1200;
   for (var i = 0; i < maxAttempts; i++) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(() => ctrl.abort(), 10000); // 10s hard timeout per attempt
     try {
-      var ctrl = new AbortController();
-      var timer = setTimeout(() => ctrl.abort(), 10000); // 10s hard timeout per attempt
       var r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
-      clearTimeout(timer);
       if (r.ok) return r;
-    } catch (e) {}
+    } catch (e) {
+      // AbortError or network failure — continue to next attempt
+    } finally {
+      clearTimeout(timer);
+    }
     if (i < maxAttempts - 1) await new Promise(res => setTimeout(res, delay));
     delay = Math.min(delay * 2, 8000);
   }
@@ -1688,7 +1695,7 @@ async function loadSheetData() {
     rows.forEach(row => {
       var navn = (row.navn || "").trim().normalize('NFC');
       if (!navn) return;
-      var lat = parseFloat(row.lat), lng = parseFloat(row.lng);
+      var lat = parseFloat((row.lat || '').replace(',', '.')), lng = parseFloat((row.lng || '').replace(',', '.'));
       var data = {
         verifisert: row.verifisert ? row.verifisert.toLowerCase() : null,
         label:      row.label || null,
@@ -1768,14 +1775,28 @@ function iconSize(highlighted=false) {
 }
 
 // ── Favorites ────────────────────────────────────────────
+// Favorites keyed by table name (stable across data reloads).
+// Migrate legacy index-based storage on first load.
+(function _migrateFavs() {
+  try {
+    var raw = JSON.parse(localStorage.getItem('pinpong-favs') || '[]');
+    if (raw.length && typeof raw[0] === 'number') {
+      // Old format: array of indices — convert to names using STATIC (always available)
+      var named = raw.map(i => STATIC[i]?.navn).filter(Boolean);
+      localStorage.setItem('pinpong-favs', JSON.stringify(named));
+    }
+  } catch(e) {}
+})();
 var FAVORITES = new Set(JSON.parse(localStorage.getItem('pinpong-favs') || '[]'));
 function saveFavorites() {
   localStorage.setItem('pinpong-favs', JSON.stringify([...FAVORITES]));
 }
 function toggleFavorite() {
   if (selectedIdx === null) return;
-  if (FAVORITES.has(selectedIdx)) FAVORITES.delete(selectedIdx);
-  else FAVORITES.add(selectedIdx);
+  var navn = TABLES[selectedIdx]?.navn;
+  if (!navn) return;
+  if (FAVORITES.has(navn)) FAVORITES.delete(navn);
+  else FAVORITES.add(navn);
   saveFavorites();
   updateHeartBtn();
   var entry = leafletMarkers.find(m => m.index === selectedIdx);
@@ -1785,7 +1806,8 @@ function updateHeartBtn() {
   var btn = document.getElementById('btnHeart');
   var icon = document.getElementById('heartIcon');
   if (!btn || selectedIdx === null) return;
-  var faved = FAVORITES.has(selectedIdx);
+  var navn = TABLES[selectedIdx]?.navn;
+  var faved = navn ? FAVORITES.has(navn) : false;
   btn.classList.toggle('faved', faved);
   icon.setAttribute('fill', faved ? '#ff3b30' : 'none');
   icon.setAttribute('stroke', '#ff3b30');
@@ -1803,7 +1825,7 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
   var cs = Math.max(12, Math.round(size * 0.48));
   var offset = -Math.round(cs * 0.45);
   var checkmark = t.verifisert==="ja" ? `<div style="position:absolute;top:${offset}px;right:${offset}px;width:${cs}px;height:${cs}px;background:#34C759;border:2.5px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
-  var isFav = tableIdx >= 0 && FAVORITES.has(tableIdx);
+  var isFav = FAVORITES.has(t.navn);
   var heartBadge = isFav ? `<div style="position:absolute;bottom:${offset}px;left:${offset}px;width:${cs}px;height:${cs}px;background:#ff3b30;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(255,59,48,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>` : '';
   var isLight = document.body.classList.contains('light');
   var markerBorder = isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.15)';
@@ -1866,7 +1888,7 @@ function renderMarkers() {
   TABLES.forEach((t, i) => {
     if ((showOutdoor || showBar) && t.type==='outdoor' && !showOutdoor) return;
     if ((showOutdoor || showBar) && t.type==='bar'     && !showBar)     return;
-    if (showFavOnly      && !FAVORITES.has(i))                                           return;
+    if (showFavOnly      && !FAVORITES.has(t.navn))                                       return;
     if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
     if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
@@ -1920,7 +1942,7 @@ function showNearbyStrip(lat, lng) {
     .filter(({ t, i }) => {
       if ((showOutdoor || showBar) && t.type === 'outdoor' && !showOutdoor) return false;
       if ((showOutdoor || showBar) && t.type !== 'outdoor' && !showBar)    return false;
-      if (showFavOnly      && !FAVORITES.has(i))                                    return false;
+      if (showFavOnly      && !FAVORITES.has(t.navn))                               return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                       return false;
@@ -1935,7 +1957,7 @@ function showNearbyStrip(lat, lng) {
     var dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
     var check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
     var glow     = idx === 0 ? ' nearest-glow' : '';
-    var typeLabel = t.type === 'outdoor' ? 'Utendørs' : (t.label || 'Innendørs');
+    var typeLabel = t.type === 'outdoor' ? 'Utendørs' : esc(t.label || 'Innendørs');
     return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
       <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
       <div class="nearby-card-name">${esc(t.navn)}</div>
@@ -2056,8 +2078,10 @@ function showLocPermissionDenied() {
   showLocToast('Posisjon blokkert', body);
 }
 
+var _locationDenied = false;
 function startLocationWatch() {
   if (!navigator.geolocation) return;
+  if (_locationDenied) return; // don't re-prompt after user denied
   if (locationWatchId !== null) {
     navigator.geolocation.clearWatch(locationWatchId);
     locationWatchId = null;
@@ -2065,7 +2089,7 @@ function startLocationWatch() {
   locationWatchId = navigator.geolocation.watchPosition(
     onPositionUpdate,
     err => {
-      if (err.code === 1) showLocPermissionDenied();
+      if (err.code === 1) { _locationDenied = true; showLocPermissionDenied(); }
     },
     geoOpts
   );
@@ -2307,17 +2331,17 @@ function closeProfile() {
 function profileFavoritter() {
   // Build and open the Favoritter page
   var list = document.getElementById('favList');
-  var favIdxs = [...FAVORITES];
-  if (!favIdxs.length) {
+  var favNames = [...FAVORITES];
+  if (!favNames.length) {
     list.innerHTML = `<div class="fav-empty"><div class="fav-empty-icon">🏓</div>Du har ingen favoritter ennå.<br>Trykk ❤ på et bord for å lagre det her.</div>`;
   } else {
-    // Sort by distance if we have location, otherwise alphabetically
-    var sorted = favIdxs
-      .filter(i => TABLES[i])
-      .map(i => ({
-        i, t: TABLES[i],
-        d: userLat !== null ? haversine(userLat, userLng, TABLES[i].lat, TABLES[i].lng) : null
-      }))
+    // Resolve names → current TABLES indices (names are stable; indices may shift)
+    var sorted = favNames
+      .map(navn => {
+        var i = TABLES.findIndex(t => t.navn === navn);
+        return i === -1 ? null : { i, t: TABLES[i], d: userLat !== null ? haversine(userLat, userLng, TABLES[i].lat, TABLES[i].lng) : null };
+      })
+      .filter(Boolean)
       .sort((a, b) => a.d !== null ? a.d - b.d : a.t.navn.localeCompare(b.t.navn));
 
     list.innerHTML = sorted.map(({ i, t, d }) => {
@@ -2762,6 +2786,13 @@ async function submitFeil() {
 
   var messageBody = ['Kategori: ' + subject, '', desc].join('\n');
 
+  // Guard: reject photos over ~4.5 MB (base64 overhead means ~6 MB on wire)
+  if (_feilPhotoData && _feilPhotoData.length > 4_500_000) {
+    showLocToast('Bilde for stort', 'Bildet er for stort til å sende. Prøv et annet bilde.');
+    btn.disabled = false; btn.textContent = 'Send rapport';
+    return;
+  }
+
   try {
     var r = await fetch('/api/report', {
       method: 'POST',
@@ -2816,6 +2847,13 @@ async function submitRapport() {
     'Belysning: ' + belysLabel
   ].join('\n');
 
+  // Guard: reject photos over ~4.5 MB
+  if (_rapportPhotoData && _rapportPhotoData.length > 4_500_000) {
+    showLocToast('Bilde for stort', 'Bildet er for stort til å sende. Prøv et annet bilde.');
+    btn.disabled = false; btn.textContent = 'Send inn';
+    return;
+  }
+
   try {
     var r = await fetch('/api/report', {
       method: 'POST',
@@ -2837,11 +2875,14 @@ function locateMe() {
     showLocToast('Ikke støttet', 'Nettleseren din støtter ikke stedstjenester.');
     return;
   }
+  // User explicitly tapped — allow retry even if previously denied
+  _locationDenied = false;
   // Check permission state before calling watchPosition so denied users
   // get instant feedback instead of a silent no-op
   if (navigator.permissions) {
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
       if (result.state === 'denied') {
+        _locationDenied = true;
         showLocPermissionDenied();
       } else {
         startLocationWatch();
@@ -3140,7 +3181,7 @@ function buildSwipeList(fromIdx) {
     .filter(({ i }) => {
       var t = TABLES[i];
       if ((showOutdoor || showBar) && !(t.type === 'outdoor' ? showOutdoor : showBar)) return false;
-      if (showFavOnly      && !FAVORITES.has(i))                        return false;
+      if (showFavOnly      && !FAVORITES.has(t.navn))                   return false;
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                      return false;

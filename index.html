@@ -994,6 +994,8 @@
       transition: background 0.12s, transform 0.3s ease; -webkit-tap-highlight-color: transparent;
     }
     .theme-btn:active { background: var(--s2); }
+    @keyframes theme-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .theme-btn.spin { animation: theme-spin 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
     .app-wordmark {
       position: fixed; z-index: 402;
       top: calc(env(safe-area-inset-top, 0px) + 24px);
@@ -3546,6 +3548,12 @@ function updateSheetNav() {
     localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
     applyTheme(isLight);
     swapTiles(isLight);
+    var btn = document.getElementById('themeBtn');
+    if (btn) {
+      btn.classList.remove('spin');
+      void btn.offsetWidth; // force reflow so animation restarts
+      btn.classList.add('spin');
+    }
   };
 
   // Apply saved preference on load — default is light mode

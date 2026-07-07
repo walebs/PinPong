@@ -1181,7 +1181,7 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
       <div class="profile-divider"></div>
-      <a href="/personvern" class="profile-item" style="text-decoration:none">
+      <button class="profile-item" onclick="openPersonvernPage()">
         <div class="profile-item-left">
           <span class="profile-item-icon" style="background:rgba(142,142,147,0.12);color:var(--muted)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -1189,7 +1189,7 @@
           <span style="font-size:15px;font-weight:500;color:var(--muted)">Personvern</span>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
+      </button>
     </div>
     <div class="profile-footer">
       <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" style="width:calc(100% - 48px);justify-content:center;font-size:15px;padding:14px 22px;">
@@ -1387,6 +1387,39 @@
     </div>
 
     <button class="rapport-submit" id="feilSubmitBtn" onclick="submitFeil()" data-i18n="feil.submit">Send rapport</button>
+  </div>
+</div>
+
+<!-- Personvern Page -->
+<div class="profile-page" id="personvernPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closePersonvernPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title">Personvern</span>
+    <div style="width:36px"></div>
+  </div>
+  <div style="padding:24px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Datainnsamling</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7">PinPong samler ikke inn persondata automatisk. Nettsiden bruker ingen informasjonskapsler (cookies) eller sporingsverktøy.</div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">E-post via kontaktskjema</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7">Dersom du frivillig oppgir e-postadressen din via kontaktskjemaet, brukes denne utelukkende for å svare deg. E-postadressen deles ikke med tredjeparter og slettes når henvendelsen er besvart.</div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Dine rettigheter</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7">Du har rett til innsyn i, retting av og sletting av opplysninger vi har om deg. Ta kontakt på <span style="color:var(--orange)">belal.jan@hotmail.com</span> for spørsmål eller forespørsler om sletting.</div>
+    </div>
+
+    <div style="text-align:center;margin-top:auto;padding-top:8px">
+      <div style="font-size:12px;color:var(--muted)">Sist oppdatert: juli 2026</div>
+    </div>
+
   </div>
 </div>
 
@@ -2538,7 +2571,8 @@ addSwipeToDismiss(document.getElementById('favPage'),      () => document.getEle
 addSwipeToDismiss(document.getElementById('settingsPage'), () => closeSettings());
 addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('feilPage'),     () => closeFeilPage());
-addSwipeToDismiss(document.getElementById('omPage'),       () => closeOmPage());
+addSwipeToDismiss(document.getElementById('omPage'),           () => closeOmPage());
+addSwipeToDismiss(document.getElementById('personvernPage'),   () => closePersonvernPage());
 
 </script>
 <script>
@@ -2757,11 +2791,10 @@ function profileSettings() {
   sp.style.transform  = '';
   sp.classList.add('open');
 }
-function openOmPage() {
-  document.getElementById('omPage').classList.add('open');
-}
-function closeOmPage() {
-  document.getElementById('omPage').classList.remove('open');
+function openOmPage() { document.getElementById('omPage').classList.add('open'); }
+function closeOmPage() { document.getElementById('omPage').classList.remove('open'); }
+function openPersonvernPage() { document.getElementById('personvernPage').classList.add('open'); }
+function closePersonvernPage() { document.getElementById('personvernPage').classList.remove('open'); }
 }
 
 function closeSettings() {
@@ -3605,7 +3638,7 @@ document.addEventListener('keydown', function(e) {
   if (document.getElementById('donateNudge')?.classList.contains('visible'))  { dismissDonateNudge(); return; }
   var pages = [['feilPage', closeFeilPage], ['rapportPage', closeRapport],
                ['settingsPage', closeSettings], ['favPage', closeFavPage],
-               ['omPage', closeOmPage], ['profilePage', closeProfile]];
+               ['omPage', closeOmPage], ['personvernPage', closePersonvernPage], ['profilePage', closeProfile]];
   for (var i = 0; i < pages.length; i++) {
     var el = document.getElementById(pages[i][0]);
     if (el && el.classList.contains('open')) { pages[i][1](); return; }

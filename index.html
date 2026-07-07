@@ -195,7 +195,7 @@
     .filter-cell-light.active svg { stroke: #FFD600; }
     /* Nearby strip */
     .nearby-container {
-      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 56px);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
       left: 0; right: 0; z-index: 299;
       opacity: 0; transform: translateY(10px); pointer-events: none;
       transition: opacity 0.35s ease, transform 0.35s ease;
@@ -575,10 +575,10 @@
     }
     .fav-empty-icon { font-size: 40px; margin-bottom: 12px; }
     .nearby-profile-btn {
-      position: absolute; top: 0; left: 16px;
+      position: absolute; top: -12px; left: 16px;
     }
     .nearby-locate-btn {
-      position: absolute; top: 0; right: 16px;
+      position: absolute; top: -12px; right: 16px;
     }
     .nearby-profile-btn, .nearby-locate-btn {
       width: 48px; height: 48px; background: var(--surface);

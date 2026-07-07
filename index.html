@@ -1506,7 +1506,7 @@
   </button>
 </div>
 <div class="bottom-sheet" id="bottomSheet">
-  <button class="sheet-close-top" aria-label="Lukk" onclick="closeSheet()">
+  <button class="sheet-close-top" aria-label="Lukk" onclick="closeSheetX()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
   <div id="sheetCard" style="display:flex;flex-direction:column;flex:1;min-height:0;">
@@ -2147,6 +2147,7 @@ function showLocPermissionDenied() {
 }
 
 var _locationDenied = false;
+var _returnToFavs   = false; // true when sheet was opened from Favoritter page
 function startLocationWatch() {
   if (!navigator.geolocation) return;
   if (_locationDenied) return; // don't re-prompt after user denied
@@ -2309,6 +2310,7 @@ function openSheet(idx, _fromNav) {
 function closeSheet() {
   // No-op when nothing is open — avoids marker icon churn + history writes on every map tap
   if (selectedIdx === null && !_bottomSheet.classList.contains('open')) return;
+  _returnToFavs = false; // cleared here; closeSheetX captures it before calling through
   // Always clear any lingering swipe/animation state
   _hSwipeActive = false;
   _cardAnimating = false;
@@ -2324,6 +2326,14 @@ function closeSheet() {
   leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], false, index)));
   selectedIdx = null;
   try { history.replaceState(null,'', location.pathname); } catch(e) {}
+}
+
+// Called specifically by the X button — returns to Favoritter page if that's where user came from
+function closeSheetX() {
+  var ret = _returnToFavs;
+  _returnToFavs = false;
+  closeSheet();
+  if (ret) setTimeout(profileFavoritter, 380);
 }
 
 map.on('click', closeSheet);
@@ -2438,6 +2448,7 @@ function profileFavoritter() {
       var card = e.target.closest('.fav-card');
       if (!card) return;
       var idx = parseInt(card.dataset.idx, 10);
+      _returnToFavs = true;
       closeFavPage();
       closeProfile();
       setTimeout(() => openSheet(idx), 480);
@@ -2559,7 +2570,7 @@ var LANG = {
     'profile.innstillinger':'Innstillinger',
     'profile.tips':         'Kjenner du et bord? 🏓',
     'profile.tips.sub':     'Tips oss om et sted!',
-    'profile.sub':          'Finn ledige bordtennisbord nær deg',
+    'profile.sub':          'Finn bordtennisbord nær deg',
     'fav.title':            '❤ Favoritter',
     'fav.empty':            'Du har ingen favoritter ennå.\nTrykk ❤ på et bord for å lagre det her.',
     'settings.title':       'Innstillinger',

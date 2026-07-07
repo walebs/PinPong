@@ -238,6 +238,7 @@
       background: var(--bg);
       transform: translateX(100%);
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: hidden;
       display: flex; flex-direction: column;
     }
     .profile-page.open { transform: translateX(0); }
@@ -491,17 +492,21 @@
     .rapport-textarea { padding-top: 4px; line-height: 1.5; }
     .rapport-divider { height: 1px; background: var(--border); margin: 0 16px; }
     .rapport-seg {
-      display: flex; background: var(--s2); border-radius: 9px;
-      padding: 3px; gap: 2px;
+      display: flex; align-items: stretch;
+      background: var(--s2); border-radius: 10px;
+      padding: 4px; gap: 3px;
     }
     .rapport-seg-full { width: 100%; }
     .rapport-seg-full .rapport-seg-btn { flex: 1; }
     .rapport-seg-btn {
       border: none; background: none; border-radius: 7px;
-      padding: 9px 14px; font-size: 14px; font-weight: 600;
+      padding: 11px 10px; font-size: 14px; font-weight: 600;
       color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1;
       transition: background 0.15s, color 0.15s;
       -webkit-tap-highlight-color: transparent;
+      min-height: 44px;
     }
     .rapport-seg-btn.active {
       background: var(--surface); color: var(--text);
@@ -1431,17 +1436,7 @@
       </div>
     </div>
 
-    <!-- CTAs -->
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button onclick="closeOmPage();closeProfile();setTimeout(profileRapporter,300)" style="width:100%;padding:14px;border-radius:13px;border:none;background:var(--orange);color:white;font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">
-        🏓 Meld inn et bord
-      </button>
-      <button onclick="closeOmPage();closeProfile();setTimeout(openFeilPage,300)" style="width:100%;padding:14px;border-radius:13px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">
-        ⚠️ Rapporter feil
-      </button>
-    </div>
-
-    <!-- Footer -->
+<!-- Footer -->
     <div style="text-align:center;padding:8px 0 4px">
       <div style="font-size:12px;color:var(--muted)">Versjon 1.0</div>
     </div>

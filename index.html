@@ -234,11 +234,10 @@
 
     /* ── Profile page ───────────────────────────────────── */
     .profile-page {
-      position: fixed; top: 0; left: 0; right: 0; height: 100dvh; z-index: 1300;
+      position: fixed; inset: 0; z-index: 1300;
       background: var(--bg);
       transform: translateX(100%);
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-      overflow: hidden;
       display: flex; flex-direction: column;
     }
     .profile-page.open { transform: translateX(0); }
@@ -274,7 +273,7 @@
     }
     .profile-body {
       flex: 1; padding: 24px 20px;
-      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 32px);
+      padding-bottom: max(calc(env(safe-area-inset-bottom,0px) + 32px), 72px);
       display: flex; flex-direction: column; gap: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       min-height: 0;

@@ -994,7 +994,6 @@
       transition: background 0.12s, transform 0.3s ease; -webkit-tap-highlight-color: transparent;
     }
     .theme-btn:active { background: var(--s2); }
-    body.light .theme-btn { transform: rotate(180deg); }
     .app-wordmark {
       position: fixed; z-index: 402;
       top: calc(env(safe-area-inset-top, 0px) + 24px);
@@ -3523,7 +3522,7 @@ function updateSheetNav() {
 // ── Light / dark mode ────────────────────────────────────
 (function() {
   var MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
-  var SUN_SVG  = `<path d="M3 12.79A9 9 0 1 0 12.79 3 7 7 0 0 1 3 12.79z"/>`;
+  var SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
   window.applyTheme = function applyTheme(light) {
     document.body.classList.toggle('light', light);

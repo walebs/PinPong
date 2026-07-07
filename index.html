@@ -243,7 +243,7 @@
     .profile-page.open { transform: translateX(0); }
     .profile-header {
       background: linear-gradient(160deg, #FF9500 0%, #e07800 100%);
-      padding: calc(env(safe-area-inset-top,0px) + 14px) 20px 36px;
+      padding: calc(env(safe-area-inset-top,0px) + 10px) 20px 18px;
       position: relative; flex-shrink: 0;
     }
     .profile-back {
@@ -253,17 +253,17 @@
     }
     .profile-logo-wrap {
       display: flex; flex-direction: column; align-items: center;
-      margin-top: 20px; gap: 6px;
+      margin-top: 8px; gap: 4px;
     }
     .profile-logo-circle {
-      width: 90px; height: 90px; border-radius: 50%;
+      width: 68px; height: 68px; border-radius: 50%;
       background: rgba(255,255,255,0.18);
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 24px rgba(0,0,0,0.18);
     }
     .profile-app-name {
       font-family: 'Russo One', 'Arial Black', sans-serif;
-      font-size: 22px; font-weight: 400;
+      font-size: 19px; font-weight: 400;
       letter-spacing: 3px; margin-right: -3px;
       color: white; margin-top: 4px;
       animation: wordmark-glow 3s ease-in-out infinite;
@@ -272,8 +272,8 @@
       font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500;
     }
     .profile-body {
-      flex: 1; padding: 24px 20px;
-      padding-bottom: max(calc(env(safe-area-inset-bottom,0px) + 32px), 72px);
+      flex: 1; padding: 16px 20px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
       display: flex; flex-direction: column; gap: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       min-height: 0;
@@ -287,7 +287,7 @@
     .profile-item {
       width: 100%; background: none; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 15px 16px; gap: 12px;
+      padding: 11px 16px; gap: 12px;
       font-size: 15px; font-weight: 500; color: var(--text);
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s;
@@ -305,7 +305,7 @@
       height: 1px; background: var(--border); margin: 0 16px;
     }
     .profile-footer {
-      margin-top: auto; padding-top: 32px;
+      margin-top: auto; padding-top: 16px;
       text-align: center; font-size: 13px;
       color: var(--muted); letter-spacing: 0.2px;
     }
@@ -1110,7 +1110,7 @@
     </button>
     <div class="profile-logo-wrap">
       <div class="profile-logo-circle">
-        <img src="icons/icon-profile.png" width="90" height="90" alt="PinPong" style="border-radius:50%;display:block"/>
+        <img src="icons/icon-profile.png" width="68" height="68" alt="PinPong" style="border-radius:50%;display:block"/>
       </div>
       <div class="profile-app-name">P<span style="font-size:18px;vertical-align:1px;margin-left:-5px;margin-right:-3px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
       <div class="profile-app-sub" data-i18n="profile.sub">Finn ledige bordtennisbord nær deg</div>

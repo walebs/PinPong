@@ -1397,38 +1397,56 @@
     <span class="fav-header-title" data-i18n="profile.om">Om PinPong</span>
     <div style="width:36px"></div>
   </div>
-  <div style="padding:28px 24px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
+  <div style="padding:24px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
 
-    <!-- Icon + app name -->
-    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px;gap:10px">
-      <img src="icons/icon-profile.png" width="72" height="72" alt="PinPong" style="border-radius:50%;box-shadow:0 4px 18px rgba(0,0,0,0.15)"/>
+    <!-- Icon + live stat -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0 4px">
+      <img src="icons/icon-profile.png" width="68" height="68" alt="PinPong" style="border-radius:50%;box-shadow:0 4px 18px rgba(0,0,0,0.12)"/>
       <div style="font-family:'Russo One','Arial Black',sans-serif;font-size:20px;letter-spacing:3px;color:var(--orange)">P<span style="font-size:16px;vertical-align:1px;margin-left:-4px;margin-right:-3px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+      <!-- Live table count -->
+      <div style="font-size:13px;color:var(--muted)">
+        <span id="omTableCount" style="font-weight:700;color:var(--orange)">—</span> bord på kartet
+      </div>
     </div>
 
-    <!-- Story sections -->
-    <div style="display:flex;flex-direction:column;gap:20px">
-
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px">
-        <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.why.title">Hvorfor PinPong?</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.65" data-i18n="om.why.body">Bordtennis er en av de mest sosiale sportene som finnes — men det er overraskende vanskelig å finne et ledig bord i Oslo. PinPong ble laget for å gjøre det enkelt å oppdage utendørs og innendørs bordtennisbord nær deg, uten å måtte google seg frem.</div>
+    <!-- The story -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:12px">Historien</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.75">
+        Bordtennis er en av de mest sosiale sportene som finnes, men i Oslo er det overraskende vanskelig å finne et bord når du faktisk trenger det. PinPong startet med et helt konkret problem: altfor mange turer med racket og ball i sekken til parker der bordet enten ikke fantes, var opptatt, dårlig kvalitet eller ødelagt. Etter tre år med frustrasjon ble det klart at ingen kom til å lage løsningen — så det måtte gjøres selv.
+        <br><br>
+        Det som begynte som et lite hobbyprosjekt har vokst til en fullverdig app med live-kart, bilder, veibeskrivelser, filtrering og masse funksjonaliteter. Målet er enkelt: du skal kunne finne nærmeste bord og spille på under ti minutter.
+        <br><br>
+        PinPong er ikke ment å være mitt prosjekt alene. Å holde kartet oppdatert og komplett har jeg dessverre ikke ressursene eller tiden til, men det har vi kanskje sammen! Hvert bord som meldes inn og hvert bilde som lastes opp, gjør nettsiden bedre for alle som spiller etter deg. Appen er bygget av en spiller, for spillere, med kjærlighet for sporten og for Oslo.
+        <br><br>
+        <span style="font-style:italic;color:var(--muted)">Ser du et bord som mangler? Meld det inn — så er du en del av historien!</span>
       </div>
-
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px">
-        <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.story.title">Historien</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.65" data-i18n="om.story.body">PinPong startet som et lite hobbyprosjekt — én person, én idé, og altfor mange turer til parker uten å finne et bord. Det vokste til en fullverdig app med kart, filtre, og et community som bidrar med nye bord. Alt er bygget med kjærlighet for sporten og for Oslo.</div>
-      </div>
-
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px">
-        <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.community.title">Community-drevet</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.65" data-i18n="om.community.body">Kartet er levende fordi folk bidrar. Vet du om et bord som mangler? Tips oss! Ser du noe som er feil? Rapporter det. Sammen gjør vi det lettere for alle å finne en god kamp.</div>
-      </div>
-
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px;text-align:center">
-        <div style="font-size:22px;margin-bottom:6px">🏓</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6" data-i18n="om.footer">Laget med kjærlighet i Oslo, Norge.<br>Versjon 1.0</div>
-      </div>
-
     </div>
+
+    <!-- Made by -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🧑‍💻</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Wale Belal Sayed</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Laget i Oslo, Norge 🇳🇴</div>
+      </div>
+    </div>
+
+    <!-- CTAs -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="closeOmPage();closeProfile();setTimeout(profileRapporter,300)" style="width:100%;padding:14px;border-radius:13px;border:none;background:var(--orange);color:white;font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        🏓 Meld inn et bord
+      </button>
+      <button onclick="closeOmPage();closeProfile();setTimeout(openFeilPage,300)" style="width:100%;padding:14px;border-radius:13px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        ⚠️ Rapporter feil
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:8px 0 4px">
+      <div style="font-size:12px;color:var(--muted)">Versjon 1.0</div>
+    </div>
+
   </div>
 </div>
 
@@ -1790,6 +1808,9 @@ function updateProgress() {
   _progressArc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
   _progressFraction.textContent = `${verified}/${total}`;
   updateMiniIndicators();
+  // Keep Om page live stat in sync
+  var omCount = document.getElementById('omTableCount');
+  if (omCount) omCount.textContent = total;
 }
 
 var map = L.map('map', {

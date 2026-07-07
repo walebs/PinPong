@@ -1164,6 +1164,19 @@
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="openOmPage()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(90,160,255,0.12);color:#4A9EFF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><polyline points="11 12 12 12 12 16"/></svg>
+          </span>
+          <div>
+            <div data-i18n="profile.om">Om PinPong</div>
+            <div class="profile-item-sub" data-i18n="profile.om.sub">Historien bak appen</div>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
     <div class="profile-footer">
       <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" style="width:calc(100% - 48px);justify-content:center;font-size:15px;padding:14px 22px;">
@@ -1373,6 +1386,50 @@
     <div style="width:36px"></div>
   </div>
   <div class="fav-list" id="favList"></div>
+</div>
+
+<!-- Om Page -->
+<div class="profile-page" id="omPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeOmPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="profile.om">Om PinPong</span>
+    <div style="width:36px"></div>
+  </div>
+  <div style="padding:28px 24px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1">
+
+    <!-- Icon + app name -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px;gap:10px">
+      <img src="icons/icon-profile.png" width="72" height="72" alt="PinPong" style="border-radius:50%;box-shadow:0 4px 18px rgba(0,0,0,0.15)"/>
+      <div style="font-family:'Russo One','Arial Black',sans-serif;font-size:20px;letter-spacing:3px;color:var(--orange)">P<span style="font-size:16px;vertical-align:1px;margin-left:-4px;margin-right:-3px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+    </div>
+
+    <!-- Story sections -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px">
+        <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.why.title">Hvorfor PinPong?</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.65" data-i18n="om.why.body">Bordtennis er en av de mest sosiale sportene som finnes — men det er overraskende vanskelig å finne et ledig bord i Oslo. PinPong ble laget for å gjøre det enkelt å oppdage utendørs og innendørs bordtennisbord nær deg, uten å måtte google seg frem.</div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px">
+        <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.story.title">Historien</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.65" data-i18n="om.story.body">PinPong startet som et lite hobbyprosjekt — én person, én idé, og altfor mange turer til parker uten å finne et bord. Det vokste til en fullverdig app med kart, filtre, og et community som bidrar med nye bord. Alt er bygget med kjærlighet for sporten og for Oslo.</div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px">
+        <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.community.title">Community-drevet</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.65" data-i18n="om.community.body">Kartet er levende fordi folk bidrar. Vet du om et bord som mangler? Tips oss! Ser du noe som er feil? Rapporter det. Sammen gjør vi det lettere for alle å finne en god kamp.</div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px;text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">🏓</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6" data-i18n="om.footer">Laget med kjærlighet i Oslo, Norge.<br>Versjon 1.0</div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 
@@ -2444,6 +2501,7 @@ addSwipeToDismiss(document.getElementById('favPage'),      () => document.getEle
 addSwipeToDismiss(document.getElementById('settingsPage'), () => closeSettings());
 addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
 addSwipeToDismiss(document.getElementById('feilPage'),     () => closeFeilPage());
+addSwipeToDismiss(document.getElementById('omPage'),       () => closeOmPage());
 
 </script>
 <script>
@@ -2497,6 +2555,15 @@ var LANG = {
     'rapport.title':        'Tips oss om et bord!',
     'profile.feil':         'Rapporter feil',
     'profile.feil.sub':     'Noe som ikke stemmer?',
+    'profile.om':           'Om PinPong',
+    'profile.om.sub':       'Historien bak appen',
+    'om.why.title':         'Hvorfor PinPong?',
+    'om.why.body':          'Bordtennis er en av de mest sosiale sportene som finnes — men det er overraskende vanskelig å finne et ledig bord i Oslo. PinPong ble laget for å gjøre det enkelt å oppdage utendørs og innendørs bordtennisbord nær deg, uten å måtte google seg frem.',
+    'om.story.title':       'Historien',
+    'om.story.body':        'PinPong startet som et lite hobbyprosjekt — én person, én idé, og altfor mange turer til parker uten å finne et bord. Det vokste til en fullverdig app med kart, filtre, og et community som bidrar med nye bord. Alt er bygget med kjærlighet for sporten og for Oslo.',
+    'om.community.title':   'Community-drevet',
+    'om.community.body':    'Kartet er levende fordi folk bidrar. Vet du om et bord som mangler? Tips oss! Ser du noe som er feil? Rapporter det. Sammen gjør vi det lettere for alle å finne en god kamp.',
+    'om.footer':            'Laget med kjærlighet i Oslo, Norge.\nVersjon 1.0',
     'feil.title':           'Rapporter feil',
     'feil.label.subject':   'Kategori',
     'feil.label.desc':      'Beskriv problemet',
@@ -2508,7 +2575,7 @@ var LANG = {
     'feil.s5':              'Annet',
     'feil.photo':           'Legg til bilde (valgfritt)',
     'vipps.btn':            'Støtt PINPONG med Vipps!',
-    'vipps.nudge.title':    'Lyst til å støtte arbeidet?',
+    'vipps.nudge.title':    'Lyst til å støtte arbeidet? 🎉',
     'vipps.nudge.sub':      '',
     'vipps.modal.title':    'Støtt arbeidet med Vipps!',
     'vipps.modal.sub':      'Skann med telefonkameraet',
@@ -2561,6 +2628,15 @@ var LANG = {
     'rapport.title':        'Tip us about a table!',
     'profile.feil':         'Report an issue',
     'profile.feil.sub':     'Something not right?',
+    'profile.om':           'About PinPong',
+    'profile.om.sub':       'The story behind the app',
+    'om.why.title':         'Why PinPong?',
+    'om.why.body':          'Table tennis is one of the most social sports around — but finding an available table in Oslo is surprisingly hard. PinPong was built to make it easy to discover outdoor and indoor ping pong tables near you, without having to google around.',
+    'om.story.title':       'The Story',
+    'om.story.body':        'PinPong started as a small hobby project — one person, one idea, and way too many trips to parks without finding a table. It grew into a full app with maps, filters, and a community that contributes new tables. Built with love for the sport and for Oslo.',
+    'om.community.title':   'Community-driven',
+    'om.community.body':    'The map stays alive because people contribute. Know a table that\'s missing? Tip us! See something wrong? Report it. Together we make it easier for everyone to find a good game.',
+    'om.footer':            'Made with love in Oslo, Norway.\nVersion 1.0',
     'feil.title':           'Report an issue',
     'feil.label.subject':   'Category',
     'feil.label.desc':      'Describe the issue',
@@ -2572,7 +2648,7 @@ var LANG = {
     'feil.s5':              'Other',
     'feil.photo':           'Add photo (optional)',
     'vipps.btn':            'Support PINPONG on Vipps!',
-    'vipps.nudge.title':    'Want to support the project?',
+    'vipps.nudge.title':    'Want to support the project? 🎉',
     'vipps.nudge.sub':      '',
     'vipps.modal.title':    'Support our work on Vipps!',
     'vipps.modal.sub':      'Scan with your phone camera',
@@ -2644,6 +2720,13 @@ function profileSettings() {
   sp.style.transform  = '';
   sp.classList.add('open');
 }
+function openOmPage() {
+  document.getElementById('omPage').classList.add('open');
+}
+function closeOmPage() {
+  document.getElementById('omPage').classList.remove('open');
+}
+
 function closeSettings() {
   var sp = document.getElementById('settingsPage');
   sp.style.transition = '';
@@ -3484,7 +3567,8 @@ document.addEventListener('keydown', function(e) {
   if (document.getElementById('vippsModalBg')?.classList.contains('visible')) { closeVippsModal(); return; }
   if (document.getElementById('donateNudge')?.classList.contains('visible'))  { dismissDonateNudge(); return; }
   var pages = [['feilPage', closeFeilPage], ['rapportPage', closeRapport],
-               ['settingsPage', closeSettings], ['favPage', closeFavPage], ['profilePage', closeProfile]];
+               ['settingsPage', closeSettings], ['favPage', closeFavPage],
+               ['omPage', closeOmPage], ['profilePage', closeProfile]];
   for (var i = 0; i < pages.length; i++) {
     var el = document.getElementById(pages[i][0]);
     if (el && el.classList.contains('open')) { pages[i][1](); return; }
@@ -3539,7 +3623,7 @@ function dismissDonateNudge() {
 <div class="donate-nudge-bg" id="donateNudgeBg" onclick="dismissDonateNudge()"></div>
 <div class="donate-nudge" id="donateNudge">
   <button class="donate-nudge-close" aria-label="Lukk" onclick="dismissDonateNudge()">✕</button>
-  <div class="donate-nudge-title" data-i18n="vipps.nudge.title">Lyst til å støtte arbeidet?</div>
+  <div class="donate-nudge-title" data-i18n="vipps.nudge.title">Lyst til å støtte arbeidet? 🎉</div>
   <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" onclick="dismissDonateNudge()" style="margin-bottom:0;margin-top:4px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.6c-5.3 0-9.6-4.3-9.6-9.6S6.7 2.4 12 2.4s9.6 4.3 9.6 9.6-4.3 9.6-9.6 9.6zm.9-14.3c-.7 0-1.3.4-1.6 1L8.6 13c-.1.2-.1.4 0 .5.1.2.3.3.5.3h1.5c.4 0 .8-.3 1-.7l.7-1.5 1.8 4c.2.4.6.7 1 .7h1c.2 0 .4-.1.5-.3.1-.2.1-.4 0-.6l-2.7-8.2c-.3-.6-.9-1-1.5-1.1h-.5z"/></svg>
     <span data-i18n="vipps.btn">Støtt PINPONG med Vipps!</span>

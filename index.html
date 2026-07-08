@@ -3424,19 +3424,80 @@ function updateSheetNav() {
 }
 
 // ── Live horizontal card swipe ───────────────────────────
+// True peek-ahead carousel: next card is pre-rendered and follows the finger
+// in real time, eliminating the white-flash between cards.
 (function() {
   var sx = 0, sy = 0, liveDx = 0, dirLocked = null, active = false;
   var LOCK_PX     = 7;    // px before direction is committed
   var COMMIT_FRAC = 0.28; // fraction of card width needed to commit
   var RESIST      = 0.18; // rubber-band at first/last card
+  var _ghost = null;      // pre-rendered next-card element
+  var _ghostDir = 0;      // direction the ghost was built for
 
   function getCard() { return document.getElementById('sheetCard'); }
+
+  // Build a lightweight next-card clone with real content, positioned off-screen.
+  // The image is loaded immediately so it's cached by the time the swipe commits.
+  function buildGhost(nextIdx, dir) {
+    if (_ghost) { _ghost.remove(); _ghost = null; }
+    var card = getCard();
+    if (!card) return;
+    var t = TABLES[nextIdx];
+    var sheetW = _bottomSheet.offsetWidth;
+
+    // Clone the card shell (keeps CSS classes / structure, no id conflicts)
+    var g = card.cloneNode(true);
+    g.id = '';
+    g.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    g.querySelectorAll('[onclick]').forEach(el => el.removeAttribute('onclick'));
+    g.style.cssText = (
+      'position:absolute;top:0;left:0;right:0;bottom:0;' +
+      'pointer-events:none;z-index:3;will-change:transform;overflow:hidden;' +
+      'transition:none;transform:translateX(' + (dir > 0 ? sheetW : -sheetW) + 'px);'
+    );
+
+    // Populate: photo
+    var photo = g.querySelector('.sheet-photo');
+    if (photo) {
+      if (t.bilde_url) { photo.src = t.bilde_url; photo.className = 'sheet-photo visible'; }
+      else             { photo.src = ''; photo.className = 'sheet-photo'; }
+    }
+    // Populate: type tag
+    var typeEl = g.querySelector('.sheet-type');
+    if (typeEl) {
+      typeEl.innerHTML = '<span>' + (t.type === 'outdoor' ? '🏓 Utendørs' : '🍺 Innendørs') + '</span>';
+      typeEl.style.color = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    }
+    // Populate: name
+    var nameEl = g.querySelector('.sheet-name');
+    if (nameEl) nameEl.textContent = t.navn || '';
+    // Clear stats/notes (ghost is just for visual continuity during the drag)
+    var statsEl = g.querySelector('.sheet-stats-col');
+    if (statsEl) statsEl.innerHTML = '';
+    var noteEl = g.querySelector('.sheet-notes-col');
+    if (noteEl) noteEl.innerHTML = '';
+    // Hide nav bar and heart in ghost
+    var navBar = g.querySelector('.sheet-nav-bar');
+    if (navBar) navBar.style.visibility = 'hidden';
+    var heart = g.querySelector('.btn-heart-inline');
+    if (heart) heart.style.visibility = 'hidden';
+
+    card.parentNode.insertBefore(g, card.nextSibling);
+    _ghost = g;
+    _ghostDir = dir;
+  }
+
+  function clearGhost() {
+    if (_ghost) { _ghost.remove(); _ghost = null; }
+    _ghostDir = 0;
+  }
 
   _bottomSheet.addEventListener('touchstart', e => {
     if (!_bottomSheet.classList.contains('open') || selectedIdx === null) return;
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
     liveDx = 0; dirLocked = null; active = true;
+    clearGhost();
   }, { passive: true });
 
   _bottomSheet.addEventListener('touchmove', e => {
@@ -3447,6 +3508,14 @@ function updateSheetNav() {
     if (!dirLocked) {
       if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
       dirLocked = Math.abs(dx) >= Math.abs(dy) * 1.1 ? 'h' : 'v';
+      // Direction just locked — build the ghost card immediately
+      if (dirLocked === 'h') {
+        var initDir  = dx < 0 ? 1 : -1;
+        var initNext = _swipePos + initDir;
+        if (initNext >= 0 && initNext < _swipeList.length) {
+          buildGhost(_swipeList[initNext], initDir);
+        }
+      }
     }
     if (dirLocked !== 'h') return;
 
@@ -3454,17 +3523,34 @@ function updateSheetNav() {
     var card = getCard();
     if (!card || _cardAnimating) return;
 
-    var atEdge = (dx > 0 && _swipePos <= 0) || (dx < 0 && _swipePos >= _swipeList.length - 1);
+    var dir = dx < 0 ? 1 : -1;
+    var nextPos = _swipePos + dir;
+    var atEdge  = nextPos < 0 || nextPos >= _swipeList.length;
     liveDx = atEdge ? dx * RESIST : dx;
 
+    // Move current card
     card.style.transition = 'none';
-    card.style.transform  = `translateX(${liveDx}px)`;
+    card.style.transform  = 'translateX(' + liveDx + 'px)';
+
+    // Rebuild ghost if direction reversed mid-swipe
+    if (!atEdge && _ghost && _ghostDir !== dir) {
+      buildGhost(_swipeList[nextPos], dir);
+    } else if (atEdge && _ghost) {
+      clearGhost();
+    }
+
+    // Move ghost in sync with finger
+    if (_ghost && !atEdge) {
+      var sheetW = _bottomSheet.offsetWidth;
+      _ghost.style.transform = 'translateX(' + ((dir > 0 ? sheetW : -sheetW) + liveDx) + 'px)';
+    }
   }, { passive: true });
 
   // Safety: touchcancel clears all state (phone call, scroll lock, etc.)
   _bottomSheet.addEventListener('touchcancel', () => {
     if (!active) return;
     active = false; dirLocked = null; liveDx = 0; _hSwipeActive = false;
+    clearGhost();
     var card = getCard();
     if (card) { card.style.transition = ''; card.style.transform = ''; }
   });
@@ -3476,7 +3562,7 @@ function updateSheetNav() {
     if (dirLocked !== 'h') { _hSwipeActive = false; liveDx = 0; return; }
 
     var card = getCard();
-    var sheetW = _bottomSheet.offsetWidth;
+    var sheetW   = _bottomSheet.offsetWidth;
     var threshold = sheetW * COMMIT_FRAC;
     var dir  = liveDx < 0 ? 1 : -1;
     var next = _swipePos + dir;
@@ -3485,34 +3571,60 @@ function updateSheetNav() {
 
     if (commit) {
       _cardAnimating = true;
-      _hSwipeActive  = false; // release immediately so X / dismiss always work
+      _hSwipeActive  = false;
       _swipePos = next;
+      var ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      var dur  = 'transform 0.26s ' + ease;
 
-      // Fly current card off-screen from its dragged position
-      if (card) {
-        card.style.transition = 'transform 0.2s ease-in';
-        card.style.transform  = `translateX(${dir < 0 ? sheetW : -sheetW}px)`;
+      if (card && _ghost) {
+        // Both cards animate to their final positions simultaneously — no white gap
+        card.style.transition  = dur;
+        card.style.transform   = 'translateX(' + (dir < 0 ? sheetW : -sheetW) + 'px)';
+        _ghost.style.transition = dur;
+        _ghost.style.transform  = 'translateX(0)';
+
+        setTimeout(() => {
+          // Ghost has slid into place — now swap in the real card underneath it
+          _cardAnimating = false;
+          openSheet(_swipeList[_swipePos], true);   // populates real card (off-screen)
+          if (card) { card.style.transition = 'none'; card.style.transform = ''; }
+          clearGhost();  // remove ghost — real card (same content) is now visible
+        }, 270);
+
+      } else {
+        // Fallback: no ghost (e.g. direction changed at the last moment)
+        clearGhost();
+        if (card) {
+          card.style.transition = 'transform 0.16s ease-in';
+          card.style.transform  = 'translateX(' + (dir < 0 ? sheetW : -sheetW) + 'px)';
+        }
+        openSheet(_swipeList[_swipePos], true);
+        setTimeout(() => {
+          if (card) {
+            card.style.transition = 'none';
+            card.style.transform  = 'translateX(' + (dir < 0 ? -sheetW : sheetW) + 'px)';
+            void card.offsetWidth;
+            card.style.transition = 'transform 0.3s ' + ease;
+            card.style.transform  = '';
+          }
+          setTimeout(() => { if (card) card.style.transition = ''; _cardAnimating = false; }, 320);
+        }, 160);
       }
 
-      setTimeout(() => {
-        openSheet(_swipeList[_swipePos], true);
-        if (card) {
-          card.style.transition = 'none';
-          card.style.transform  = `translateX(${dir < 0 ? -sheetW : sheetW}px)`;
-          void card.offsetWidth;
-          card.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
-          card.style.transform  = '';
-        }
-        setTimeout(() => {
-          if (card) card.style.transition = '';
-          _cardAnimating = false;
-        }, 360);
-      }, 185);
-
     } else {
-      // Spring back to center
+      // Not committed — spring both cards back to their resting positions
+      var springEase = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+      if (_ghost) {
+        var gDir = _ghostDir;
+        var gSheetW = _bottomSheet.offsetWidth;
+        var ghostRef = _ghost;
+        _ghost = null; _ghostDir = 0;
+        ghostRef.style.transition = springEase;
+        ghostRef.style.transform  = 'translateX(' + (gDir > 0 ? gSheetW : -gSheetW) + 'px)';
+        setTimeout(() => { if (ghostRef.parentNode) ghostRef.remove(); }, 360);
+      }
       if (card) {
-        card.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+        card.style.transition = springEase;
         card.style.transform  = '';
         setTimeout(() => { if (card) card.style.transition = ''; }, 360);
       }

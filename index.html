@@ -107,17 +107,20 @@
       font-size: 7px; font-weight: 700; letter-spacing: 0.8px;
       color: var(--muted); pointer-events: none; line-height: 1;
     }
-    /* Orange activity dot — corner badge on the filter button */
-    .filter-dot {
-      position: absolute; top: 6px; right: 6px;
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--orange);
+    /* Multi-color activity dots — corner badge on the filter button */
+    .filter-dot-wrap {
+      position: absolute; top: 5px; right: 5px;
+      display: flex; flex-wrap: wrap-reverse; gap: 2px;
+      max-width: 20px; justify-content: flex-end; align-items: flex-end;
       opacity: 0; transform: scale(0); pointer-events: none;
       transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
       z-index: 1;
     }
-    .filter-dot.visible { opacity: 1; transform: scale(1); }
-    .filter-fab.open .filter-dot { opacity: 0; transform: scale(0); }
+    .filter-dot-wrap.visible { opacity: 1; transform: scale(1); }
+    .filter-fab.open .filter-dot-wrap { opacity: 0; transform: scale(0); }
+    .filter-dot-mini {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
     .filter-toggle:active { background: var(--s2); transform: scale(0.93); }
     .filter-panel {
       position: absolute; top: 0; left: 0;
@@ -1041,7 +1044,7 @@
       <line x1="5" y1="11.5" x2="11" y2="11.5"/>
     </svg>
     <span class="filter-toggle-label">FILTER</span>
-    <span class="filter-dot" id="filterDot"></span>
+    <span class="filter-dot-wrap" id="filterDotWrap"></span>
   </button>
   <!-- Verified-count badge — always visible under filter button -->
   <div class="filter-progress-badge" id="filterProgress">
@@ -1171,7 +1174,7 @@
           <span class="profile-item-icon" style="background:rgba(142,142,147,0.12);color:var(--muted)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </span>
-          <span style="font-size:15px;font-weight:500;color:var(--text)">Personvern</span>
+          <span style="font-size:15px;font-weight:500;color:var(--text)" data-i18n="privat.title">Personvern</span>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -1616,11 +1619,20 @@ var _mapsOverlay     = document.getElementById('mapsOverlay');
 var _mapsModal       = document.getElementById('mapsModal');
 var _progressArc     = document.getElementById('progressArc');
 var _progressFraction= document.getElementById('progressFraction');
-var _filterDot = document.getElementById('filterDot');
+var _filterDotWrap = document.getElementById('filterDotWrap');
 
 function updateMiniIndicators() {
-  var nonDefault = showFavOnly || showVerifiedOnly || showRoofOnly || showLightOnly || !showOutdoor || !showBar;
-  _filterDot.classList.toggle('visible', nonDefault);
+  var dots = [];
+  if (!showOutdoor)     dots.push('var(--orange)');
+  if (!showBar)         dots.push('var(--purple)');
+  if (showFavOnly)      dots.push('#ff3b30');
+  if (showVerifiedOnly) dots.push('var(--green)');
+  if (showRoofOnly)     dots.push('#64a0ff');
+  if (showLightOnly)    dots.push('#FFD600');
+  _filterDotWrap.innerHTML = dots.map(c =>
+    '<span class="filter-dot-mini" style="background:' + c + '"></span>'
+  ).join('');
+  _filterDotWrap.classList.toggle('visible', dots.length > 0);
 }
 
 var SHEETS_CSV_URL = "/api/tables";
@@ -2642,7 +2654,7 @@ var LANG = {
     'filter.inne':          'IN',
     'filter.tak':           'ROOF',
     'filter.likte':         'LIKED',
-    'filter.besøkt':        'VERIFISERT',
+    'filter.besøkt':        'VERIFIED',
     'filter.lys':           'LIGHT',
     'profile.favoritter':   'Favorites',
     'profile.innstillinger':'Settings',

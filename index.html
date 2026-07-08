@@ -645,7 +645,7 @@
     .bottom-sheet {
       position: fixed; bottom: 24px; left: 50%; z-index: 500;
       width: calc(100% - 32px); max-width: 400px;
-      height: auto; max-height: min(560px, calc(100dvh - 110px));
+      height: min(560px, calc(100dvh - 110px));
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
       transform: translate(-50%, calc(100% + 40px));
@@ -655,7 +655,7 @@
       display: flex; flex-direction: column;
     }
     @media (max-width: 480px) {
-      .bottom-sheet { max-height: min(580px, calc(100dvh - 100px)); }
+      .bottom-sheet { height: min(580px, calc(100dvh - 100px)); }
       .sheet-photo { height: 195px; }
       .sheet-body { padding: 10px 14px calc(8px + env(safe-area-inset-bottom, 0px)); }
       .sheet-type { font-size: 10px; margin-bottom: 2px; }
@@ -1395,28 +1395,28 @@
     <button class="profile-back" aria-label="Tilbake" onclick="closePersonvernPage()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span class="fav-header-title">Personvern</span>
+    <span class="fav-header-title" data-i18n="privat.title">Personvern</span>
     <div style="width:36px"></div>
   </div>
   <div style="padding:24px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
-      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Datainnsamling</div>
-      <div style="font-size:14px;color:var(--text);line-height:1.7">PinPong samler ikke inn persondata automatisk. Nettsiden bruker ingen informasjonskapsler (cookies) eller sporingsverktøy.</div>
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px" data-i18n="privat.data.title">Datainnsamling</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7" data-i18n="privat.data.body">PinPong samler ikke inn persondata automatisk. Nettsiden bruker ingen informasjonskapsler (cookies) eller sporingsverktøy.</div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
-      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">E-post via kontaktskjema</div>
-      <div style="font-size:14px;color:var(--text);line-height:1.7">Dersom du frivillig oppgir e-postadressen din via kontaktskjemaet, brukes denne utelukkende for å svare deg. E-postadressen deles ikke med tredjeparter og slettes når henvendelsen er besvart.</div>
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px" data-i18n="privat.email.title">E-post via kontaktskjema</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7" data-i18n="privat.email.body">Dersom du frivillig oppgir e-postadressen din via kontaktskjemaet, brukes denne utelukkende for å svare deg. E-postadressen deles ikke med tredjeparter og slettes når henvendelsen er besvart.</div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
-      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Dine rettigheter</div>
-      <div style="font-size:14px;color:var(--text);line-height:1.7">Du har rett til innsyn i, retting av og sletting av opplysninger vi har om deg. Ta kontakt på <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for spørsmål eller forespørsler om sletting.</div>
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px" data-i18n="privat.rights.title">Dine rettigheter</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7" data-i18n-html="privat.rights.body">Du har rett til innsyn i, retting av og sletting av opplysninger vi har om deg. Ta kontakt på <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for spørsmål eller forespørsler om sletting.</div>
     </div>
 
     <div style="text-align:center;margin-top:auto;padding-top:8px">
-      <div style="font-size:12px;color:var(--muted)">Sist oppdatert: juli 2026</div>
+      <div style="font-size:12px;color:var(--muted)" data-i18n="privat.updated">Sist oppdatert: juli 2026</div>
     </div>
 
   </div>
@@ -1451,27 +1451,19 @@
       <div style="font-family:'Russo One','Arial Black',sans-serif;font-size:20px;letter-spacing:3px;color:var(--orange)">P<span style="font-size:16px;vertical-align:1px;margin-left:-4px;margin-right:-3px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
       <!-- Live table count -->
       <div style="font-size:13px;color:var(--muted)">
-        <span id="omTableCount" style="font-weight:700;color:var(--orange)">—</span> bord på kartet
+        <span id="omTableCount" style="font-weight:700;color:var(--orange)">—</span> <span data-i18n="om.tables.label">bord på kartet</span>
       </div>
     </div>
 
     <!-- The story -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
-      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:12px">Historien</div>
-      <div style="font-size:14px;color:var(--text);line-height:1.75">
-        Bordtennis er en av de morsomste sportene som finnes, men i Oslo er det overraskende vanskelig å finne et bord utover den ene eller to man allerede kjenner til. Altfor ofte ender man opp med racket og ball i sekken på vei til en park der bordet viser seg å være opptatt, ødelagt eller ikke der i det hele tatt. Etter tre år med den frustrasjonen ble det klart at ingen andre kom til å lage en løsning — så jeg laget den selv.
-        <br><br>
-        Det som begynte som et ide, vokste til en fullverdig app med live-kart, bilder, veibeskrivelser, filtrering og masse funksjonaliteter. Målet er enkelt: du skal kunne finne nærmeste bord og spille på under ti minutter. Dette har vi klart å oppnå!
-        <br><br>
-        PinPong er ikke ment å være mitt prosjekt alene. Å holde kartet oppdatert og komplett har jeg dessverre ikke ressursene eller tiden til, men jeg tror det er noe vi kanskje kan få til sammen! Hvert bord som meldes inn gjør nettsiden bedre for alle som spiller etter deg. Dette er en app bygget av en spiller, for spillere, med kjærlighet for sporten og for Oslo.
-        <br><br>
-        <span style="font-style:italic;color:var(--muted)">Ser du et bord som mangler? Meld det inn — så kan du bli en del av historien!</span>
-      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:12px" data-i18n="om.story.title">Historien</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.75" data-i18n-html="om.story.body">Bordtennis er en av de morsomste sportene som finnes, men i Oslo er det overraskende vanskelig å finne et bord utover den ene eller to man allerede kjenner til. Altfor ofte ender man opp med racket og ball i sekken på vei til en park der bordet viser seg å være opptatt, ødelagt eller ikke der i det hele tatt. Etter tre år med den frustrasjonen ble det klart at ingen andre kom til å lage en løsning — så jeg laget den selv.<br><br>Det som begynte som et ide, vokste til en fullverdig app med live-kart, bilder, veibeskrivelser, filtrering og masse funksjonaliteter. Målet er enkelt: du skal kunne finne nærmeste bord og spille på under ti minutter. Dette har vi klart å oppnå!<br><br>PinPong er ikke ment å være mitt prosjekt alene. Å holde kartet oppdatert og komplett har jeg dessverre ikke ressursene eller tiden til, men jeg tror det er noe vi kanskje kan få til sammen! Hvert bord som meldes inn gjør nettsiden bedre for alle som spiller etter deg. Dette er en app bygget av en spiller, for spillere, med kjærlighet for sporten og for Oslo.<br><br><span style="font-style:italic;color:var(--muted)">Ser du et bord som mangler? Meld det inn — så kan du bli en del av historien!</span></div>
     </div>
 
     <!-- Made by -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
-      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px">Utviklet av</div>
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.dev.title">Utviklet av</div>
       <div style="font-size:15px;font-weight:600;color:var(--text)">Wale Belal Sayed</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">
         BSc Informatikk: Programmering og systemarkitektur, UiO<br>
@@ -1481,7 +1473,7 @@
 
 <!-- Footer -->
     <div style="text-align:center;padding:8px 0 4px;margin-top:auto">
-      <div style="font-size:12px;color:var(--muted)">Versjon 1.0</div>
+      <div style="font-size:12px;color:var(--muted)" data-i18n="om.version">Versjon 1.0</div>
     </div>
 
   </div>
@@ -2650,6 +2642,19 @@ var LANG = {
     'vipps.modal.title':    'Støtt arbeidet med Vipps!',
     'vipps.modal.sub':      'Skann med telefonkameraet',
     'vipps.modal.close':    'Lukk',
+    'om.tables.label':      'bord på kartet',
+    'om.story.title':       'Historien',
+    'om.story.body':        'Bordtennis er en av de morsomste sportene som finnes, men i Oslo er det overraskende vanskelig å finne et bord utover den ene eller to man allerede kjenner til. Altfor ofte ender man opp med racket og ball i sekken på vei til en park der bordet viser seg å være opptatt, ødelagt eller ikke der i det hele tatt. Etter tre år med den frustrasjonen ble det klart at ingen andre kom til å lage en løsning — så jeg laget den selv.<br><br>Det som begynte som et ide, vokste til en fullverdig app med live-kart, bilder, veibeskrivelser, filtrering og masse funksjonaliteter. Målet er enkelt: du skal kunne finne nærmeste bord og spille på under ti minutter. Dette har vi klart å oppnå!<br><br>PinPong er ikke ment å være mitt prosjekt alene. Å holde kartet oppdatert og komplett har jeg dessverre ikke ressursene eller tiden til, men jeg tror det er noe vi kanskje kan få til sammen! Hvert bord som meldes inn gjør nettsiden bedre for alle som spiller etter deg. Dette er en app bygget av en spiller, for spillere, med kjærlighet for sporten og for Oslo.<br><br><span style="font-style:italic;color:var(--muted)">Ser du et bord som mangler? Meld det inn — så kan du bli en del av historien!</span>',
+    'om.dev.title':         'Utviklet av',
+    'om.version':           'Versjon 1.0',
+    'privat.title':         'Personvern',
+    'privat.data.title':    'Datainnsamling',
+    'privat.data.body':     'PinPong samler ikke inn persondata automatisk. Nettsiden bruker ingen informasjonskapsler (cookies) eller sporingsverktøy.',
+    'privat.email.title':   'E-post via kontaktskjema',
+    'privat.email.body':    'Dersom du frivillig oppgir e-postadressen din via kontaktskjemaet, brukes denne utelukkende for å svare deg. E-postadressen deles ikke med tredjeparter og slettes når henvendelsen er besvart.',
+    'privat.rights.title':  'Dine rettigheter',
+    'privat.rights.body':   'Du har rett til innsyn i, retting av og sletting av opplysninger vi har om deg. Ta kontakt på <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for spørsmål eller forespørsler om sletting.',
+    'privat.updated':       'Sist oppdatert: juli 2026',
   },
   en: {
     'nearby.label':         'Nearest',
@@ -2723,6 +2728,19 @@ var LANG = {
     'vipps.modal.title':    'Support our work on Vipps!',
     'vipps.modal.sub':      'Scan with your phone camera',
     'vipps.modal.close':    'Close',
+    'om.tables.label':      'tables on the map',
+    'om.story.title':       'The Story',
+    'om.story.body':        'Table tennis is one of the most fun sports there is, but in Oslo it\'s surprisingly hard to find a table beyond the one or two you already know about. Too often you end up with a racket and ball in your bag, heading to a park only to find the table is occupied, broken, or simply not there at all. After three years of that frustration, it became clear no one else was going to build a solution — so I built it myself.<br><br>What started as an idea grew into a full-featured app with a live map, photos, directions, filters, and a whole lot more. The goal is simple: find the nearest table and start playing in under ten minutes. We\'ve made that happen!<br><br>PinPong isn\'t meant to be just my project. Keeping the map fully up to date is something I unfortunately don\'t have the time or resources to do alone — but I believe it\'s something we can pull off together! Every table that gets submitted makes the app better for everyone who plays after you. This is an app built by a player, for players, with love for the sport and for Oslo.<br><br><span style="font-style:italic;color:var(--muted)">See a table that\'s missing? Submit it — and become part of the story!</span>',
+    'om.dev.title':         'Developed by',
+    'om.version':           'Version 1.0',
+    'privat.title':         'Privacy',
+    'privat.data.title':    'Data Collection',
+    'privat.data.body':     'PinPong does not collect personal data automatically. The site uses no cookies or tracking tools.',
+    'privat.email.title':   'Email via contact form',
+    'privat.email.body':    'If you voluntarily provide your email address via the contact form, it is used solely to respond to you. Your email is not shared with third parties and is deleted once your enquiry has been answered.',
+    'privat.rights.title':  'Your rights',
+    'privat.rights.body':   'You have the right to access, correct, and delete any information we hold about you. Contact us at <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for questions or deletion requests.',
+    'privat.updated':       'Last updated: July 2026',
   }
 };
 
@@ -2732,8 +2750,10 @@ function tr(key) {
 
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
-    var key = el.dataset.i18n;
-    el.textContent = tr(key);
+    el.textContent = tr(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = tr(el.dataset.i18nHtml);
   });
   var si = document.getElementById('searchInput');
   if (si) si.placeholder = tr('search.placeholder');
@@ -3471,9 +3491,29 @@ function updateSheetNav() {
     // Populate: name
     var nameEl = g.querySelector('.sheet-name');
     if (nameEl) nameEl.textContent = t.navn || '';
-    // Clear stats/notes (ghost is just for visual continuity during the drag)
+    // Populate stats so the ghost matches the incoming card's height
     var statsEl = g.querySelector('.sheet-stats-col');
-    if (statsEl) statsEl.innerHTML = '';
+    if (statsEl) {
+      var _si = function(lbl, val, cls) {
+        return '<div class="stat-item"><div class="stat-label">' + lbl + '</div>'
+             + '<div class="stat-val' + (cls||'') + '">' + val + '</div></div>';
+      };
+      var gh = '';
+      if (t.verifisert === 'ja')        gh += _si(tr('stats.status'), '✓', ' verified status-icon');
+      else if (t.verifisert === 'nei')  gh += _si(tr('stats.status'), '✗', ' not-found status-icon');
+      else                              gh += _si(tr('stats.status'), '−', ' status-icon');
+      if (t.tilstand) gh += _si(tr('stats.tilstand'), esc(t.tilstand));
+      if (t.antall)   gh += _si(tr('stats.antall'),   esc(t.antall), ' big-num');
+      if (t.under_tak) {
+        var tv = /ja/i.test(t.under_tak) ? tr('stats.ja') : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
+        gh += _si(tr('stats.under_tak'), tv, /ja/i.test(t.under_tak) ? ' verified' : '');
+      }
+      if (t.belysning) {
+        var lv = /ja/i.test(t.belysning) ? tr('stats.ja') : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
+        gh += _si(tr('stats.belysning'), lv);
+      }
+      statsEl.innerHTML = gh;
+    }
     var noteEl = g.querySelector('.sheet-notes-col');
     if (noteEl) noteEl.innerHTML = '';
     // Hide nav bar and heart in ghost

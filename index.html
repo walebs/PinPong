@@ -424,24 +424,7 @@
       background: var(--surface); color: var(--text);
       box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     }
-    .ios-toggle {
-      position: relative; width: 51px; height: 31px; flex-shrink: 0;
-    }
-    .ios-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .ios-toggle-track {
-      position: absolute; inset: 0; border-radius: 999px;
-      background: var(--border); transition: background 0.22s;
-      cursor: pointer;
-    }
-    .ios-toggle input:checked + .ios-toggle-track { background: var(--green); }
-    .ios-toggle-track::after {
-      content: ''; position: absolute;
-      top: 3px; left: 3px;
-      width: 25px; height: 25px; border-radius: 50%;
-      background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.25);
-      transition: transform 0.22s cubic-bezier(0.22,1,0.36,1);
-    }
-    .ios-toggle input:checked + .ios-toggle-track::after { transform: translateX(20px); }
+
     .settings-about {
       text-align: center; color: var(--muted); font-size: 13px;
       line-height: 1.6; padding: 8px 0 4px;
@@ -1730,7 +1713,7 @@ function parseCSVLine(line) {
 }
 
 function parseCSV(text) {
-  var lines = text.trim().split("\n");
+  var lines = text.trim().split(/\r?\n/);
   var headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
   return lines.slice(1).map(line => {
     var vals = parseCSVLine(line);
@@ -1835,7 +1818,7 @@ function updateProgress() {
   var verified = TABLES.filter(t => t.verifisert === 'ja').length;
   var total    = TABLES.length;
   var circ     = 2 * Math.PI * 10; // r=10 → ~62.83
-  _progressArc.setAttribute('stroke-dasharray', `${(verified/total)*circ} ${circ}`);
+  _progressArc.setAttribute('stroke-dasharray', `${(verified/(total||1))*circ} ${circ}`);
   _progressFraction.textContent = `${verified}/${total}`;
   updateMiniIndicators();
   // Keep Om page live stat in sync
@@ -1933,7 +1916,6 @@ function makeIcon(t, highlighted=false, tableIdx=-1) {
 }
 
 var showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
-var hideVisited = localStorage.getItem('pinpong-hide-visited') === 'true';
 var currentLang = localStorage.getItem('pinpong-lang') || 'no';
 var userLat=null, userLng=null;
 
@@ -1990,7 +1972,6 @@ function renderMarkers() {
     if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
     if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
     if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
-    if (hideVisited      && t.verifisert === 'ja')                                       return;
     var lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, false, i) });
     lm._tableIndex = i;
     lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
@@ -2044,7 +2025,6 @@ function showNearbyStrip(lat, lng) {
       if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                       return false;
-      if (hideVisited      && t.verifisert === 'ja')                                return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)
@@ -2582,9 +2562,6 @@ var LANG = {
     'stats.under_tak':      'Under tak',
     'stats.belysning':      'Belysning',
     'stats.vibe':           'Vibe',
-    'stats.verifisert':     '✓ Verifisert',
-    'stats.ikke_funnet':    'Ikke funnet',
-    'stats.ikke_besøkt':    'Ikke besøkt',
     'stats.ja':             'Ja',
     'stats.nei':            'Nei',
     'nav.bord':             'bord',
@@ -2602,8 +2579,6 @@ var LANG = {
     'profile.tips':         'Kjenner du et bord? 🏓',
     'profile.tips.sub':     'Tips oss om et sted!',
     'profile.sub':          'Finn bordtennisbord nær deg',
-    'fav.title':            '❤ Favoritter',
-    'fav.empty':            'Du har ingen favoritter ennå.\nTrykk ❤ på et bord for å lagre det her.',
     'settings.title':       'Innstillinger',
     'settings.appearance':  'Utseende',
     'settings.theme':       'Tema',
@@ -2611,22 +2586,12 @@ var LANG = {
     'settings.light':       '☀ Lyst',
     'settings.dark':        '🌙 Mørkt',
     'settings.language':    'Språk / Language',
-    'settings.map':         'Kart',
-    'settings.hide_visited':'Skjul bord jeg har besøkt',
-    'settings.hide_visited.sub':'Vis kun bord du ikke har sett ennå',
     'lang.sub':             'Velg språk i appen',
     'rapport.title':        'Tips oss om et bord!',
     'profile.feil':         'Rapporter feil',
     'profile.feil.sub':     'Noe som ikke stemmer?',
     'profile.om':           'Om PinPong',
     'profile.om.sub':       'Historien bak appen',
-    'om.why.title':         'Hvorfor PinPong?',
-    'om.why.body':          'Bordtennis er en av de morsomte sportene som finnes — men det er overraskende vanskelig å finne et bord utenom den ene eller to man kjenner til. PinPong ble derfor utviklet for å gjøre nettopp dette enkelt ved at du nå kan finne bordtennisbord nær deg!',
-    'om.story.title':       'Historien',
-    'om.story.body':        'PinPong startet som med en ide, én person, og altfor mange turer til parker uten å finne et bord. Det vokste til en fullverdig app med kart, filtre, og et community som kan bidra med nye bord. Alt bygget med kjærlighet for sporten og for Oslo.',
-    'om.community.title':   'Community-drevet',
-    'om.community.body':    'Kartet er levende fordi folk bidrar. Vet du om et bord som mangler? Tips oss! Ser du noe som er feil? Rapporter det! Sammen gjør vi det lettere for alle å finne en god kamp.',
-    'om.footer':            'Laget med kjærlighet i Oslo, Norge.\nVersjon 1.0',
     'feil.title':           'Rapporter feil',
     'feil.label.subject':   'Kategori',
     'feil.label.desc':      'Beskriv problemet',
@@ -2636,7 +2601,6 @@ var LANG = {
     'feil.s3':              'Feil informasjon',
     'feil.s4':              'Programvarefeil',
     'feil.s5':              'Annet',
-    'feil.photo':           'Legg til bilde (valgfritt)',
     'vipps.btn':            'Støtt PINPONG med Vipps!',
     'vipps.nudge.title':    'Lyst til å støtte arbeidet? 🎉',
     'vipps.nudge.sub':      '',
@@ -2668,9 +2632,6 @@ var LANG = {
     'stats.under_tak':      'Covered',
     'stats.belysning':      'Lighting',
     'stats.vibe':           'Vibe',
-    'stats.verifisert':     '✓ Verified',
-    'stats.ikke_funnet':    'Not found',
-    'stats.ikke_besøkt':    'Not visited',
     'stats.ja':             'Yes',
     'stats.nei':            'No',
     'nav.bord':             'tables',
@@ -2688,8 +2649,6 @@ var LANG = {
     'profile.tips':         'Know a table? 🏓',
     'profile.tips.sub':     'Tip us about a spot!',
     'profile.sub':          'Find available ping pong tables near you',
-    'fav.title':            '❤ Favorites',
-    'fav.empty':            'No favorites yet.\nTap ❤ on a table to save it here.',
     'settings.title':       'Settings',
     'settings.appearance':  'Appearance',
     'settings.theme':       'Theme',
@@ -2697,22 +2656,12 @@ var LANG = {
     'settings.light':       '☀ Light',
     'settings.dark':        '🌙 Dark',
     'settings.language':    'Language / Språk',
-    'settings.map':         'Map',
-    'settings.hide_visited':'Hide tables I\'ve visited',
-    'settings.hide_visited.sub':'Show only tables you haven\'t seen yet',
     'lang.sub':             'Choose app language',
     'rapport.title':        'Tip us about a table!',
     'profile.feil':         'Report an issue',
     'profile.feil.sub':     'Something not right?',
     'profile.om':           'About PinPong',
     'profile.om.sub':       'The story behind the app',
-    'om.why.title':         'Why PinPong?',
-    'om.why.body':          'Table tennis is one of the most social sports around — but finding an available table in Oslo is surprisingly hard. PinPong was built to make it easy to discover outdoor and indoor ping pong tables near you, without having to google around.',
-    'om.story.title':       'The Story',
-    'om.story.body':        'PinPong started as a small hobby project — one person, one idea, and way too many trips to parks without finding a table. It grew into a full app with maps, filters, and a community that contributes new tables. Built with love for the sport and for Oslo.',
-    'om.community.title':   'Community-driven',
-    'om.community.body':    'The map stays alive because people contribute. Know a table that\'s missing? Tip us! See something wrong? Report it. Together we make it easier for everyone to find a good game.',
-    'om.footer':            'Made with love in Oslo, Norway.\nVersion 1.0',
     'feil.title':           'Report an issue',
     'feil.label.subject':   'Category',
     'feil.label.desc':      'Describe the issue',
@@ -2722,7 +2671,6 @@ var LANG = {
     'feil.s3':              'Incorrect information',
     'feil.s4':              'Software bug',
     'feil.s5':              'Other',
-    'feil.photo':           'Add photo (optional)',
     'vipps.btn':            'Support PINPONG on Vipps!',
     'vipps.nudge.title':    'Want to support the project? 🎉',
     'vipps.nudge.sub':      '',
@@ -3354,7 +3302,6 @@ function buildSwipeList(fromIdx) {
       if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
       if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
       if (showLightOnly    && !/ja/i.test(t.belysning || ''))                      return false;
-      if (hideVisited      && t.verifisert === 'ja')                               return false;
       return true;
     })
     .sort((a, b) => a.d - b.d)

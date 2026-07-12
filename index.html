@@ -3320,6 +3320,21 @@ function buildSwipeList(fromIdx) {
   _swipePos = _swipeList.indexOf(fromIdx);
 }
 
+// Find the geographically nearest visible table east (dir>0) or west (dir<0) of fromIdx
+function findGeoNeighbor(fromIdx, dir) {
+  var cur = TABLES[fromIdx];
+  var best = -1, bestDist = Infinity;
+  _swipeList.forEach(function(i) {
+    if (i === fromIdx) return;
+    var t = TABLES[i];
+    if (dir > 0 && t.lng <= cur.lng) return;  // must be east
+    if (dir < 0 && t.lng >= cur.lng) return;  // must be west
+    var d = haversine(cur.lat, cur.lng, t.lat, t.lng);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return best;
+}
+
 var _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
 var _cardAnimating = false;
 
@@ -3384,10 +3399,10 @@ function sheetSwipeTo(nextIdx, dir) {
 
 window.sheetNav = function(dir) {
   if (selectedIdx === null || !_swipeList.length || _cardAnimating) return;
-  var next = _swipePos + dir;
-  if (next < 0 || next >= _swipeList.length) return;
-  _swipePos = next;
-  sheetSwipeTo(_swipeList[_swipePos], dir);
+  var nextIdx = findGeoNeighbor(selectedIdx, dir);
+  if (nextIdx === -1) return;
+  _swipePos = _swipeList.indexOf(nextIdx);
+  sheetSwipeTo(nextIdx, dir);
 };
 
 function updateSheetNav() {
@@ -3398,8 +3413,8 @@ function updateSheetNav() {
   var total = _swipeList.length;
   var pos   = _swipePos + 1;
   label.textContent = `${pos} / ${total} ${tr('nav.bord')}`;
-  prev.disabled = _swipePos <= 0;
-  next.disabled = _swipePos >= total - 1;
+  prev.disabled = selectedIdx === null || findGeoNeighbor(selectedIdx, -1) === -1;
+  next.disabled = selectedIdx === null || findGeoNeighbor(selectedIdx,  1) === -1;
 }
 
 // ── Live horizontal card swipe ───────────────────────────
@@ -3509,10 +3524,10 @@ function updateSheetNav() {
       dirLocked = Math.abs(dx) >= Math.abs(dy) * 1.1 ? 'h' : 'v';
       // Direction just locked — build the ghost card immediately
       if (dirLocked === 'h') {
-        var initDir  = dx < 0 ? 1 : -1;
-        var initNext = _swipePos + initDir;
-        if (initNext >= 0 && initNext < _swipeList.length) {
-          buildGhost(_swipeList[initNext], initDir);
+        var initDir     = dx < 0 ? 1 : -1;
+        var initGeoNext = findGeoNeighbor(selectedIdx, initDir);
+        if (initGeoNext !== -1) {
+          buildGhost(initGeoNext, initDir);
         }
       }
     }
@@ -3522,9 +3537,9 @@ function updateSheetNav() {
     var card = getCard();
     if (!card || _cardAnimating) return;
 
-    var dir = dx < 0 ? 1 : -1;
-    var nextPos = _swipePos + dir;
-    var atEdge  = nextPos < 0 || nextPos >= _swipeList.length;
+    var dir     = dx < 0 ? 1 : -1;
+    var geoNext = findGeoNeighbor(selectedIdx, dir);
+    var atEdge  = geoNext === -1;
     liveDx = atEdge ? dx * RESIST : dx;
 
     // Move current card
@@ -3533,7 +3548,7 @@ function updateSheetNav() {
 
     // Rebuild ghost if direction reversed mid-swipe
     if (!atEdge && _ghost && _ghostDir !== dir) {
-      buildGhost(_swipeList[nextPos], dir);
+      buildGhost(geoNext, dir);
     } else if (atEdge && _ghost) {
       clearGhost();
     }
@@ -3563,15 +3578,14 @@ function updateSheetNav() {
     var card = getCard();
     var sheetW   = _bottomSheet.offsetWidth;
     var threshold = sheetW * COMMIT_FRAC;
-    var dir  = liveDx < 0 ? 1 : -1;
-    var next = _swipePos + dir;
-    var commit = Math.abs(liveDx) >= threshold && !_cardAnimating
-                   && next >= 0 && next < _swipeList.length;
+    var dir      = liveDx < 0 ? 1 : -1;
+    var geoCommit = findGeoNeighbor(selectedIdx, dir);
+    var commit = Math.abs(liveDx) >= threshold && !_cardAnimating && geoCommit !== -1;
 
     if (commit) {
       _cardAnimating = true;
       _hSwipeActive  = false;
-      _swipePos = next;
+      _swipePos = _swipeList.indexOf(geoCommit);
       var ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
       var dur  = 'transform 0.26s ' + ease;
 
@@ -3585,7 +3599,7 @@ function updateSheetNav() {
         setTimeout(() => {
           // Ghost has slid into place — now swap in the real card underneath it
           _cardAnimating = false;
-          openSheet(_swipeList[_swipePos], true);   // populates real card (off-screen)
+          openSheet(geoCommit, true);   // populates real card (off-screen)
           if (card) { card.style.transition = 'none'; card.style.transform = ''; }
           clearGhost();  // remove ghost — real card (same content) is now visible
         }, 270);
@@ -3597,7 +3611,7 @@ function updateSheetNav() {
           card.style.transition = 'transform 0.16s ease-in';
           card.style.transform  = 'translateX(' + (dir < 0 ? sheetW : -sheetW) + 'px)';
         }
-        openSheet(_swipeList[_swipePos], true);
+        openSheet(geoCommit, true);
         setTimeout(() => {
           if (card) {
             card.style.transition = 'none';

@@ -1,4 +1,4 @@
-A Norwegian web app developed by Wale Belal Sayed that helps people find table tennis tables nearby Oslo, Lørenskog and Lillestrøm.
+A Norwegian web app developed that helps people find table tennis tables nearby Oslo, Lørenskog and Lillestrøm.
 
 Features
 -Find table tennis tables on a map

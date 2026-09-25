@@ -14,6 +14,7 @@ An intuitive and responsive app to easily find, filter and save public ping pong
 - Favourites, light/dark theme, Norwegian/English
 - Forms to suggest a new table or report a problem (sent by email)
 - Installable PWA; map tiles and photos are cached by a service worker
+- Hardened form endpoint, SRI-pinned dependencies and security headers (see [Security and privacy](#security-and-privacy))
 
 ## Stack
 
@@ -53,6 +54,28 @@ sw.js                 service worker (tile and photo cache)
 **Swipe navigation.** Swiping a card right or left opens the nearest table east or west of the current one. As soon as a horizontal drag starts, the next card is rendered off-screen and moves with the finger, so the transition has no loading gap.
 
 **Caching.** The service worker caches map tiles and photos as they are viewed. On load, only photos for the closest tables are preloaded, plus the neighbours of whichever card is open.
+
+## Security and privacy
+
+The app has no accounts and stores no personal data on a server, so the attack surface is small: mainly the form endpoint and third-party scripts.
+
+**Form endpoint (`api/report.js`)**
+- Only accepts requests from pinpong.no (and Vercel previews); others get `403`
+- Rate limited per IP (best effort, in memory) on top of a per-device daily limit in the app
+- Validates every field server-side: type, length, email format; line breaks are stripped from the subject
+- Attachments must be real JPEG, PNG, WebP or HEIC, checked by file signature rather than the declared type
+- Errors are logged server-side; the client only gets a generic message
+- Secrets (`RESEND_API_KEY`, sheet URL) live in Vercel environment variables, never in the repo or the browser
+
+**Frontend**
+- All sheet and user text is HTML-escaped before rendering
+- CDN scripts and styles are pinned to exact versions with Subresource Integrity hashes
+- Response headers: HSTS, `frame-ancestors 'none'` (no clickjacking), `nosniff`, a strict referrer policy, and a Permissions-Policy that limits geolocation to the site and turns off APIs it doesn't use (microphone, payment, USB)
+
+**Privacy**
+- GPS position is only used in the browser and never sent anywhere
+- Favourites and settings are kept in `localStorage`; no cookies, analytics or trackers
+- An email address is only collected if the user submits a form, and only to reply
 
 ## Running locally
 

@@ -1,0 +1,3904 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#f2f2f7" id="metaThemeColor" />
+  <script>
+    // Set theme-color before first paint to avoid status-bar flash
+    (function(){var l=localStorage.getItem('pinpong-theme')!=='dark';document.getElementById('metaThemeColor').content=l?'#f2f2f7':'#0c0c0f';document.documentElement.style.background=l?'#f2f2f7':'#0c0c0f';})();
+  </script>
+  <meta name="color-scheme" content="dark light" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PinPong" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+  <title>PinPong – Finn bordtennisbord nær deg!</title>
+  <meta name="description" content="Kart over bordtennisbord i Oslo og Lillestrøm. Finn nærmeste ping pong-bord – ute, inne, under tak, med belysning. Gratis og uten app-nedlasting." />
+
+  <!-- Open Graph / link previews -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://pinpong.no" />
+  <meta property="og:title"       content="PinPong – Finn bordtennisbord nær deg!" />
+  <meta property="og:description" content="Kart over bordtennisbord i Oslo og Lillestrøm. Finn nærmeste ping pong-bord – ute, inne, under tak, med belysning." />
+  <meta property="og:image"       content="https://pinpong.no/icons/icon-512.png" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="PinPong – Finn bordtennisbord nær deg!" />
+  <meta name="twitter:description" content="Kart over bordtennisbord i Oslo og Lillestrøm. Finn nærmeste ping pong-bord – ute, inne, under tak, med belysning." />
+  <meta name="twitter:image"       content="https://pinpong.no/icons/icon-512.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin />
+  <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin />
+  <!-- Non-render-blocking font (logo only); display=swap shows fallback until loaded -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" /></noscript>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin="anonymous" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #0c0c0f; }
+    html:has(body.light) { background: #f2f2f7; }
+    :root {
+      --bg:      #0c0c0f;
+      --surface: #17171c;
+      --s2:      #202028;
+      --border:  #2a2a35;
+      --text:    #f0f0f5;
+      --muted:   #606070;
+      --blue:    #3B8BFF;
+      --orange:  #FF9500;
+      --purple:  #8B5CF6;
+      --green:   #34C759;
+      --yellow:  #FFD60A;
+    }
+    body.light {
+      --bg:      #f2f2f7;
+      --surface: #ffffff;
+      --s2:      #e5e5ea;
+      --border:  rgba(0,0,0,0.1);
+      --text:    #1c1c1e;
+      --muted:   #8e8e93;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      overflow: hidden;
+      height: 100dvh; width: 100dvw;
+      color: var(--text);
+      touch-action: manipulation;
+    }
+    button { touch-action: manipulation; }
+    #map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
+    /* Light mode: white search field */
+    body.light .search-field {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+    body.light .search-results {
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    /* Light mode: vivid green location dot */
+    body.light .user-dot-core {
+      background: #00C853;
+      box-shadow: 0 0 8px rgba(0,200,83,0.9);
+    }
+    body.light .user-dot-ring { background: rgba(0,200,83,0.45); }
+    /* Filter fab — expands in-place to 2×3 grid */
+    .filter-fab {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px;
+      z-index: 401;
+    }
+    .filter-toggle {
+      position: relative;
+      width: 44px; height: 52px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, opacity 0.22s ease, transform 0.12s ease;
+    }
+    .filter-toggle-label {
+      font-size: 7px; font-weight: 700; letter-spacing: 0.8px;
+      color: var(--muted); pointer-events: none; line-height: 1;
+    }
+    /* Multi-color activity dots — straight line across top of filter button */
+    .filter-dot-wrap {
+      position: absolute; top: 5px; left: 0; right: 0;
+      display: flex; justify-content: center; gap: 3px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease;
+      z-index: 1;
+    }
+    .filter-dot-wrap.visible { opacity: 1; }
+    .filter-fab.open .filter-dot-wrap { opacity: 0; }
+    .filter-dot-mini {
+      width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+    }
+    .filter-toggle:active { background: var(--s2); transform: scale(0.93); }
+    .filter-panel {
+      position: absolute; top: 0; left: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      padding: 3px;
+      display: grid; gap: 3px;
+      grid-template-columns: repeat(3, 36px);
+      grid-template-rows: 44px 44px 44px;
+      opacity: 0; pointer-events: none;
+      transform: scale(0.72);
+      transform-origin: top left;
+      /* close curve — smooth ease-in-out */
+      transition: opacity 0.26s ease,
+                  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .filter-fab.open .filter-panel {
+      opacity: 1; pointer-events: auto;
+      transform: scale(1);
+      /* open curve — spring bounce */
+      transition: opacity 0.22s ease,
+                  transform 0.42s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    .filter-fab.open .filter-toggle {
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+    .filter-cell-toggle {
+      grid-column: 1 / -1;
+      background: var(--surface); border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, transform 0.12s ease;
+    }
+    .filter-cell-toggle:active { background: var(--s2); transform: scale(0.88); }
+    /* Progress badge — lives below filter toggle, plain arc + number */
+    .filter-progress-badge {
+      width: 44px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px;
+      margin-top: 8px;
+      transition: opacity 0.18s ease;
+    }
+    .filter-fab.open .filter-progress-badge { opacity: 0; pointer-events: none; }
+    .filter-cell {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      background: var(--surface); border: none; border-radius: 0;
+      transition: background 0.12s, transform 0.12s ease;
+      font-size: 9px; font-weight: 600; color: var(--muted);
+      user-select: none;
+    }
+    .filter-cell svg { height: 18px; width: auto; flex-shrink: 0; }
+    .filter-cell:active { background: var(--s2); transform: scale(0.88); }
+    .filter-cell-icon { color: var(--text); }
+    .filter-cell-outdoor { color: rgba(255,107,0,0.35); }
+    .filter-cell-bar     { color: rgba(124,58,237,0.35); }
+    .filter-cell-outdoor.active { color: var(--orange); background: transparent;
+      text-shadow: 0 0 8px rgba(255,107,0,0.6); }
+    .filter-cell-outdoor.active svg { stroke: var(--orange); fill: var(--orange); }
+    .filter-cell-bar.active     { color: var(--purple); background: transparent;
+      text-shadow: 0 0 8px rgba(124,58,237,0.6); }
+    .filter-cell-bar.active svg { stroke: var(--purple); fill: rgba(124,58,237,0.22); }
+    .progress-fraction { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
+    .filter-cell-fav      { color: rgba(255,59,48,0.35); }
+    .filter-cell-verified { color: rgba(52,199,89,0.35); font-size: 7.5px; letter-spacing: -0.4px; grid-column: 3; grid-row: 3; }
+    .filter-cell-roof     { color: rgba(100,160,255,0.35); }
+    .filter-cell-fav.active      { color: #ff3b30; background: transparent; text-shadow: 0 0 8px rgba(255,59,48,0.6); }
+    .filter-cell-fav.active svg  { fill: #ff3b30; stroke: #ff3b30; }
+    .filter-cell-verified.active { color: var(--green); background: transparent; text-shadow: 0 0 8px rgba(52,199,89,0.6); }
+    .filter-cell-roof.active     { color: #64a0ff; background: transparent; text-shadow: 0 0 8px rgba(100,160,255,0.7); }
+    .filter-cell-light     { color: rgba(255,214,0,0.35); }
+    .filter-cell-light.active     { color: #FFD600; background: transparent; text-shadow: 0 0 8px rgba(255,214,0,0.7); }
+    .filter-cell-light.active svg { stroke: #FFD600; }
+    /* Nearby strip */
+    .nearby-container {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      left: 0; right: 0; z-index: 299;
+      opacity: 0; transform: translateY(10px); pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .nearby-container.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .nearby-header {
+      display: flex; align-items: center; justify-content: center;
+      height: 48px;
+      padding-bottom: 0px; padding-top: 18px;
+    }
+    .nearby-label {
+      text-align: center;
+      font-family: 'Russo One', 'Arial Black', sans-serif;
+      font-size: 12px; font-weight: 400; letter-spacing: 8px;
+      margin-right: -8px;
+      color: var(--orange); text-transform: uppercase;
+      line-height: 1.6; padding-bottom: 2px;
+      animation: wordmark-glow 4s ease-in-out infinite;
+    }
+    @keyframes wordmark-glow {
+      0%, 100% {
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.55),  1px -1px 0 rgba(0,0,0,0.55),
+          -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
+          0 2px 6px rgba(0,0,0,0.4),
+          0 0 10px rgba(255,149,0,0.35);
+      }
+      50% {
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.55),  1px -1px 0 rgba(0,0,0,0.55),
+          -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
+          0 2px 6px rgba(0,0,0,0.4),
+          0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
+      }
+    }
+
+    /* ── Profile page ───────────────────────────────────── */
+    .profile-page {
+      position: fixed; inset: 0; z-index: 1300;
+      background: var(--bg);
+      transform: translateX(100%);
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .profile-page.open { transform: translateX(0); }
+    .profile-header {
+      background: linear-gradient(160deg, #FF9500 0%, #e07800 100%);
+      padding: calc(env(safe-area-inset-top,0px) + 8px) 20px 12px;
+      position: relative; flex-shrink: 0;
+    }
+    .profile-back {
+      background: rgba(0,0,0,0.18); border: none; border-radius: 50%;
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .profile-logo-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      margin-top: 4px; gap: 4px;
+    }
+    .profile-logo-circle {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    }
+    .profile-app-name {
+      font-family: 'Russo One', 'Arial Black', sans-serif;
+      font-size: 19px; font-weight: 400;
+      letter-spacing: 3px; margin-right: -3px;
+      color: white; margin-top: 4px;
+      animation: wordmark-glow 3s ease-in-out infinite;
+    }
+    .profile-app-sub {
+      font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500;
+    }
+    .profile-body {
+      flex: 1; padding: 16px 20px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
+      display: flex; flex-direction: column; gap: 0;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      min-height: 0;
+    }
+    .profile-card {
+      background: var(--surface); border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border: 1px solid var(--border);
+    }
+    .profile-item {
+      width: 100%; background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; gap: 12px;
+      font-size: 15px; font-weight: 500; color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s;
+      text-align: left;
+    }
+    .profile-item:active { background: var(--s2); }
+    .profile-item-left {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .profile-item-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .profile-divider {
+      height: 1px; background: var(--border); margin: 0 16px;
+    }
+    .profile-footer {
+      margin-top: auto; padding-top: 16px;
+      text-align: center; font-size: 13px;
+      color: var(--muted); letter-spacing: 0.2px;
+    }
+    .vipps-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #FF5B24; color: #fff;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.2px;
+      padding: 11px 22px; border-radius: 50px;
+      text-decoration: none; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 16px rgba(255,91,36,0.4);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s;
+      margin-bottom: 16px;
+    }
+    .vipps-btn:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(255,91,36,0.3); opacity: 0.9; }
+    /* Vipps QR fallback modal (desktop) */
+    .vipps-modal-bg {
+      position: fixed; inset: 0; z-index: 1400;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .vipps-modal-bg.visible { opacity: 1; pointer-events: auto; }
+    .vipps-modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px 24px 22px;
+      text-align: center; max-width: 280px; width: 90%;
+      transform: scale(0.88); transition: transform 0.28s cubic-bezier(0.34,1.3,0.64,1);
+    }
+    .vipps-modal-bg.visible .vipps-modal { transform: scale(1); }
+    .vipps-modal-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .vipps-modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.vipps-modal-num { font-size: 22px; font-weight: 800; color: #FF5B24; letter-spacing: 2px; margin-top: 12px; }
+    .vipps-modal-close {
+      margin-top: 16px; background: var(--s2); border: none; border-radius: 50px;
+      color: var(--muted); font-size: 13px; font-weight: 600;
+      padding: 8px 22px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    /* Donation nudge popup */
+    .donate-nudge-bg {
+      position: fixed; inset: 0; z-index: 799;
+      background: rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .donate-nudge-bg.visible { opacity: 1; pointer-events: auto; }
+    .donate-nudge {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -44%);
+      z-index: 800; width: min(300px, calc(100vw - 40px));
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px 16px 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      opacity: 0; pointer-events: none;
+      transition: transform 0.38s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.25s ease;
+    }
+    .donate-nudge.visible { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
+    .donate-nudge-close {
+      position: absolute; top: 10px; right: 10px;
+      width: 30px; height: 30px;
+      background: var(--s2); border: none; border-radius: 50%;
+      color: var(--muted); font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .donate-nudge-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .donate-nudge-sub { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .profile-item-sub {
+      font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px;
+    }
+    /* ── Settings page ──────────────────────────────────── */
+    .settings-body {
+      padding: 20px 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 40px);
+      display: flex; flex-direction: column; gap: 24px;
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      min-height: 0;
+    }
+    .settings-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 8px; padding-left: 4px;
+    }
+    .settings-card {
+      background: var(--surface); border-radius: 18px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; gap: 12px;
+    }
+    .settings-row + .settings-row { border-top: 1px solid var(--border); }
+    .settings-row-label {
+      font-size: 15px; font-weight: 500; color: var(--text);
+    }
+    .settings-row-sub {
+      font-size: 11px; color: var(--muted); margin-top: 1px;
+    }
+    .seg-control {
+      display: flex; background: var(--s2); border-radius: 10px;
+      padding: 3px; gap: 3px;
+    }
+    .seg-btn {
+      padding: 6px 14px; border: none; border-radius: 7px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      background: transparent; color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .seg-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+
+    .settings-about {
+      text-align: center; color: var(--muted); font-size: 13px;
+      line-height: 1.6; padding: 8px 0 4px;
+      margin-top: auto; padding-top: 40px;
+    }
+    /* ── Rapport page ──────────────────────────────────── */
+    .rapport-body {
+      padding: 16px 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 40px);
+      display: flex; flex-direction: column; gap: 12px;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      flex: 1; min-height: 0;
+    }
+    .rapport-photo-wrap {
+      border-radius: 16px; overflow: hidden;
+      background: var(--surface); border: 1.5px dashed var(--border);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      min-height: 140px; position: relative;
+    }
+    .rapport-photo-preview {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; min-height: 140px;
+      color: var(--muted); font-size: 13px; font-weight: 500;
+    }
+    .rapport-photo-preview img {
+      width: 100%; height: auto; max-height: 200px; object-fit: cover;
+      display: block;
+    }
+    .rapport-card {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .rapport-field {
+      display: flex; flex-direction: column; gap: 6px; padding: 14px 16px;
+    }
+    .rapport-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .rapport-input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 100%; resize: none;
+      min-height: 28px; line-height: 1.4;
+    }
+    .rapport-input::placeholder { color: var(--muted); }
+    .rapport-textarea { padding-top: 4px; line-height: 1.5; }
+    .rapport-divider { height: 1px; background: var(--border); margin: 0 16px; }
+    .rapport-seg {
+      display: flex; align-items: stretch;
+      background: var(--s2); border-radius: 10px;
+      padding: 4px; gap: 3px;
+    }
+    .rapport-seg-full { width: 100%; }
+    .rapport-seg-full .rapport-seg-btn { flex: 1; }
+    .rapport-seg-btn {
+      border: none; background: none; border-radius: 7px;
+      padding: 8px 10px; font-size: 14px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1;
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rapport-seg-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .rapport-submit {
+      width: 100%; padding: 18px; border-radius: 16px; border: none;
+      background: var(--orange); color: white;
+      font-size: 17px; font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.12s, transform 0.12s;
+      box-shadow: 0 4px 16px rgba(255,149,0,0.35);
+      margin-top: 4px;
+    }
+    .rapport-submit:active { opacity: 0.82; transform: scale(0.98); }
+    /* ── Favoritter page ────────────────────────────────── */
+    .fav-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0; position: sticky; top: 0;
+      background: var(--bg); z-index: 2;
+    }
+    .fav-header-title {
+      font-size: 17px; font-weight: 700; color: var(--text);
+    }
+    .fav-list {
+      padding: 16px; display: flex; flex-direction: column; gap: 12px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      flex: 1; min-height: 0;
+    }
+    .fav-card {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      display: flex; gap: 0; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s, opacity 0.12s;
+    }
+    .fav-card:active { transform: scale(0.98); opacity: 0.85; }
+    .fav-card-img {
+      width: 90px; height: 90px; flex-shrink: 0;
+      object-fit: cover; background: var(--s2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 28px;
+    }
+    .fav-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .fav-card-info {
+      flex: 1; padding: 11px 13px; display: flex; flex-direction: column;
+      justify-content: center; gap: 4px; min-width: 0;
+    }
+    .fav-card-type {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .fav-card-name {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fav-card-meta {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--muted); flex-wrap: wrap;
+    }
+    .fav-card-dist { color: var(--orange); font-weight: 700; }
+    .fav-empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-size: 15px; line-height: 1.6;
+    }
+    .fav-empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .nearby-profile-btn {
+      position: absolute; top: -4px; left: 16px;
+    }
+    .nearby-locate-btn {
+      position: absolute; top: -4px; right: 16px;
+    }
+    .nearby-profile-btn, .nearby-locate-btn {
+      width: 48px; height: 48px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.12s; -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+    .nearby-profile-btn:active, .nearby-locate-btn:active { transform: scale(0.92); }
+    .nearby-card-dist.nearest-glow {
+      text-shadow: 0 0 6px rgba(255,107,0,0.55), 0 0 12px rgba(255,107,0,0.2);
+    }
+    .nearby-divider {
+      height: 1px; background: var(--border);
+      margin: 0 16px;
+    }
+    .nearby-strip {
+      display: flex; gap: 9px; padding: 10px 16px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      scroll-snap-type: x mandatory;
+      scroll-padding-left: 16px;
+    }
+    .nearby-strip::-webkit-scrollbar { display: none; }
+    .nearby-card {
+      flex-shrink: 0; width: calc((100vw - 50px) / 3);
+      scroll-snap-align: start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 10px 14px 11px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transition: transform 0.12s, opacity 0.12s;
+      border-left-width: 3px; border-left-style: solid;
+      border-right-width: 3px; border-right-style: solid;
+    }
+    .nearby-card:active { transform: scale(0.95); opacity: 0.8; }
+    .nearby-card-dist { font-size: 10px; font-weight: 700; color: var(--orange); letter-spacing: 0.3px; }
+    .nearby-card-name {
+      font-size: 10px; font-weight: 600; color: var(--text);
+      margin-top: 3px; line-height: 1.35;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nearby-card-type {
+      font-size: 9px; color: var(--muted); margin-top: 3px;
+      font-weight: 500; letter-spacing: 0.2px;
+    }
+    .nearby-card-check { color: var(--green); margin-left: 2px; }
+    .fab-stack {
+      position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 36px); z-index: 300;
+      display: flex; flex-direction: row; gap: 10px; align-items: center;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .fab-stack.strip-visible { opacity: 0; pointer-events: none; transform: scale(0.85); }
+    .fab-locate {
+      width: 50px; height: 50px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 50%;
+      cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .fab-locate:active { transform: scale(0.92); }
+    .bottom-sheet {
+      position: fixed; bottom: 24px; left: 50%; z-index: 500;
+      width: calc(100% - 32px); max-width: 400px;
+      height: auto; max-height: min(560px, calc(100dvh - 110px));
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+      transform: translate(-50%, calc(100% + 40px));
+      transition: transform 0.5s cubic-bezier(0.34, 1.15, 0.64, 1);
+      overflow: hidden;
+      will-change: transform;
+      display: flex; flex-direction: column;
+    }
+    @media (max-width: 480px) {
+      .bottom-sheet { max-height: min(580px, calc(100dvh - 100px)); }
+      .sheet-photo { height: 195px; }
+      .sheet-body { padding: 10px 14px calc(8px + env(safe-area-inset-bottom, 0px)); }
+      .sheet-type { font-size: 10px; margin-bottom: 2px; }
+      .sheet-name { font-size: 16px; margin-bottom: 6px; }
+      .sheet-content { gap: 8px; }
+      .stat-val { font-size: 13px; }
+      .btn-directions { padding: 10px; font-size: 13px; }
+    }
+    .bottom-sheet.open { transform: translate(-50%, 0); }
+    /* Dark mode: brighten tiles so roads are readable */
+    body:not(.light) .leaflet-tile-pane {
+      filter: brightness(1.45) contrast(0.9) saturate(1.1);
+      transition: filter 0.4s ease;
+    }
+    body.light .leaflet-tile-pane {
+      filter: brightness(0.96) contrast(1.05) saturate(1.2);
+      transition: filter 0.4s ease;
+    }
+    .sheet-close-top {
+      position: absolute; top: 12px; right: 12px; z-index: 10;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(0,0,0,0.82); border: 1.5px solid rgba(255,255,255,0.22);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; backdrop-filter: blur(6px);
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .sheet-close-top:active { background: rgba(0,0,0,0.95); }
+    .nearby-container.sheet-open {
+      opacity: 0; pointer-events: none; transform: translateY(12px);
+    }
+    .fab-stack.sheet-open { opacity: 0; pointer-events: none; }
+    /* Search — single animated container */
+    .search-wrap {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 62px);
+      left: 50%; transform: translateX(-50%); z-index: 402;
+      width: 115px;
+      transition: width 0.22s cubic-bezier(0.28, 0.84, 0.42, 1);
+    }
+    .search-wrap.expanded { width: min(200px, calc(100vw - 160px)); }
+    .search-label {
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      white-space: nowrap; flex: 1;
+      margin-left: -8px; pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+    .search-wrap.expanded .search-label { opacity: 0; pointer-events: none; position: absolute; }
+    .search-field {
+      display: flex; align-items: center;
+      background: rgba(23,23,28,0.32); border: 1px solid rgba(255,255,255,0.13);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-radius: 13px; height: 44px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      transition: border-radius 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .search-icon-btn {
+      width: 44px; height: 44px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); cursor: pointer; background: transparent; border: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .search-input {
+      flex: 1; border: none; background: transparent;
+      color: var(--text); font-size: 14px; outline: none;
+      padding: 0; min-width: 0;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s ease 0.22s;
+      -webkit-appearance: none;
+    }
+    .search-wrap.expanded .search-input { opacity: 1; pointer-events: auto; }
+    .search-input::placeholder { color: var(--muted); }
+    .search-close {
+      width: 26px; height: 26px; flex-shrink: 0; margin-right: 9px;
+      border-radius: 50%; border: none; background: var(--s2);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.72); pointer-events: none;
+      transition: opacity 0.2s ease 0.28s, transform 0.24s cubic-bezier(0.34, 1.3, 0.64, 1) 0.26s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .search-wrap.expanded .search-close { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .search-results {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 114px);
+      left: 50%; transform: translateX(-50%);
+      width: min(200px, calc(100vw - 160px));
+      z-index: 403;
+      background: rgba(23,23,28,0.95);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(42,42,53,0.5); border-radius: 14px;
+      overflow: hidden; display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .search-result-item {
+      padding: 11px 14px; cursor: pointer; font-size: 13px;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:active { background: var(--s2); }
+    .sheet-photo-wrap { position: relative; overflow: hidden; flex-shrink: 0; }
+    .sheet-photo { width: 100%; height: 220px; object-fit: cover; display: none; background: var(--s2); }
+    .sheet-photo.visible { display: block; }
+    .sheet-body {
+      flex: 0 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 10px 14px 10px;
+    }
+    .sheet-type { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
+    .sheet-name { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; line-height: 1.15; margin-bottom: 6px; }
+    .sheet-content {
+      display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;
+    }
+    .sheet-stats-col {
+      display: flex; flex-direction: row;
+      background: var(--s2); border-radius: 10px; overflow: hidden;
+      margin-bottom: 0;
+    }
+    .stat-item {
+      flex: 1; min-width: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 10px 3px; gap: 4px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-label { font-size: 7.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .stat-val { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.15; }
+    .stat-val.verified  { color: var(--green); }
+    .stat-val.not-found { color: #FF3B30; }
+    .stat-val.stars     { color: var(--orange); font-size: 11px; letter-spacing: -1px; }
+    .stat-val.cond-good { color: var(--green); }
+    .stat-val.cond-mid  { color: #FF9500; }
+    .stat-val.cond-bad  { color: #FF3B30; }
+    .stat-val.big-num   { font-size: 13px; font-weight: 700; }
+    .stat-val.status-icon { font-size: 14px; }
+    .notes-inline {
+      font-size: 11px; color: var(--muted); line-height: 1.4;
+      font-style: italic;
+    }
+    .notes-tag {
+      font-style: normal; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      color: var(--muted); opacity: 0.6; margin-right: 5px;
+    }
+    .sheet-actions { display: flex; gap: 10px; }
+    .btn-directions {
+      flex: 1; padding: 11px; color: white;
+      border: none; border-radius: 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 7px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
+      background: var(--blue); box-shadow: 0 4px 16px rgba(59,139,255,0.35);
+    }
+    .btn-directions:active { opacity: 0.8; }
+    .btn-share {
+      width: 46px; padding: 11px 0; color: #aaa; background: var(--s2);
+      border: 1px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+    }
+    .btn-share:active { opacity: 0.7; }
+    /* When no photo, push sheet-body down so X button doesn't overlap the heart */
+    .sheet-card:not(:has(.sheet-photo.visible)) .sheet-body {
+      padding-top: 52px;
+    }
+    /* Table navigation bar — sits below action buttons */
+    .sheet-nav-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sheet-nav-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--s2); color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, opacity 0.12s; flex-shrink: 0;
+    }
+    .sheet-nav-btn:active { background: var(--border); }
+    .sheet-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+    .sheet-nav-label {
+      font-size: 12px; color: var(--muted); font-weight: 600;
+      letter-spacing: 0.3px; text-align: center;
+    }
+    /* Name row with heart */
+    .sheet-name-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .sheet-name-row .sheet-name { margin-bottom: 0; flex: 1; }
+    .btn-heart-inline {
+      flex-shrink: 0; background: transparent; border: none;
+      padding: 3px 0 0 4px; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex; align-items: flex-start;
+    }
+    .btn-heart-inline svg { transition: transform 0.18s cubic-bezier(0.34,1.5,0.64,1); }
+    .btn-heart-inline.faved svg { transform: scale(1.2); }
+    /* Location permission toast */
+    .loc-toast {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      left: 50%; transform: translateX(-50%) translateY(120%);
+      width: calc(100% - 32px); max-width: 360px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 16px 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      z-index: 1500;
+      transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
+    }
+    .loc-toast.show { transform: translateX(-50%) translateY(0); }
+    .loc-toast-icon { font-size: 22px; margin-bottom: 6px; }
+    .loc-toast-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .loc-toast-body  { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .loc-toast-body b { color: var(--text); font-weight: 600; }
+    .loc-toast-actions { display: flex; gap: 8px; }
+    .loc-toast-retry {
+      flex: 1; padding: 10px; border-radius: 11px; border: none;
+      background: var(--blue); color: white;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .loc-toast-close {
+      padding: 10px 14px; border-radius: 11px; border: none;
+      background: var(--s2); color: var(--muted);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .maps-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 1100; backdrop-filter: blur(2px);
+    }
+    .maps-modal-overlay.open { display: block; }
+    .maps-modal {
+      display: none; position: fixed; left: 50%; bottom: 32px;
+      transform: translateX(-50%) translateY(20px);
+      width: min(340px, calc(100vw - 32px));
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 16px; z-index: 1101;
+      flex-direction: column; gap: 10px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      transition: transform 0.22s ease, opacity 0.22s ease; opacity: 0;
+    }
+    .maps-modal.open {
+      display: flex; transform: translateX(-50%) translateY(0); opacity: 1;
+    }
+    .maps-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      color: #888; font-size: 13px; font-weight: 500; margin-bottom: 2px;
+    }
+    .maps-modal-close {
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: var(--s2); color: #aaa; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-maps-option {
+      width: 100%; padding: 14px; color: white; border: none; border-radius: 14px;
+      font-size: 14.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
+      gap: 9px; transition: opacity 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-maps-option:active { opacity: 0.8; }
+    .btn-gmaps { background: var(--blue);  box-shadow: 0 3px 12px rgba(59,139,255,0.3); }
+    .btn-amaps { background: #3a3a45;      box-shadow: 0 3px 12px rgba(0,0,0,0.2); }
+    .btn-close {
+      width: 52px; height: 52px; background: var(--s2);
+      border: 1px solid var(--border); border-radius: 14px;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #777; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-close:active { background: var(--border); }
+    .leaflet-tile-pane { will-change: transform; }
+    .leaflet-map-pane  { will-change: transform; }
+    /* Prevent tile seam flicker on zoom (sub-pixel anti-aliasing gaps) */
+    .leaflet-tile { outline: 1px solid transparent; }
+    #map { background: var(--bg); }
+    /* Zoom animation — long enough for cluster merge/split to complete */
+    .leaflet-zoom-anim .leaflet-zoom-animated { transition-duration: 0.22s !important; }
+    .user-dot-beam {
+      position: absolute;
+      width: 14px; height: 22px;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      background: rgba(0,200,83,0.45);
+      bottom: 50%; left: 50%;
+      margin-left: -7px; margin-bottom: -2px;
+      transform-origin: bottom center;
+      transform: rotate(0deg);
+      transition: transform 0.15s ease-out;
+      display: none; pointer-events: none;
+    }
+    .user-dot-beam.active { display: block; }
+    @keyframes radar-ping {
+      0%   { transform: scale(1); opacity: 0.8; }
+      70%  { transform: scale(7); opacity: 0; }
+      100% { transform: scale(7); opacity: 0; }
+    }
+    .user-dot {
+      width: 10px; height: 10px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-dot-core {
+      width: 10px; height: 10px;
+      background: #34C759; border: 2px solid rgba(255,255,255,0.95);
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(52,199,89,0.8);
+      position: relative; z-index: 2;
+    }
+    .user-dot-ring {
+      position: absolute; width: 10px; height: 10px;
+      border-radius: 50%; background: rgba(52,199,89,0.5);
+      animation: radar-ping 5s ease-out infinite;
+    }
+    .user-dot-ring:nth-child(2) { animation-delay: 0.35s; }
+    .user-dot-ring:nth-child(3) { display: none; }
+    .leaflet-control-zoom { display: none !important; }
+    .zoom-btns {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 16px; z-index: 400;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .zoom-btn {
+      width: 44px; height: 44px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 13px;
+      color: var(--text); font-size: 20px; font-weight: 300;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      transition: background 0.12s; -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .zoom-btn:active { background: var(--s2); }
+    .theme-btn {
+      width: 44px; height: 44px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 13px;
+      color: var(--text); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      transition: background 0.12s, transform 0.3s ease; -webkit-tap-highlight-color: transparent;
+    }
+    .theme-btn:active { background: var(--s2); }
+    @keyframes theme-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .theme-btn.spin { animation: theme-spin 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
+    .app-wordmark {
+      position: fixed; z-index: 402;
+      top: calc(env(safe-area-inset-top, 0px) + 24px);
+      left: 50%; transform: translateX(-50%);
+      font-family: 'Russo One', 'Arial Black', sans-serif;
+      font-size: 20px; font-weight: 400; letter-spacing: 3px; margin-right: -3px;
+      color: var(--orange); pointer-events: none; white-space: nowrap;
+      animation: wordmark-glow 3s ease-in-out infinite;
+    }
+    .cluster-icon {
+      position: relative;
+      width: 30px; height: 30px; background: #FF9500;
+      border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: white;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      box-shadow: 0 3px 14px rgba(255,107,0,0.5);
+    }
+    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: none !important; }
+    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: none !important; }
+    /* Cluster split/merge: markers fly from cluster → position (and back).
+       Slight overshoot on the curve so the fly-out feels energetic and visible. */
+    .leaflet-cluster-anim .leaflet-marker-icon,
+    .leaflet-cluster-anim .leaflet-marker-shadow {
+      transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity  0.26s ease !important;
+    }
+    .leaflet-control-attribution {
+      background: transparent !important; color: #222 !important;
+      font-size: 9px !important; border-radius: 0 !important;
+      box-shadow: none !important; padding: 2px 6px !important;
+      opacity: 0.35 !important;
+    }
+    .leaflet-control-attribution a { color: #222 !important; }
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 0.5; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    /* Respect the user's reduced-motion preference: stop decorative
+       animations and make UI transitions near-instant (same end states). */
+    @media (prefers-reduced-motion: reduce) {
+      .nearby-label, .profile-app-name, .app-wordmark { animation: none; }
+      .user-dot-ring { animation: none; opacity: 0; }
+      .leaflet-marker-pane * { animation: none !important; }
+      .filter-panel, .filter-toggle, .bottom-sheet, .profile-page,
+      .search-wrap, .donate-nudge, .donate-nudge-bg, .loc-toast,
+      .vipps-modal, .vipps-modal-bg, .maps-modal, .nearby-container,
+      .fab-stack { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<!-- Filter fab — toggle button + floating panel -->
+<div class="filter-fab" id="filterFab">
+  <button class="filter-toggle" onclick="toggleFilterFab()">
+    <svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <line x1="1" y1="1.5" x2="15" y2="1.5"/>
+      <line x1="3" y1="6.5" x2="13" y2="6.5"/>
+      <line x1="5" y1="11.5" x2="11" y2="11.5"/>
+    </svg>
+    <span class="filter-toggle-label">FILTER</span>
+    <span class="filter-dot-wrap" id="filterDotWrap"></span>
+  </button>
+  <!-- Verified-count badge — always visible under filter button -->
+  <div class="filter-progress-badge" id="filterProgress">
+    <svg width="30" height="30" viewBox="0 0 26 26">
+      <circle cx="13" cy="13" r="10" fill="none" stroke="var(--border)" stroke-width="2.2"/>
+      <circle id="progressArc" cx="13" cy="13" r="10" fill="none" stroke="var(--green)" stroke-width="2.2"
+              stroke-dasharray="0 62.83" stroke-linecap="round" transform="rotate(-90 13 13)"/>
+    </svg>
+    <span class="progress-fraction" id="progressFraction">0/0</span>
+  </div>
+  <div class="filter-panel">
+    <div class="filter-cell-toggle" onclick="toggleFilterFab()" title="Close filters">
+      <svg width="20" height="16" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <line x1="1" y1="1.5" x2="15" y2="1.5"/>
+      <line x1="3" y1="6.5" x2="13" y2="6.5"/>
+      <line x1="5" y1="11.5" x2="11" y2="11.5"/>
+    </svg>
+    </div>
+    <div class="filter-cell filter-cell-outdoor active" id="pill-outdoor" onclick="toggleFilter('outdoor')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 14h6l-3 6h12l-3-6h6L12 3z"/><line x1="12" y1="20" x2="12" y2="23"/></svg>
+      UTE
+    </div>
+    <div class="filter-cell filter-cell-bar active" id="pill-bar" onclick="toggleFilter('bar')">
+      <svg width="14" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/>
+        <line x1="3" y1="21" x2="21" y2="21"/>
+        <circle cx="15.5" cy="13" r="1" fill="currentColor"/>
+      </svg>
+      INNE
+    </div>
+    <div class="filter-cell filter-cell-roof" id="pill-roof" onclick="toggleFilter('roof')">
+      <svg width="19" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M9 21V12h6v9"/><path d="M3 9.5v11.5h18V9.5"/></svg>
+      TAK
+    </div>
+    <div class="filter-cell filter-cell-fav" id="pill-fav" onclick="toggleFilter('fav')">
+      <svg width="18" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      LIKTE
+    </div>
+    <div class="filter-cell filter-cell-light" id="pill-light" onclick="toggleFilter('light')">
+      <svg width="17" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M12 3a6 6 0 0 1 6 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8A6 6 0 0 1 6 9a6 6 0 0 1 6-6z"/></svg>
+      LYS
+    </div>
+    <div class="filter-cell filter-cell-verified" id="pill-verified" onclick="toggleFilter('verified')">
+      <svg width="16" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      VERIFISERT
+    </div>
+  </div>
+</div>
+
+<!-- Profile Page -->
+<div class="profile-page" id="profilePage">
+  <div class="profile-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeProfile()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="profile-logo-wrap">
+      <div class="profile-logo-circle">
+        <img src="icons/icon-profile.png" width="60" height="60" alt="PinPong" style="border-radius:50%;display:block"/>
+      </div>
+      <div class="profile-app-name">P<span style="font-size:18px;vertical-align:1px;margin-left:-5px;margin-right:-3px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+      <div class="profile-app-sub" data-i18n="profile.sub">Finn ledige bordtennisbord nær deg</div>
+    </div>
+  </div>
+  <div class="profile-body">
+    <div class="profile-card">
+      <button class="profile-item" onclick="profileFavoritter()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(255,59,48,0.12);color:#ff3b30">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff3b30" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </span>
+          <span data-i18n="profile.favoritter">Favoritter</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="profileSettings()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(142,142,147,0.15);color:var(--muted)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </span>
+          <span data-i18n="profile.innstillinger">Innstillinger</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="profileRapporter()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(255,149,0,0.12);color:var(--orange)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <div>
+            <div data-i18n="profile.tips">Kjenner du et bord? 🏓</div>
+            <div class="profile-item-sub" data-i18n="profile.tips.sub">Tips oss om et sted!</div>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="openFeilPage()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(255,59,48,0.12);color:#ff3b30">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
+          <div>
+            <div data-i18n="profile.feil">Rapporter feil</div>
+            <div class="profile-item-sub" data-i18n="profile.feil.sub">Noe som ikke stemmer?</div>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="openOmPage()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(90,160,255,0.12);color:#4A9EFF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/><polyline points="11 12 12 12 12 16"/></svg>
+          </span>
+          <div>
+            <div data-i18n="profile.om">Om PinPong</div>
+            <div class="profile-item-sub" data-i18n="profile.om.sub">Historien bak appen</div>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="profile-divider"></div>
+      <button class="profile-item" onclick="openPersonvernPage()">
+        <div class="profile-item-left">
+          <span class="profile-item-icon" style="background:rgba(142,142,147,0.12);color:var(--muted)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
+          <span style="font-size:15px;font-weight:500;color:var(--text)" data-i18n="privat.title">Personvern</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="profile-footer">
+      <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" style="width:calc(100% - 48px);justify-content:center;font-size:15px;padding:14px 22px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.6c-5.3 0-9.6-4.3-9.6-9.6S6.7 2.4 12 2.4s9.6 4.3 9.6 9.6-4.3 9.6-9.6 9.6zm.9-14.3c-.7 0-1.3.4-1.6 1L8.6 13c-.1.2-.1.4 0 .5.1.2.3.3.5.3h1.5c.4 0 .8-.3 1-.7l.7-1.5 1.8 4c.2.4.6.7 1 .7h1c.2 0 .4-.1.5-.3.1-.2.1-.4 0-.6l-2.7-8.2c-.3-.6-.9-1-1.5-1.1h-.5z"/></svg>
+        <span data-i18n="vipps.btn">Støtt PINPONG med Vipps!</span>
+      </a>
+      <div style="margin-top:14px">🇳🇴 Designed in Norway</div>
+    </div>
+  </div>
+</div>
+
+<!-- Innstillinger Page -->
+<div class="profile-page" id="settingsPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeSettings()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="settings.title">Innstillinger</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="settings-body">
+
+    <!-- Utseende -->
+    <div>
+      <div class="settings-section-label" data-i18n="settings.appearance">Utseende</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label" data-i18n="settings.theme">Tema</div>
+            <div class="settings-row-sub" data-i18n="settings.theme.sub">Velg lyst eller mørkt kart</div>
+          </div>
+          <div class="seg-control">
+            <button class="seg-btn" id="seg-light" onclick="setThemeFromSettings(true)" data-i18n="settings.light">☀ Lyst</button>
+            <button class="seg-btn" id="seg-dark"  onclick="setThemeFromSettings(false)" data-i18n="settings.dark">🌙 Mørkt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Språk -->
+    <div>
+      <div class="settings-section-label" data-i18n="settings.language">Språk / Language</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">🇳🇴 / 🇬🇧</div>
+            <div class="settings-row-sub" id="langSubLabel">Velg språk i appen</div>
+          </div>
+          <div class="seg-control">
+            <button class="seg-btn" id="seg-no" onclick="setLang('no')">🇳🇴 Norsk</button>
+            <button class="seg-btn" id="seg-en" onclick="setLang('en')">🇬🇧 English</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kart -->
+
+  </div>
+</div>
+
+<!-- Rapporter Page -->
+<div class="profile-page" id="rapportPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeRapport()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="rapport.title">Tips oss om et bord!</span>
+    <div style="width:36px"></div>
+  </div>
+
+  <div class="rapport-body">
+
+    <!-- Photo capture -->
+    <div class="rapport-card" style="cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="document.getElementById('rapportPhotoInput').click()">
+      <input type="file" id="rapportPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="rapportPhotoChosen(this)">
+      <div class="rapport-field" id="rapportPhotoPreview" style="flex-direction:row;align-items:center;gap:12px">
+        <div style="width:52px;height:52px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="rapport-label">Legg til bilde</div>
+          <div style="font-size:14px;color:var(--muted);margin-top:2px">Valgfritt</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <!-- Navn -->
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Navn / Sted</label>
+        <input class="rapport-input" id="rNavn" type="text" placeholder="f.eks. Grünerløkka park" autocomplete="off"/>
+      </div>
+    </div>
+
+    <!-- Adresse -->
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Adresse</label>
+        <input class="rapport-input" id="rAdresse" type="text" placeholder="Gateadresse eller område" autocomplete="off"/>
+      </div>
+    </div>
+
+    <!-- Type -->
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Type bord</label>
+        <div class="rapport-seg rapport-seg-full" id="rTypeSeg">
+          <button class="rapport-seg-btn active" data-val="ute" onclick="rapportSegPick(this)">🌳 Ute</button>
+          <button class="rapport-seg-btn" data-val="inne" onclick="rapportSegPick(this)">🏠 Inne</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Belysning -->
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Belysning</label>
+        <div class="rapport-seg rapport-seg-full" id="rBelysingSeg">
+          <button class="rapport-seg-btn active" data-val="ja" onclick="rapportSegPick(this)">Ja</button>
+          <button class="rapport-seg-btn" data-val="nei" onclick="rapportSegPick(this)">Nei</button>
+          <button class="rapport-seg-btn" data-val="ukjent" onclick="rapportSegPick(this)">Vet ikke</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- E-post -->
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Din e-post</label>
+        <input class="rapport-input" id="rEmail" type="email" placeholder="din@epost.no" autocomplete="email"/>
+      </div>
+    </div>
+
+    <button class="rapport-submit" id="rapportSubmitBtn" onclick="submitRapport()">Send inn</button>
+
+  </div>
+</div>
+
+<!-- Rapporter Feil Page -->
+<div class="profile-page" id="feilPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeFeilPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="feil.title">Rapporter feil</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="rapport-body">
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label" data-i18n="feil.label.subject">Kategori</label>
+        <select class="rapport-input" id="feilSubject" style="background:transparent;color:var(--text);border:none;width:100%;font-size:15px;padding:0;-webkit-appearance:auto">
+          <option id="feilS1" data-i18n="feil.s1">Bord finnes ikke</option>
+          <option id="feilS2" data-i18n="feil.s2">Bord er ødelagt</option>
+          <option id="feilS3" data-i18n="feil.s3">Feil informasjon</option>
+          <option id="feilS4" data-i18n="feil.s4">Programvarefeil</option>
+          <option id="feilS5" data-i18n="feil.s5">Annet</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label" data-i18n="feil.label.desc">Beskriv problemet</label>
+        <textarea class="rapport-input" id="feilDesc" rows="4"
+          style="resize:none;min-height:90px;font-family:inherit;font-size:15px;line-height:1.4;overflow:hidden"
+          placeholder="…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      </div>
+    </div>
+
+    <div class="rapport-card" style="cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="document.getElementById('feilPhotoInput').click()">
+      <input type="file" id="feilPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="feilPhotoChosen(this)">
+      <div class="rapport-field" id="feilPhotoPreview" style="flex-direction:row;align-items:center;gap:12px">
+        <div style="width:52px;height:52px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="rapport-label">Legg til bilde</div>
+          <div style="font-size:14px;color:var(--muted);margin-top:2px">Valgfritt</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="rapport-card">
+      <div class="rapport-field">
+        <label class="rapport-label">Din e-post</label>
+        <input class="rapport-input" id="feilEmail" type="email" placeholder="din@epost.no" autocomplete="email"/>
+      </div>
+    </div>
+
+    <button class="rapport-submit" id="feilSubmitBtn" onclick="submitFeil()" data-i18n="feil.submit">Send rapport</button>
+  </div>
+</div>
+
+<!-- Personvern Page -->
+<div class="profile-page" id="personvernPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closePersonvernPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="privat.title">Personvern</span>
+    <div style="width:36px"></div>
+  </div>
+  <div style="padding:24px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px" data-i18n="privat.data.title">Datainnsamling</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7" data-i18n="privat.data.body">PinPong samler ikke inn persondata automatisk. Nettsiden bruker ingen informasjonskapsler (cookies) eller sporingsverktøy.</div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px" data-i18n="privat.email.title">E-post via kontaktskjema</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7" data-i18n="privat.email.body">Dersom du frivillig oppgir e-postadressen din via kontaktskjemaet, brukes denne utelukkende for å svare deg. E-postadressen deles ikke med tredjeparter og slettes når henvendelsen er besvart.</div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px" data-i18n="privat.rights.title">Dine rettigheter</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7" data-i18n-html="privat.rights.body">Du har rett til innsyn i, retting av og sletting av opplysninger vi har om deg. Ta kontakt på <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for spørsmål eller forespørsler om sletting.</div>
+    </div>
+
+    <div style="text-align:center;margin-top:auto;padding-top:8px">
+      <div style="font-size:12px;color:var(--muted)" data-i18n="privat.updated">Sist oppdatert: juli 2026</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Favoritter Page -->
+<div class="profile-page" id="favPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeFavPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="profile.favoritter">Favoritter</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="fav-list" id="favList"></div>
+</div>
+
+<!-- Om Page -->
+<div class="profile-page" id="omPage">
+  <div class="fav-header">
+    <button class="profile-back" aria-label="Tilbake" onclick="closeOmPage()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="fav-header-title" data-i18n="profile.om">Om PinPong</span>
+    <div style="width:36px"></div>
+  </div>
+  <div style="padding:24px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
+
+    <!-- Icon + live stat -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0 4px">
+      <img src="icons/icon-profile.png" width="68" height="68" alt="PinPong" style="border-radius:50%;box-shadow:0 4px 18px rgba(0,0,0,0.12)"/>
+      <div style="font-family:'Russo One','Arial Black',sans-serif;font-size:20px;letter-spacing:3px;color:var(--orange)">P<span style="font-size:16px;vertical-align:1px;margin-left:-4px;margin-right:-3px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+      <!-- Live table count -->
+      <div style="font-size:13px;color:var(--muted)">
+        <span id="omTableCount" style="font-weight:700;color:var(--orange)">—</span> <span data-i18n="om.tables.label">bord på kartet</span>
+      </div>
+    </div>
+
+    <!-- The story -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:12px" data-i18n="om.story.title">Historien</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.75" data-i18n-html="om.story.body">Bordtennis er en av de morsomste sportene som finnes, men i Oslo er det overraskende vanskelig å finne et bord utover den ene eller to man allerede kjenner til. Altfor ofte ender man opp med racket og ball i sekken på vei til en park der bordet viser seg å være opptatt, ødelagt eller ikke der i det hele tatt. Etter tre år med den frustrasjonen ble det klart at ingen andre kom til å lage en løsning — så jeg laget den selv.<br><br>Det som begynte som et ide, vokste til en fullverdig app med live-kart, bilder, veibeskrivelser, filtrering og masse funksjonaliteter. Målet er enkelt: du skal kunne finne nærmeste bord og spille på under ti minutter. Dette har vi klart å oppnå!<br><br>PinPong er ikke ment å være mitt prosjekt alene. Å holde kartet oppdatert og komplett har jeg dessverre ikke ressursene eller tiden til, men jeg tror det er noe vi kanskje kan få til sammen! Hvert bord som meldes inn gjør nettsiden bedre for alle som spiller etter deg. Dette er en app bygget av en spiller, for spillere, med kjærlighet for sporten og for Oslo.<br><br><span style="font-style:italic;color:var(--muted)">Ser du et bord som mangler? Meld det inn — så kan du bli en del av historien!</span></div>
+    </div>
+
+    <!-- Made by -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px" data-i18n="om.dev.title">Utviklet av</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Wale Belal Sayed</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">
+        BSc Informatikk: Programmering og systemarkitektur, UiO<br>
+        MSc Cybersikkerhetsledelse, Universitetet i Agder
+      </div>
+    </div>
+
+<!-- Footer -->
+    <div style="text-align:center;padding:8px 0 4px;margin-top:auto">
+      <div style="font-size:12px;color:var(--muted)" data-i18n="om.version">Versjon 1.0</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="search-wrap" id="searchWrap">
+  <div class="search-field" onclick="expandSearch()">
+    <button class="search-icon-btn" aria-label="Søk">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <span class="search-label">Søk…</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="Søk etter bord…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onclick="event.stopPropagation()" oninput="scheduleSearch()" enterkeyhint="search" />
+    <button class="search-close" aria-label="Lukk søk" onclick="event.stopPropagation(); collapseSearch()">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+<div class="search-results" id="searchResults"></div>
+<div class="zoom-btns">
+  <div class="app-wordmark">P<span style="font-size:15px;vertical-align:1px;margin-left:-5px;margin-right:-3px;letter-spacing:0px;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif">📍</span>NPONG</div>
+  <button class="zoom-btn" onclick="map.zoomIn(1)" aria-label="Zoom inn">+</button>
+  <button class="zoom-btn" onclick="map.zoomOut(1)" aria-label="Zoom ut">−</button>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Bytt tema" aria-label="Bytt tema">
+    <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Sun icon (shown in dark mode to switch to light) -->
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+</div>
+<div id="map"></div>
+<div class="nearby-container visible" id="nearbyContainer">
+  <button class="nearby-profile-btn" aria-label="Profil" onclick="openProfile()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  </button>
+  <button class="nearby-locate-btn" aria-label="Min posisjon" onclick="locateMe()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
+    </svg>
+  </button>
+  <div class="nearby-header">
+    <div class="nearby-label" data-i18n="nearby.label">Nærmeste</div>
+  </div>
+  <div class="nearby-divider"></div>
+  <div class="nearby-strip" id="nearbyStrip"></div>
+</div>
+<div class="fab-stack strip-visible">
+  <button class="fab-locate" aria-label="Min posisjon" onclick="locateMe()">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
+    </svg>
+  </button>
+</div>
+<div class="bottom-sheet" id="bottomSheet">
+  <button class="sheet-close-top" aria-label="Lukk" onclick="closeSheetX()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div id="sheetCard" class="sheet-card" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+  <div class="sheet-photo-wrap" id="sheetPhotoWrap">
+    <img class="sheet-photo" id="sheetPhoto" src="" alt="" decoding="async" />
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-type" id="sheetType"></div>
+    <div class="sheet-name-row">
+      <div class="sheet-name" id="sheetName"></div>
+      <button class="btn-heart-inline" id="btnHeart" onclick="toggleFavorite()" title="Favoritt" aria-label="Favoritt">
+        <svg id="heartIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>
+    <div class="sheet-content">
+      <div class="sheet-stats-col" id="sheetStats"></div>
+      <div class="sheet-notes-col" id="sheetNote"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-directions" onclick="toggleMapsPicker()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        <span data-i18n="sheet.directions">Veibeskrivelse</span>
+      </button>
+      <button class="btn-share" onclick="shareTable()" title="Del" aria-label="Del">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Nav bar pinned to bottom of card, outside scrollable body -->
+  <div class="sheet-nav-bar" id="sheetNavBar">
+    <button class="sheet-nav-btn" id="sheetNavPrev" onclick="sheetNav(-1)" title="Forrige bord" aria-label="Forrige bord">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="sheet-nav-label" id="sheetNavLabel">1 / 1 bord</span>
+    <button class="sheet-nav-btn" id="sheetNavNext" onclick="sheetNav(1)" title="Neste bord" aria-label="Neste bord">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+  </div><!-- /sheetCard -->
+</div>
+
+<!-- Maps picker modal -->
+<div class="maps-modal-overlay" id="mapsOverlay" onclick="closeMapsPicker()"></div>
+
+<!-- Location permission toast -->
+<div class="loc-toast" id="locToast">
+  <div class="loc-toast-icon">📍</div>
+  <div class="loc-toast-title" id="locToastTitle">Posisjon ikke tilgjengelig</div>
+  <div class="loc-toast-body" id="locToastBody"></div>
+  <div class="loc-toast-actions">
+    <button class="loc-toast-retry" onclick="locToastRetry()">Prøv igjen</button>
+    <button class="loc-toast-close" onclick="closeLocToast()">Lukk</button>
+  </div>
+</div>
+<div class="maps-modal" id="mapsModal">
+  <div class="maps-modal-header">
+    <span>Åpne veibeskrivelse i</span>
+    <button class="maps-modal-close" onclick="closeMapsPicker()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <button class="btn-maps-option btn-gmaps" onclick="openGoogleMaps()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    Google Maps
+  </button>
+  <button class="btn-maps-option btn-amaps" onclick="openAppleMaps()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    Apple Maps
+  </button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous"></script>
+<script>
+if (location.protocol === 'http:' && location.hostname !== 'localhost' && !location.hostname.includes('127.0.0.1')) {
+  location.replace('https:' + location.href.slice(5));
+}
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Cached DOM references (looked up once, reused everywhere) ──
+var _nearbyStrip     = document.getElementById('nearbyStrip');
+var _nearbyContainer = document.getElementById('nearbyContainer');
+var _fabStack        = document.querySelector('.fab-stack');
+var _bottomSheet     = document.getElementById('bottomSheet');
+var _sheetPhoto      = document.getElementById('sheetPhoto');
+var _sheetType       = document.getElementById('sheetType');
+var _sheetName       = document.getElementById('sheetName');
+var _sheetStats      = document.getElementById('sheetStats');
+var _sheetNote       = document.getElementById('sheetNote');
+var _mapsOverlay     = document.getElementById('mapsOverlay');
+var _mapsModal       = document.getElementById('mapsModal');
+var _progressArc     = document.getElementById('progressArc');
+var _progressFraction= document.getElementById('progressFraction');
+var _filterDotWrap = document.getElementById('filterDotWrap');
+
+function updateMiniIndicators() {
+  var dots = [];
+  if (!showOutdoor)     dots.push('var(--orange)');
+  if (!showBar)         dots.push('var(--purple)');
+  if (showFavOnly)      dots.push('#ff3b30');
+  if (showVerifiedOnly) dots.push('var(--green)');
+  if (showRoofOnly)     dots.push('#64a0ff');
+  if (showLightOnly)    dots.push('#FFD600');
+  _filterDotWrap.innerHTML = dots.map(c =>
+    '<span class="filter-dot-mini" style="background:' + c + '"></span>'
+  ).join('');
+  _filterDotWrap.classList.toggle('visible', dots.length > 0);
+}
+
+var SHEETS_CSV_URL = "/api/tables";
+
+var STATIC = [
+  { navn:"Blindern",                 lat:59.9393882, lng:10.7231652, type:"outdoor" },
+  { navn:"Stensparken",              lat:59.9291336, lng:10.7308114, type:"outdoor" },
+  { navn:"Lilleborgbanen",           lat:59.9337185, lng:10.7683008, type:"outdoor" },
+  { navn:"Sofienbergparken",         lat:59.9232131, lng:10.7645644, type:"outdoor" },
+  { navn:"Taket på St. Hanshaugen",  lat:59.9255176, lng:10.7451989, type:"outdoor" },
+  { navn:"Grunerhagen",              lat:59.9231318, lng:10.7550015, type:"outdoor" },
+  { navn:"Rodeløkka kolonihage",     lat:59.9283978, lng:10.7731401, type:"outdoor" },
+  { navn:"Vogts gate",               lat:59.9310789, lng:10.7636191, type:"outdoor" },
+  { navn:"Sagene",                   lat:59.9381037, lng:10.7517979, type:"outdoor" },
+  { navn:"Iladalen",                 lat:59.9322454, lng:10.7527243, type:"outdoor" },
+  { navn:"Lakkegata skole",          lat:59.9200232, lng:10.7672644, type:"outdoor" },
+  { navn:"Mølleparken",              lat:59.9296868, lng:10.7568828, type:"outdoor" },
+  { navn:"Vøyenparken",              lat:59.9324830, lng:10.7585277, type:"outdoor" },
+  { navn:"Bjølsen skole",            lat:59.9398579, lng:10.7574463, type:"outdoor" },
+  { navn:"Torshovdalen",             lat:59.9315526, lng:10.7729130, type:"outdoor" },
+  { navn:"Skjønnhaug skole",         lat:59.9281584, lng:10.8765123, type:"outdoor" },
+  { navn:"Caltexløkka",              lat:59.9165710, lng:10.7782639, type:"outdoor" },
+  { navn:"Heibergløkka",             lat:59.9153523, lng:10.7751604, type:"outdoor" },
+  { navn:"Kampen park",              lat:59.9149963, lng:10.7790279, type:"outdoor" },
+  { navn:"Nydalen",                  lat:59.9500350, lng:10.7714855, type:"outdoor" },
+  { navn:"Kringsjå skole",           lat:59.9622263, lng:10.7303788, type:"outdoor" },
+  { navn:"Marienlystparken",         lat:59.9341753, lng:10.7238056, type:"outdoor" },
+  { navn:"Sinsen skole",             lat:59.9354285, lng:10.7839167, type:"outdoor" },
+  { navn:"Fagerborg skole",          lat:59.9335506, lng:10.7298536, type:"outdoor" },
+  { navn:"Urtehagen",                lat:59.9142148, lng:10.7643292, type:"outdoor" },
+  { navn:"Vika terrasse",            lat:59.9140998, lng:10.7293165, type:"outdoor" },
+  { navn:"Hersleb vgs",              lat:59.9176762, lng:10.7656187, type:"outdoor" },
+  { navn:"Lassons gate",             lat:59.9118907, lng:10.7190111, type:"outdoor" },
+  { navn:"Tinkern",                  lat:59.9115512, lng:10.7110250, type:"outdoor" },
+  { navn:"Majorstuen skole",         lat:59.9289730, lng:10.7121185, type:"outdoor" },
+  { navn:"Tøyen",                    lat:59.9140908, lng:10.7727423, type:"outdoor" },
+  { navn:"Kristparken",              lat:59.9178217, lng:10.7483310, type:"outdoor" },
+  { navn:"Rudolf Nielsen plass",     lat:59.9159490, lng:10.7654611, type:"outdoor" },
+  { navn:"Vahl skole",               lat:59.9164933, lng:10.7664373, type:"outdoor" },
+  { navn:"Kringsjå studentby",       lat:59.9648018, lng:10.7319261, type:"outdoor" },
+  { navn:"Ola Narr parken",          lat:59.9234624, lng:10.7759146, type:"outdoor" },
+  { navn:"Ullevål skole",            lat:59.9421684, lng:10.7319998, type:"outdoor" },
+  { navn:"Dælenenga",                lat:59.9264049, lng:10.7630655, type:"outdoor" },
+  { navn:"Foss vgs",                 lat:59.9269155, lng:10.7552217, type:"outdoor" },
+  { navn:"Sofienbergparken 2",       lat:59.9225230, lng:10.7677575, type:"outdoor" },
+  { navn:"Københavngata",            lat:59.9287924, lng:10.7685903, type:"outdoor" },
+  { navn:"Vaterland",                lat:59.9132184, lng:10.7587956, type:"outdoor" },
+  { navn:"Kampen skole",             lat:59.9131876, lng:10.7832771, type:"outdoor" },
+  { navn:"Kampenløkka",              lat:59.9148725, lng:10.7827546, type:"outdoor" },
+  { navn:"G12",                      lat:59.9558213, lng:10.7663830, type:"outdoor" },
+  { navn:"Vinslottet",               lat:59.9267937, lng:10.7936523, type:"outdoor" },
+  { navn:"Fyrstikkalleen skole",     lat:59.9157571, lng:10.7948091, type:"outdoor" },
+  { navn:"Lensmann Hiorths allé",    lat:59.9127430, lng:10.7941919, type:"outdoor" },
+  { navn:"St. Hanshaugen",           lat:59.9272768, lng:10.7424180, type:"outdoor" },
+  { navn:"Bygdøy skole",             lat:59.9049487, lng:10.6766785, type:"outdoor" },
+  { navn:"Sukkerbiten",              lat:59.9049733, lng:10.7525070, type:"outdoor" },
+  { navn:"Vålerenga skole",          lat:59.9071800, lng:10.7880630, type:"outdoor" },
+  { navn:"Sofienberg skole",         lat:59.9218270, lng:10.7695410, type:"outdoor" },
+  { navn:"Hartvig Nissens Skole",    lat:59.9188610, lng:10.7166110, type:"outdoor" },
+  { navn:"Sofienbergparken 3",       lat:59.9226578, lng:10.7664440, type:"outdoor" },
+  { navn:"Grunerløkka skole",        lat:59.9265681, lng:10.7614293, type:"outdoor" },
+  { navn:"Bentsebrua skole",         lat:59.9370877, lng:10.7613870, type:"outdoor" },
+  { navn:"Arkitekt Rivertz plass",   lat:59.9346269, lng:10.7510169, type:"outdoor" },
+  { navn:"Skur 13",                  lat:59.9091676, lng:10.7210694, type:"outdoor" },
+  { navn:"Trettenparken",            lat:59.9090300, lng:10.7196820, type:"outdoor" },
+  { navn:"Majorstuen skole (Firemanns)", lat:59.9286252, lng:10.7135843, type:"outdoor" },
+  { navn:"Marienlyst skole",         lat:59.9346089, lng:10.7231877, type:"outdoor" },
+  { navn:"Marienlyst",               lat:59.9327184, lng:10.7223750, type:"outdoor" },
+  { navn:"Brygg",                    lat:59.9132947, lng:10.7485544, type:"bar", label:"Bryggebar" },
+  { navn:"Kulturhuset",              lat:59.9146374, lng:10.7508109, type:"bar", label:"Kulturhus" },
+  { navn:"Raadhuset Bar",            lat:59.9136835, lng:10.7337321, type:"bar", label:"Bar" },
+  { navn:"Union Blindern",           lat:59.9407063, lng:10.7216641, type:"bar", label:"Studentklubb" },
+  { navn:"Alf",                      lat:59.9272500, lng:10.7508899, type:"bar", label:"Bar" },
+  { navn:"Røverstaden",              lat:59.9134458, lng:10.7293552, type:"bar", label:"Bar" },
+];
+
+var TABLES = STATIC.map(s => ({ ...s, verifisert:null, antall:null, materiale:null, tilstand:null, under_tak:null, belysning:null, vibe:null, notater:"", bilde_url:"", label: s.label || null }));
+
+// RFC 4180 CSV parser: handles quoted commas, "" escapes and line breaks
+// inside quoted cells (e.g. multi-line notes typed in Google Sheets).
+function parseCSVRows(text) {
+  var rows = [], row = [], cur = '', inQ = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else inQ = false;
+      } else cur += c;
+    } else if (c === '"') inQ = true;
+    else if (c === ',') { row.push(cur.trim()); cur = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(cur.trim()); rows.push(row); row = []; cur = '';
+    } else cur += c;
+  }
+  if (cur || row.length) { row.push(cur.trim()); rows.push(row); }
+  return rows.filter(r => r.some(v => v !== ''));
+}
+
+function parseCSV(text) {
+  var rows = parseCSVRows(text.trim());
+  if (!rows.length) return [];
+  var headers = rows[0].map(h => h.toLowerCase());
+  return rows.slice(1).map(vals => {
+    var obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || "").trim());
+    return obj;
+  });
+}
+
+function resolveImage(url) {
+  if (!url) return "";
+  url = url.trim();
+  if (url.includes('imgur.com')) {
+    var m = url.match(/([a-zA-Z0-9]+)(?:\?.*)?$/);
+    if (m) return `https://i.imgur.com/${m[1]}.jpg`;
+  }
+  if (url.startsWith("http")) return url;
+  // Local filename — normalise so sheet entries don't need to be exact:
+  // strip any leading path, lowercase, spaces → dashes
+  var filename = url.split('/').pop().toLowerCase().replace(/\s+/g, '-').normalize('NFC');
+  return `images/bord/${encodeURIComponent(filename)}`;
+}
+
+async function fetchWithRetry(url, maxAttempts) {
+  var delay = 1200;
+  for (var i = 0; i < maxAttempts; i++) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(() => ctrl.abort(), 10000); // 10s hard timeout per attempt
+    try {
+      // Default cache mode: the API responds with max-age=0, so the browser always
+      // revalidates, but Vercel's CDN can answer instantly from its edge cache.
+      var r = await fetch(url, { signal: ctrl.signal });
+      if (r.ok) return r;
+    } catch (e) {
+      // AbortError or network failure — continue to next attempt
+    } finally {
+      clearTimeout(timer);
+    }
+    if (i < maxAttempts - 1) await new Promise(res => setTimeout(res, delay));
+    delay = Math.min(delay * 2, 8000);
+  }
+  return null;
+}
+
+var _lastDataFetch = 0;
+async function loadSheetData() {
+  if (!SHEETS_CSV_URL) {
+    updateProgress();
+    return;
+  }
+  try {
+    // No cache-busting query param — it would defeat the CDN edge cache
+    var res = await fetchWithRetry(SHEETS_CSV_URL, 3);
+    if (!res) { updateProgress(); return; }
+    _lastDataFetch = Date.now();
+    var text = await res.text();
+    var rows = parseCSV(text);
+    var newTables = [];
+    rows.forEach(row => {
+      var navn = (row.navn || "").trim().normalize('NFC');
+      if (!navn) return;
+      var lat = parseFloat((row.lat || '').replace(',', '.')), lng = parseFloat((row.lng || '').replace(',', '.'));
+      var data = {
+        verifisert: row.verifisert ? row.verifisert.toLowerCase() : null,
+        label:      row.label || null,
+        antall:     row.antall    || null,
+        materiale:  row.materiale || null,
+        tilstand:   row.tilstand  || null,
+        under_tak:  row.under_tak || null,
+        belysning:  row.belysning || null,
+        vibe:       row.vibe ? parseFloat(row.vibe) : null,
+        notater:    row.notater   || "",
+        bilde_url:  resolveImage(row.images || row.url || row.bilde_url || row["bilde url"] || row.bilde || row.image || row.img || row.foto || row.photo || ""),
+      };
+      // Try to match a static entry for coords/type
+      var navnN = navn.toLowerCase().normalize('NFC');
+      var stripA = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      var base = STATIC.find(t => t.navn.toLowerCase().normalize('NFC') === navnN);
+      if (!base) base = STATIC.find(t => stripA(t.navn) === stripA(navn));
+      if (!base && lat && lng) {
+        base = STATIC.find(t => Math.abs(t.lat - lat) + Math.abs(t.lng - lng) < 0.001);
+      }
+      if (base) {
+        newTables.push({ ...base, navn, ...data });
+      } else {
+        if (!lat || !lng) return;
+        var rawType = (row.type||"utendørs").toLowerCase();
+        var type = rawType === "utendørs" ? "outdoor" : rawType === "innendørs" ? "bar" : rawType;
+        newTables.push({ navn, lat, lng, type, ...data });
+      }
+    });
+    // Sheet is sole source of truth — only show what's in the sheet
+    if (newTables.length > 0) TABLES = newTables;
+    updateProgress();
+    renderMarkers();
+    if (userLat !== null) showNearbyStrip(userLat, userLng);
+  } catch(e) {
+    console.warn("Sheet-feil:", e);
+    updateProgress();
+  }
+}
+
+function updateProgress() {
+  var verified = TABLES.filter(t => t.verifisert === 'ja').length;
+  var total    = TABLES.length;
+  var circ     = 2 * Math.PI * 10; // r=10 → ~62.83
+  _progressArc.setAttribute('stroke-dasharray', `${(verified/(total||1))*circ} ${circ}`);
+  _progressFraction.textContent = `${verified}/${total}`;
+  updateMiniIndicators();
+  // Keep Om page live stat in sync
+  var omCount = document.getElementById('omTableCount');
+  if (omCount) omCount.textContent = total;
+}
+
+var map = L.map('map', {
+  center: [59.926, 10.752], zoom: 13,
+  zoomControl: false, attributionControl: true,
+  tap: true, preferCanvas: true,
+  zoomSnap: 0, zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 80,
+  wheelDebounceTime: 0,
+  minZoom: 5, maxZoom: 19,
+  rotate: true, rotateControl: false, bearing: 0,
+  inertia: true,
+  inertiaDeceleration: 500,
+  inertiaMaxSpeed: Infinity,
+  easeLinearity: 0.2,
+});
+map.attributionControl.setPrefix(false);
+var _tileOpts = {
+  attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
+  maxZoom: 19, subdomains: 'abcd',
+  updateWhenIdle: false, updateWhenZooming: false, keepBuffer: 8, crossOrigin: true,
+  detectRetina: true,
+};
+var _darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_3lve_1_7d81dabffe145165e306a9a4', _tileOpts);
+var _lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_3lve_1_7d81dabffe145165e306a9a4', _tileOpts);
+// Add only the tile layer matching the saved theme (default light) — avoids
+// downloading a full screen of dark tiles that are immediately swapped out.
+(localStorage.getItem('pinpong-theme') === 'dark' ? _darkTiles : _lightTiles).addTo(map);
+
+function iconSize(highlighted=false) {
+  return highlighted ? 36 : 28;
+}
+
+// ── Favorites ────────────────────────────────────────────
+// Favorites keyed by table name (stable across data reloads).
+// Migrate legacy index-based storage on first load.
+(function _migrateFavs() {
+  try {
+    var raw = JSON.parse(localStorage.getItem('pinpong-favs') || '[]');
+    if (raw.length && typeof raw[0] === 'number') {
+      // Old format: array of indices — convert to names using STATIC (always available)
+      var named = raw.map(i => STATIC[i]?.navn).filter(Boolean);
+      localStorage.setItem('pinpong-favs', JSON.stringify(named));
+    }
+  } catch(e) {}
+})();
+var FAVORITES = new Set(JSON.parse(localStorage.getItem('pinpong-favs') || '[]'));
+function saveFavorites() {
+  localStorage.setItem('pinpong-favs', JSON.stringify([...FAVORITES]));
+}
+function toggleFavorite() {
+  if (selectedIdx === null) return;
+  var navn = TABLES[selectedIdx]?.navn;
+  if (!navn) return;
+  if (FAVORITES.has(navn)) FAVORITES.delete(navn);
+  else FAVORITES.add(navn);
+  saveFavorites();
+  updateHeartBtn();
+  var lm = _markerByIdx[selectedIdx];
+  if (lm) lm.setIcon(makeIcon(TABLES[selectedIdx], true, selectedIdx));
+}
+function updateHeartBtn() {
+  var btn = document.getElementById('btnHeart');
+  var icon = document.getElementById('heartIcon');
+  if (!btn || selectedIdx === null) return;
+  var navn = TABLES[selectedIdx]?.navn;
+  var faved = navn ? FAVORITES.has(navn) : false;
+  btn.classList.toggle('faved', faved);
+  icon.setAttribute('fill', faved ? '#ff3b30' : 'none');
+  icon.setAttribute('stroke', '#ff3b30');
+}
+
+function makeIcon(t, highlighted=false, tableIdx=-1) {
+  var color = t.type==='outdoor' ? '#FF9500' : '#8B5CF6';
+  var size  = iconSize(highlighted);
+  var glow  = highlighted ? `filter:drop-shadow(0 0 8px ${color}99);` : '';
+  var opacity = t.verifisert==="nei" ? 0.35 : 1;
+  var pulse = highlighted ? `<div style="position:absolute;top:50%;left:50%;width:${size}px;height:${size}px;margin:-${size/2}px 0 0 -${size/2}px;border-radius:50%;background:${color};opacity:0.35;animation:pulse 1.3s ease-out infinite;pointer-events:none;"></div>` : '';
+  var icon = t.type==='outdoor'
+    ? `<svg width="${Math.round(size*.42)}" height="${Math.round(size*.42)}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="10" rx="8" ry="8" fill="white" opacity="0.92"/><rect x="15" y="14" width="3" height="7" rx="1.5" fill="white" opacity="0.92" transform="rotate(-40 15 14)"/></svg>`
+    : `<svg width="${Math.round(size*.46)}" height="${Math.round(size*.46)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.92" xmlns="http://www.w3.org/2000/svg"><polyline points="3,14 12,4 21,14"/><line x1="6" y1="11" x2="6" y2="20"/><line x1="18" y1="11" x2="18" y2="20"/><line x1="6" y1="20" x2="18" y2="20"/></svg>`;
+  var cs = Math.max(12, Math.round(size * 0.48));
+  var offset = -Math.round(cs * 0.45);
+  var checkmark = t.verifisert==="ja" ? `<div style="position:absolute;top:${offset}px;right:${offset}px;width:${cs}px;height:${cs}px;background:#34C759;border:2.5px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : '';
+  var isFav = FAVORITES.has(t.navn);
+  var heartBadge = isFav ? `<div style="position:absolute;bottom:${offset}px;left:${offset}px;width:${cs}px;height:${cs}px;background:#ff3b30;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(255,59,48,0.5);"><svg width="${Math.round(cs*0.52)}" height="${Math.round(cs*0.52)}" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>` : '';
+  var isLight = document.body.classList.contains('light');
+  var markerBorder = isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.15)';
+  var markerShadow = isLight ? `0 3px 10px ${color}88, 0 1px 3px rgba(0,0,0,0.2)` : `0 3px 12px ${color}55`;
+  var html = `<div style="position:relative;display:flex;flex-direction:column;align-items:center;${glow}opacity:${opacity}">${pulse}<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid ${markerBorder};box-shadow:${markerShadow};display:flex;align-items:center;justify-content:center;">${icon}${checkmark}${heartBadge}</div><div style="width:2px;height:6px;background:${color};opacity:0.8;margin-top:-1px;border-radius:0 0 2px 2px;"></div></div>`;
+  return L.divIcon({ html, className:'', iconSize:[size,size+7], iconAnchor:[size/2,size+7] });
+}
+
+var showOutdoor=true, showBar=true, showFavOnly=false, showVerifiedOnly=false, showRoofOnly=false, showLightOnly=false, leafletMarkers=[], userMarker=null, selectedIdx=null, clusterGroup=null, clusterGroupBar=null;
+var currentLang = localStorage.getItem('pinpong-lang') || 'no';
+var userLat=null, userLng=null;
+
+function makeClusterGroup(color) {
+  var group = L.markerClusterGroup({
+    iconCreateFunction: cluster => {
+      var count = cluster.getChildCount();
+      var cms = cluster.getAllChildMarkers();
+      var allVerified = cms.length > 0 && cms.every(m => {
+        var t = TABLES[m._tableIndex];
+        return t && t.verifisert === 'ja';
+      });
+      var badge = allVerified
+        ? `<div style="position:absolute;top:-5px;right:-5px;width:14px;height:14px;background:#34C759;border:2px solid #0c0c0f;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.5);"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>`
+        : '';
+      return L.divIcon({
+        html: `<div class="cluster-icon" style="background:${color};box-shadow:0 3px 14px ${color}80">${count}${badge}</div>`,
+        className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+      });
+    },
+    maxClusterRadius: 42,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: false,
+    disableClusteringAtZoom: 15,
+    animate: true,
+    spiderfyOnMaxZoom: false,
+    removeOutsideVisibleBounds: false,
+  });
+  group.on('clusterclick', function(e) {
+    var bounds = e.layer.getBounds().pad(0.3);
+    var targetZoom = Math.min(16, map.getBoundsZoom(bounds));
+    var center = bounds.getCenter();
+    if (map.getZoom() >= targetZoom) {
+      // Already zoomed in enough — just pan, no zoom change
+      map.flyTo(center, map.getZoom(), { duration: 0.28, easeLinearity: 0.6 });
+    } else {
+      // Zoomed out — fly and zoom in
+      map.flyTo(center, targetZoom, { duration: 0.38, easeLinearity: 0.55 });
+    }
+  });
+  return group;
+}
+
+// idx → Leaflet marker, so highlight changes touch 2 markers instead of all of them
+var _markerByIdx = {};
+var _highlightedIdx = null;
+
+// Move the highlight from the previously selected marker to `idx` (or none if null)
+function highlightMarker(idx) {
+  if (_highlightedIdx === idx) return;
+  var prev = _highlightedIdx !== null ? _markerByIdx[_highlightedIdx] : null;
+  if (prev) prev.setIcon(makeIcon(TABLES[_highlightedIdx], false, _highlightedIdx));
+  var next = idx !== null ? _markerByIdx[idx] : null;
+  if (next) next.setIcon(makeIcon(TABLES[idx], true, idx));
+  _highlightedIdx = idx;
+}
+
+// Redraw every marker icon (theme change etc.)
+function refreshMarkerIcons() {
+  leafletMarkers.forEach(({ lm, index }) => lm.setIcon(makeIcon(TABLES[index], index === selectedIdx, index)));
+  _highlightedIdx = selectedIdx;
+}
+
+function renderMarkers() {
+  if (clusterGroup)    map.removeLayer(clusterGroup);
+  if (clusterGroupBar) map.removeLayer(clusterGroupBar);
+  leafletMarkers = [];
+  _markerByIdx = {};
+  _highlightedIdx = null;
+  clusterGroup    = makeClusterGroup('#FF9500');
+  clusterGroupBar = makeClusterGroup('#8B5CF6');
+  TABLES.forEach((t, i) => {
+    if ((showOutdoor || showBar) && t.type==='outdoor' && !showOutdoor) return;
+    if ((showOutdoor || showBar) && t.type==='bar'     && !showBar)     return;
+    if (showFavOnly      && !FAVORITES.has(t.navn))                                       return;
+    if (showVerifiedOnly && t.verifisert !== 'ja')                                       return;
+    if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))          return;
+    if (showLightOnly    && !/ja/i.test(t.belysning || ''))                              return;
+    var isSel = i === selectedIdx;
+    var lm = L.marker([t.lat,t.lng], { icon:makeIcon(t, isSel, i) });
+    lm._tableIndex = i;
+    lm.on('click', e => { L.DomEvent.stopPropagation(e); openSheet(i); });
+    leafletMarkers.push({ lm, index:i });
+    _markerByIdx[i] = lm;
+    if (isSel) _highlightedIdx = i;
+    if (t.type === 'outdoor') clusterGroup.addLayer(lm);
+    else                      clusterGroupBar.addLayer(lm);
+  });
+  map.addLayer(clusterGroup);
+  map.addLayer(clusterGroupBar);
+}
+
+renderMarkers();
+updateMiniIndicators();
+
+loadSheetData().then(() => {
+  var param = new URLSearchParams(location.search).get('bord');
+  if (param) {
+    var idx = TABLES.findIndex(t => t.navn.toLowerCase() === param.toLowerCase());
+    if (idx !== -1) {
+      map.setView([TABLES[idx].lat, TABLES[idx].lng], 15, { animate: false });
+      setTimeout(() => openSheet(idx), 400);
+    }
+  }
+
+  // Warm the image cache for the tables the user is most likely to open first
+  // (nearest to them / the map centre) instead of downloading every photo.
+  // Neighbours of an open card are preloaded in openSheet() so swiping stays instant.
+  setTimeout(_preloadNearestImages, 1500); // start 1.5s after data loads — tiles first
+});
+
+var _preloaded = new Set();
+function preloadImage(url) {
+  if (!url || _preloaded.has(url)) return;
+  _preloaded.add(url);
+  var im = new Image();
+  im.decoding = 'async';
+  im.src = url;
+}
+function _preloadNearestImages() {
+  if (navigator.connection && navigator.connection.saveData) return;
+  var c = userLat !== null ? { lat: userLat, lng: userLng } : map.getCenter();
+  var urls = TABLES
+    .filter(t => t.bilde_url)
+    .map(t => ({ url: t.bilde_url, d: haversine(c.lat, c.lng, t.lat, t.lng) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 12)
+    .map(x => x.url);
+  var i = 0;
+  (function next() {
+    if (i >= urls.length) return;
+    urls.slice(i, i + 3).forEach(preloadImage);
+    i += 3;
+    setTimeout(next, 600);
+  })();
+}
+
+</script>
+<script>
+
+
+// ── Nearby strip ────────────────────────────────────────
+function showNearbyStrip(lat, lng) {
+  var nearest = TABLES
+    .map((t, i) => ({ t, i, d: haversine(lat, lng, t.lat, t.lng) }))
+    .filter(({ t, i }) => {
+      if ((showOutdoor || showBar) && t.type === 'outdoor' && !showOutdoor) return false;
+      if ((showOutdoor || showBar) && t.type !== 'outdoor' && !showBar)    return false;
+      if (showFavOnly      && !FAVORITES.has(t.navn))                               return false;
+      if (showVerifiedOnly && t.verifisert !== 'ja')                                return false;
+      if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || ''))  return false;
+      if (showLightOnly    && !/ja/i.test(t.belysning || ''))                       return false;
+      return true;
+    })
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 9);
+
+  _nearbyStrip.innerHTML = nearest.map(({ t, i, d }, idx) => {
+    var color    = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    var dist     = d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`;
+    var check    = t.verifisert === 'ja' ? ' <span class="nearby-card-check">✓</span>' : '';
+    var glow     = idx === 0 ? ' nearest-glow' : '';
+    var typeLabel = t.type === 'outdoor' ? 'Utendørs' : esc(t.label || 'Innendørs');
+    return `<div class="nearby-card" onclick="selectNearby(${i})" style="border-left-color:${color};border-right-color:${color}">
+      <div class="nearby-card-dist${glow}" style="color:${color}">${dist}${check}</div>
+      <div class="nearby-card-name">${esc(t.navn)}</div>
+      <div class="nearby-card-type">${typeLabel}</div>
+    </div>`;
+  }).join('');
+
+  _nearbyContainer.classList.add('visible');
+  _fabStack.classList.add('strip-visible');
+}
+
+var _pendingOpenTimer = null;
+function selectNearby(idx) {
+  clearTimeout(_pendingOpenTimer);
+  map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
+  // Open after the flight completes — opening mid-flight cancels the zoom leg
+  _pendingOpenTimer = setTimeout(() => openSheet(idx), 850);
+}
+
+// ── Continuous location watch ────────────────────────────
+// maximumAge:0 = never serve a cached position (important while moving)
+var geoOpts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+var locationWatchId = null;
+var firstFix = true;
+var _lastNearbyLat = null, _lastNearbyLng = null;
+
+// Smooth dot animation between GPS fixes
+function _animateMarker(marker, toLat, toLng) {
+  // Cancel any in-flight glide so overlapping GPS fixes don't fight each other
+  if (marker._animRaf) { cancelAnimationFrame(marker._animRaf); marker._animRaf = null; }
+  var from = marker.getLatLng();
+  var dist  = haversine(from.lat, from.lng, toLat, toLng);
+  // Large jumps (GPS correction) snap instantly; small movements glide
+  if (dist > 150) { marker.setLatLng([toLat, toLng]); return; }
+  var duration = 1200; // ms — matches typical GPS update interval
+  var start    = performance.now();
+  function step(now) {
+    var t = Math.min((now - start) / duration, 1);
+    var e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
+    marker.setLatLng([from.lat + (toLat - from.lat)*e, from.lng + (toLng - from.lng)*e]);
+    marker._animRaf = t < 1 ? requestAnimationFrame(step) : null;
+  }
+  marker._animRaf = requestAnimationFrame(step);
+}
+
+function onPositionUpdate(pos) {
+  var lat = pos.coords.latitude;
+  var lng  = pos.coords.longitude;
+  userLat = lat; userLng = lng;
+
+  if (userMarker) {
+    _animateMarker(userMarker, lat, lng);
+  } else {
+    // First ever fix — create marker and fly to it
+    var icon = L.divIcon({
+      html:`<div class="user-dot">
+        <div class="user-dot-beam" id="userBeam"></div>
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-ring"></div>
+        <div class="user-dot-core"></div>
+      </div>`,
+      className:'', iconSize:[40,40], iconAnchor:[20,20],
+    });
+    userMarker = L.marker([lat,lng], { icon, zIndexOffset:1000 }).addTo(map);
+  }
+
+  if (firstFix) {
+    firstFix = false;
+    map.flyTo([lat, lng], 14, { duration: 1.2 });
+    showNearbyStrip(lat, lng);
+    _lastNearbyLat = lat; _lastNearbyLng = lng;
+    return;
+  }
+
+  // Refresh nearby strip only when moved >50 m (avoids spamming while stationary)
+  if (_lastNearbyLat === null || haversine(lat, lng, _lastNearbyLat, _lastNearbyLng) > 50) {
+    _lastNearbyLat = lat; _lastNearbyLng = lng;
+    showNearbyStrip(lat, lng);
+  }
+}
+
+function showLocToast(title, body) {
+  var toast = document.getElementById('locToast');
+  document.getElementById('locToastTitle').textContent = title;
+  document.getElementById('locToastBody').innerHTML = body;
+  toast.classList.add('show');
+}
+function closeLocToast() {
+  document.getElementById('locToast').classList.remove('show');
+}
+function locToastRetry() {
+  closeLocToast();
+  // Check if permission API is available and already denied
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(result => {
+      if (result.state === 'denied') {
+        showLocPermissionDenied();
+      } else {
+        startLocationWatch();
+        if (userLat !== null) map.flyTo([userLat, userLng], 15, { duration: 1 });
+      }
+    });
+  } else {
+    startLocationWatch();
+  }
+}
+function showLocPermissionDenied() {
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var body;
+  if (isIOS) {
+    body = `Gå til <b>Innstillinger → Personvern → Lokalisering → Safari</b> og velg <b>«Mens appen brukes»</b>. Kom tilbake hit etterpå.`;
+  } else if (isAndroid) {
+    body = `Trykk på 🔒 i adressefeltet i nettleseren → <b>Tillatelser → Posisjon → Tillat</b>. Last så inn siden på nytt.`;
+  } else {
+    body = `Trykk på 🔒 eller ⓘ i adressefeltet → <b>Stedstjenester</b> → sett til <b>Tillat</b>. Last så inn siden på nytt.`;
+  }
+  showLocToast('Posisjon blokkert', body);
+}
+
+var _locationDenied = false;
+var _returnToFavs   = false; // true when sheet was opened from Favoritter page
+function startLocationWatch() {
+  if (!navigator.geolocation) return;
+  if (_locationDenied) return; // don't re-prompt after user denied
+  if (locationWatchId !== null) {
+    navigator.geolocation.clearWatch(locationWatchId);
+    locationWatchId = null;
+  }
+  locationWatchId = navigator.geolocation.watchPosition(
+    onPositionUpdate,
+    err => {
+      if (err.code === 1) { _locationDenied = true; showLocPermissionDenied(); }
+    },
+    geoOpts
+  );
+}
+
+startLocationWatch();
+
+// Full recovery when the app becomes visible again (tab switch, lock screen, bfcache restore)
+function _onAppVisible() {
+  // 1. Restart GPS (iOS pauses it on lock/tab-switch)
+  startLocationWatch();
+
+  // 2. Reset any stuck card-swipe animation lock
+  _cardAnimating = false;
+
+  // 3. Re-render map tiles (Leaflet loses track of size while hidden)
+  if (typeof map !== 'undefined') {
+    try { map.invalidateSize(); } catch(e) {}
+  }
+
+  // 4. Re-enable submit buttons if they were disabled mid-flight
+  ['rapportSubmitBtn', 'feilSubmitBtn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.disabled) { el.disabled = false; }
+  });
+
+  // 5. Dispatch touchcancel so any lingering touch state is cleared
+  try { document.dispatchEvent(new TouchEvent('touchcancel')); } catch(e) {}
+
+  // 6. Refresh data if it's been more than 30 minutes
+  if (Date.now() - _lastDataFetch > 30 * 60 * 1000) {
+    loadSheetData();
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') _onAppVisible();
+});
+
+// Safari bfcache: page is restored from memory exactly as-is, visibilitychange
+// does NOT fire. pageshow with persisted=true is the only reliable signal.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) _onAppVisible();
+});
+
+// ── Compass widget ───────────────────────────────────────
+var _compassHeading = null;
+
+function _onCompass(e) {
+  var h = typeof e.webkitCompassHeading === 'number'
+    ? e.webkitCompassHeading
+    : e.alpha != null ? (360 - e.alpha) % 360 : null;
+  if (h === null) return;
+  if (_compassHeading !== null && Math.abs(h - _compassHeading) < 1.5) return;
+  _compassHeading = h;
+  var beam = document.getElementById('userBeam');
+  if (beam) { beam.classList.add('active'); beam.style.transform = `rotate(${h}deg)`; }
+}
+
+async function startCompass() {
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    try {
+      var p = await DeviceOrientationEvent.requestPermission();
+      if (p !== 'granted') return;
+    } catch(e) { return; }
+  }
+  window.addEventListener('deviceorientation', _onCompass, true);
+}
+
+// Auto-start on Android
+if (!(typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function')) {
+  window.addEventListener('deviceorientation', _onCompass, true);
+}
+
+function openSheet(idx, _fromNav) {
+  if (!_fromNav) buildSwipeList(idx);
+  var t = TABLES[idx];
+  selectedIdx = idx;
+  closeMapsPicker();
+  try { history.replaceState(null,'', `${location.pathname}?bord=${encodeURIComponent(t.navn)}`); } catch(e) {}
+  if (t.bilde_url) {
+    _sheetPhoto.src = t.bilde_url;
+    _sheetPhoto.className = 'sheet-photo visible';
+    _sheetPhoto.onerror = () => { _sheetPhoto.className = 'sheet-photo'; };
+  } else {
+    _sheetPhoto.src = ''; _sheetPhoto.className = 'sheet-photo';
+  }
+  _sheetType.innerHTML = sheetTypeHtml(t);
+  _sheetType.style.color = t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)';
+  _sheetName.textContent = t.navn || 'Ukjent bord';
+  _sheetStats.innerHTML = sheetStatsHtml(t);
+  _sheetNote.innerHTML = sheetNotesHtml(t);
+  var alreadyOpen = _bottomSheet.classList.contains('open');
+  _bottomSheet.classList.add('open');
+  _nearbyContainer.classList.add('sheet-open');
+  _fabStack.classList.add('sheet-open');
+  highlightMarker(idx);
+  if (_cardAnimating) {
+    setTimeout(() => map.panTo([t.lat, t.lng], { animate:true, duration:0.35 }), 410);
+  } else {
+    map.panTo([t.lat, t.lng], { animate:true, duration: alreadyOpen ? 0.2 : 0.35 });
+  }
+  updateHeartBtn();
+  if (typeof updateSheetNav === 'function') updateSheetNav();
+  // Warm the photos of the cards a swipe would reveal next
+  if (typeof findGeoNeighbor === 'function') {
+    var _l = findGeoNeighbor(idx, -1), _r = findGeoNeighbor(idx, 1);
+    if (_l !== -1) preloadImage(TABLES[_l].bilde_url);
+    if (_r !== -1) preloadImage(TABLES[_r].bilde_url);
+  }
+}
+
+// ── Card content renderers (shared by the real card and the swipe ghost) ──
+function sheetTypeHtml(t) {
+  var typeMain = t.type==='outdoor' ? '🏓 ' + tr('type.outdoor') : '🍺 ' + tr('type.bar');
+  var typeLabel = t.label ? `<span style="font-size:9px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:0.5px;text-transform:uppercase">${esc(t.label)}</span>` : '';
+  return `<span>${typeMain}</span>${typeLabel}`;
+}
+
+function sheetNotesHtml(t) {
+  if (t.notater && t.notater.trim() && currentLang !== 'en') {
+    return `<div class="notes-inline"><span class="notes-tag">${tr('notes.label')}</span>${esc(t.notater.trim())}</div>`;
+  }
+  return '';
+}
+
+function sheetStatsHtml(t) {
+  var si = s => `<div class="stat-item"><div class="stat-label">${s.label}</div><div class="stat-val${s.cls||''}">${s.val}</div></div>`;
+  var renderStars = v => {
+    var s = ''; for (var i = 1; i <= 5; i++) s += v >= i ? '★' : v >= i - 0.5 ? '⯨' : '☆'; return s;
+  };
+  var statsHtml = '';
+  if (t.verifisert==='ja')       statsHtml += si({ label:tr('stats.status'), val:'✓', cls:' verified status-icon' });
+  else if (t.verifisert==='nei') statsHtml += si({ label:tr('stats.status'), val:'✗', cls:' not-found status-icon' });
+  else                           statsHtml += si({ label:tr('stats.status'), val:'−', cls:' status-icon' });
+  if (t.tilstand) {
+    var _condMap = {
+      'god':'Good','meget god':'Excellent','veldig god':'Excellent',
+      'grei':'Decent','ok':'Decent','middels':'Average',
+      'dårlig':'Poor','dårleg':'Poor','dårleg.':'Poor',
+      'ikke funnet':'Not found','ukjent':'Unknown','ny':'New'
+    };
+    var _condVal = currentLang === 'no' ? t.tilstand :
+      (_condMap[t.tilstand.toLowerCase()] || t.tilstand);
+    var _condCls = /^(god|meget god|veldig god|excellent|good|ny)/i.test(t.tilstand) ? ' cond-good'
+      : /^(grei|ok|middels|decent|average)/i.test(t.tilstand) ? ' cond-mid'
+      : /^(dårlig|dårleg|poor)/i.test(t.tilstand) ? ' cond-bad' : '';
+    statsHtml += si({ label:tr('stats.tilstand'), val: esc(_condVal), cls: _condCls });
+  }
+  if (t.antall)    statsHtml += si({ label:tr('stats.antall'),   val: esc(t.antall), cls:' big-num' });
+  if (t.under_tak) {
+    var takVal = /ja/i.test(t.under_tak) ? tr('stats.ja') : /nei/i.test(t.under_tak) ? tr('stats.nei') : esc(t.under_tak);
+    var takCls = /ja/i.test(t.under_tak) ? ' verified' : '';
+    statsHtml += si({ label:tr('stats.under_tak'), val: takVal, cls: takCls });
+  }
+  if (t.belysning) {
+    var lysVal = /ja/i.test(t.belysning) ? tr('stats.ja') : /nei/i.test(t.belysning) ? tr('stats.nei') : esc(t.belysning);
+    var lysCls = '';
+    statsHtml += si({ label:tr('stats.belysning'), val: lysVal, cls: lysCls });
+  }
+  if (t.vibe !== null && !isNaN(t.vibe)) statsHtml += si({ label:tr('stats.vibe'), val: renderStars(t.vibe), cls:' stars' });
+  return statsHtml;
+}
+
+function closeSheet() {
+  // No-op when nothing is open — avoids marker icon churn + history writes on every map tap
+  if (selectedIdx === null && !_bottomSheet.classList.contains('open')) return;
+  _returnToFavs = false; // cleared here; closeSheetX captures it before calling through
+  // Always clear any lingering swipe/animation state
+  _hSwipeActive = false;
+  _cardAnimating = false;
+  _bottomSheet.style.transition = '';
+  _bottomSheet.style.transform  = '';
+  var card = document.getElementById('sheetCard');
+  if (card) { card.style.transition = ''; card.style.transform = ''; }
+
+  _bottomSheet.classList.remove('open');
+  _nearbyContainer.classList.remove('sheet-open');
+  _fabStack.classList.remove('sheet-open');
+  closeMapsPicker();
+  highlightMarker(null);
+  selectedIdx = null;
+  try { history.replaceState(null,'', location.pathname); } catch(e) {}
+}
+
+// Called specifically by the X button — returns to Favoritter page if that's where user came from
+function closeSheetX() {
+  var ret = _returnToFavs;
+  _returnToFavs = false;
+  closeSheet();
+  if (ret) setTimeout(profileFavoritter, 380);
+}
+
+map.on('click', closeSheet);
+
+var _lastClusterZoom = map.getZoom(), _clusterRaf;
+map.on('zoom', () => {
+  // (Marker icons don't depend on zoom — setIcon() persists through
+  //  cluster add/remove, so no icon rebuild is needed here.)
+  // Dynamic cluster split/merge during pinch zoom
+  var z = Math.round(map.getZoom());
+  if (z !== _lastClusterZoom && clusterGroup && clusterGroupBar) {
+    _lastClusterZoom = z;
+    cancelAnimationFrame(_clusterRaf);
+    _clusterRaf = requestAnimationFrame(() => requestAnimationFrame(() => {
+      try { clusterGroup._zoomEnd(); } catch(e) {}
+      try { clusterGroupBar._zoomEnd(); } catch(e) {}
+    }));
+  }
+});
+
+function toggleMapsPicker() {
+  _mapsOverlay.classList.add('open');
+  _mapsModal.classList.add('open');
+}
+function closeMapsPicker() {
+  _mapsOverlay.classList.remove('open');
+  _mapsModal.classList.remove('open');
+}
+function openGoogleMaps() {
+  if (selectedIdx===null) return;
+  var { lat, lng } = TABLES[selectedIdx];
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`);
+}
+function openAppleMaps() {
+  if (selectedIdx===null) return;
+  var { lat, lng } = TABLES[selectedIdx];
+  window.open(`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`);
+}
+function shareTable() {
+  if (selectedIdx===null) return;
+  var navn = TABLES[selectedIdx].navn;
+  var url = `${location.origin}${location.pathname}?bord=${encodeURIComponent(navn)}`;
+  if (navigator.share) {
+    navigator.share({ title: navn, text: `Sjekk ut dette bordtennisbordet: ${navn}`, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      var btn = document.querySelector('.btn-share');
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      setTimeout(() => btn.innerHTML = orig, 1800);
+    }).catch(() => { window.prompt('Kopier lenken:', url); });
+  } else {
+    window.prompt('Kopier lenken:', url);
+  }
+}
+
+function openProfile() {
+  // Close any stray overlays that could sit above the profile page
+  document.querySelector('.maps-modal-overlay')?.classList.remove('open');
+  document.querySelector('.maps-modal')?.classList.remove('open');
+  document.getElementById('vippsModalBg')?.classList.remove('visible');
+  document.getElementById('profilePage').classList.add('open');
+}
+function closeProfile() {
+  document.getElementById('profilePage').classList.remove('open');
+}
+function profileFavoritter() {
+  // Build and open the Favoritter page
+  var list = document.getElementById('favList');
+  var favNames = [...FAVORITES];
+  if (!favNames.length) {
+    list.innerHTML = `<div class="fav-empty"><div class="fav-empty-icon">🏓</div>Du har ingen favoritter ennå.<br>Trykk ❤ på et bord for å lagre det her.</div>`;
+  } else {
+    // Resolve names → current TABLES indices (names are stable; indices may shift)
+    var sorted = favNames
+      .map(navn => {
+        var i = TABLES.findIndex(t => t.navn === navn);
+        return i === -1 ? null : { i, t: TABLES[i], d: userLat !== null ? haversine(userLat, userLng, TABLES[i].lat, TABLES[i].lng) : null };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.d !== null ? a.d - b.d : a.t.navn.localeCompare(b.t.navn));
+
+    list.innerHTML = sorted.map(({ i, t, d }) => {
+      var typeColor = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+      var typeLabel = t.type === 'outdoor' ? tr('type.outdoor') : tr('type.bar');
+      var distStr = d !== null ? (d < 1000 ? `${Math.round(d)} m` : `${(d/1000).toFixed(1)} km`) : '';
+      var verified = t.verifisert === 'ja' ? `<span style="color:var(--green)">✓ Verifisert</span>` : '';
+      var imgHtml = t.bilde_url
+        ? `<img src="${t.bilde_url}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover"/>`
+        : `🏓`;
+      return `<div class="fav-card" data-idx="${i}">
+        <div class="fav-card-img">${imgHtml}</div>
+        <div class="fav-card-info">
+          <div class="fav-card-type" style="color:${typeColor}">${typeLabel}</div>
+          <div class="fav-card-name">${esc(t.navn)}</div>
+          <div class="fav-card-meta">
+            ${distStr ? `<span class="fav-card-dist">${distStr}</span>` : ''}
+            ${verified}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Event delegation — reliable on all mobile browsers
+    list.onclick = e => {
+      var card = e.target.closest('.fav-card');
+      if (!card) return;
+      var idx = parseInt(card.dataset.idx, 10);
+      _returnToFavs = true;
+      closeFavPage();
+      closeProfile();
+      setTimeout(() => openSheet(idx), 480);
+    };
+  }
+  document.getElementById('favPage').classList.add('open');
+}
+function closeFavPage() {
+  var fp = document.getElementById('favPage');
+  fp.style.transition = '';
+  fp.style.transform  = '';
+  fp.classList.remove('open');
+}
+
+// ── Swipe-to-dismiss for slide-in pages ─────────────────
+function addSwipeToDismiss(el, dismissFn) {
+  var startX = 0, startY = 0, lastX = 0, lastT = 0;
+  var curX = 0, isHoriz = null, active = false;
+  var EASE = 'transform 0.38s cubic-bezier(0.22,1,0.36,1)';
+
+  el.addEventListener('touchstart', e => {
+    if (!el.classList.contains('open')) return;
+    startX = lastX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    lastT  = Date.now();
+    curX   = 0; isHoriz = null; active = true;
+    el.style.transition = 'none';
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    if (!active) return;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
+
+    if (isHoriz === null) {
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6)
+        isHoriz = Math.abs(dx) > Math.abs(dy);
+      return;
+    }
+    if (!isHoriz) return;
+
+    curX = Math.max(0, dx); // only allow rightward drag
+    lastX = e.touches[0].clientX;
+    lastT = Date.now();
+    el.style.transform = `translateX(${curX}px)`;
+    e.preventDefault();
+  }, { passive: false });
+
+  var onEnd = e => {
+    if (!active) return;
+    active = false;
+    if (!isHoriz) { el.style.transition = ''; return; }
+
+    var velX = (e.changedTouches[0].clientX - lastX) / Math.max(1, Date.now() - lastT); // px/ms
+    var dismiss = curX > window.innerWidth * 0.35 || velX > 0.55;
+
+    if (dismiss) {
+      el.style.transition = EASE;
+      el.style.transform  = 'translateX(100%)';
+      setTimeout(() => {
+        el.style.transition = '';
+        el.style.transform  = '';
+        dismissFn();
+      }, 380);
+    } else {
+      el.style.transition = EASE;
+      el.style.transform  = 'translateX(0)';
+      var onSnapBack = function(ev) {
+        if (ev.target !== el) return;
+        el.style.transition = '';
+        el.removeEventListener('transitionend', onSnapBack);
+      };
+      el.addEventListener('transitionend', onSnapBack);
+    }
+  };
+  el.addEventListener('touchend',    onEnd, { passive: true });
+  el.addEventListener('touchcancel', onEnd, { passive: true });
+}
+
+addSwipeToDismiss(document.getElementById('profilePage'),  () => document.getElementById('profilePage').classList.remove('open'));
+addSwipeToDismiss(document.getElementById('favPage'),      () => document.getElementById('favPage').classList.remove('open'));
+addSwipeToDismiss(document.getElementById('settingsPage'), () => closeSettings());
+addSwipeToDismiss(document.getElementById('rapportPage'),  () => document.getElementById('rapportPage').classList.remove('open'));
+addSwipeToDismiss(document.getElementById('feilPage'),     () => closeFeilPage());
+addSwipeToDismiss(document.getElementById('omPage'),           () => closeOmPage());
+addSwipeToDismiss(document.getElementById('personvernPage'),   () => closePersonvernPage());
+
+</script>
+<script>
+
+// ── i18n ───────────────────────────────────────────────
+var LANG = {
+  no: {
+    'nearby.label':         'Nærmeste',
+    'sheet.directions':     'Veibeskrivelse',
+    'search.placeholder':   'Søk etter bord…',
+    'search.label':         'Søk…',
+    'stats.status':         'Status',
+    'stats.tilstand':       'Tilstand',
+    'stats.antall':         'Antall',
+    'stats.under_tak':      'Under tak',
+    'stats.belysning':      'Belysning',
+    'stats.vibe':           'Vibe',
+    'stats.ja':             'Ja',
+    'stats.nei':            'Nei',
+    'nav.bord':             'bord',
+    'notes.label':          'Notater',
+    'type.outdoor':         'Utebord',
+    'type.bar':             'Innebord',
+    'filter.ute':           'UTE',
+    'filter.inne':          'INNE',
+    'filter.tak':           'TAK',
+    'filter.likte':         'LIKTE',
+    'filter.besøkt':        'VERIFISERT',
+    'filter.lys':           'LYS',
+    'profile.favoritter':   'Favoritter',
+    'profile.innstillinger':'Innstillinger',
+    'profile.tips':         'Kjenner du et bord? 🏓',
+    'profile.tips.sub':     'Tips oss om et sted!',
+    'profile.sub':          'Finn bordtennisbord nær deg',
+    'settings.title':       'Innstillinger',
+    'settings.appearance':  'Utseende',
+    'settings.theme':       'Tema',
+    'settings.theme.sub':   'Velg lyst eller mørkt kart',
+    'settings.light':       '☀ Lyst',
+    'settings.dark':        '🌙 Mørkt',
+    'settings.language':    'Språk / Language',
+    'lang.sub':             'Velg språk i appen',
+    'rapport.title':        'Tips oss om et bord!',
+    'profile.feil':         'Rapporter feil',
+    'profile.feil.sub':     'Noe som ikke stemmer?',
+    'profile.om':           'Om PinPong',
+    'profile.om.sub':       'Historien bak appen',
+    'feil.title':           'Rapporter feil',
+    'feil.label.subject':   'Kategori',
+    'feil.label.desc':      'Beskriv problemet',
+    'feil.submit':          'Send rapport',
+    'feil.s1':              'Bord finnes ikke',
+    'feil.s2':              'Bord er ødelagt',
+    'feil.s3':              'Feil informasjon',
+    'feil.s4':              'Programvarefeil',
+    'feil.s5':              'Annet',
+    'vipps.btn':            'Støtt PINPONG med Vipps!',
+    'vipps.nudge.title':    'Lyst til å støtte arbeidet? 🎉',
+    'vipps.nudge.sub':      '',
+    'vipps.modal.title':    'Støtt arbeidet med Vipps!',
+    'vipps.modal.sub':      'Skann med telefonkameraet',
+    'vipps.modal.close':    'Lukk',
+    'om.tables.label':      'bord på kartet',
+    'om.story.title':       'Historien',
+    'om.story.body':        'Bordtennis er en av de morsomste sportene som finnes, men i Oslo er det overraskende vanskelig å finne et bord utover den ene eller to man allerede kjenner til. Altfor ofte ender man opp med racket og ball i sekken på vei til en park der bordet viser seg å være opptatt, ødelagt eller ikke der i det hele tatt. Etter tre år med den frustrasjonen ble det klart at ingen andre kom til å lage en løsning — så jeg laget den selv.<br><br>Det som begynte som et ide, vokste til en fullverdig app med live-kart, bilder, veibeskrivelser, filtrering og masse funksjonaliteter. Målet er enkelt: du skal kunne finne nærmeste bord og spille på under ti minutter. Dette har vi klart å oppnå!<br><br>PinPong er ikke ment å være mitt prosjekt alene. Å holde kartet oppdatert og komplett har jeg dessverre ikke ressursene eller tiden til, men jeg tror det er noe vi kanskje kan få til sammen! Hvert bord som meldes inn gjør nettsiden bedre for alle som spiller etter deg. Dette er en app bygget av en spiller, for spillere, med kjærlighet for sporten og for Oslo.<br><br><span style="font-style:italic;color:var(--muted)">Ser du et bord som mangler? Meld det inn — så kan du bli en del av historien!</span>',
+    'om.dev.title':         'Utviklet av',
+    'om.version':           'Versjon 1.0',
+    'privat.title':         'Personvern',
+    'privat.data.title':    'Datainnsamling',
+    'privat.data.body':     'PinPong samler ikke inn persondata automatisk. Nettsiden bruker ingen informasjonskapsler (cookies) eller sporingsverktøy.',
+    'privat.email.title':   'E-post via kontaktskjema',
+    'privat.email.body':    'Dersom du frivillig oppgir e-postadressen din via kontaktskjemaet, brukes denne utelukkende for å svare deg. E-postadressen deles ikke med tredjeparter og slettes når henvendelsen er besvart.',
+    'privat.rights.title':  'Dine rettigheter',
+    'privat.rights.body':   'Du har rett til innsyn i, retting av og sletting av opplysninger vi har om deg. Ta kontakt på <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for spørsmål eller forespørsler om sletting.',
+    'privat.updated':       'Sist oppdatert: juli 2026',
+  },
+  en: {
+    'nearby.label':         'Nearest',
+    'sheet.directions':     'Directions',
+    'search.placeholder':   'Search tables…',
+    'search.label':         'Search…',
+    'stats.status':         'Status',
+    'stats.tilstand':       'Condition',
+    'stats.antall':         'Tables',
+    'stats.under_tak':      'Covered',
+    'stats.belysning':      'Lighting',
+    'stats.vibe':           'Vibe',
+    'stats.ja':             'Yes',
+    'stats.nei':            'No',
+    'nav.bord':             'tables',
+    'notes.label':          'Notes',
+    'type.outdoor':         'Outdoor',
+    'type.bar':             'Indoor',
+    'filter.ute':           'OUT',
+    'filter.inne':          'IN',
+    'filter.tak':           'ROOF',
+    'filter.likte':         'LIKED',
+    'filter.besøkt':        'VERIFIED',
+    'filter.lys':           'LIGHT',
+    'profile.favoritter':   'Favorites',
+    'profile.innstillinger':'Settings',
+    'profile.tips':         'Know a table? 🏓',
+    'profile.tips.sub':     'Tip us about a spot!',
+    'profile.sub':          'Find available ping pong tables near you',
+    'settings.title':       'Settings',
+    'settings.appearance':  'Appearance',
+    'settings.theme':       'Theme',
+    'settings.theme.sub':   'Choose light or dark map',
+    'settings.light':       '☀ Light',
+    'settings.dark':        '🌙 Dark',
+    'settings.language':    'Language / Språk',
+    'lang.sub':             'Choose app language',
+    'rapport.title':        'Tip us about a table!',
+    'profile.feil':         'Report an issue',
+    'profile.feil.sub':     'Something not right?',
+    'profile.om':           'About PinPong',
+    'profile.om.sub':       'The story behind the app',
+    'feil.title':           'Report an issue',
+    'feil.label.subject':   'Category',
+    'feil.label.desc':      'Describe the issue',
+    'feil.submit':          'Send report',
+    'feil.s1':              'Table does not exist',
+    'feil.s2':              'Table is broken',
+    'feil.s3':              'Incorrect information',
+    'feil.s4':              'Software bug',
+    'feil.s5':              'Other',
+    'vipps.btn':            'Support PINPONG on Vipps!',
+    'vipps.nudge.title':    'Want to support the project? 🎉',
+    'vipps.nudge.sub':      '',
+    'vipps.modal.title':    'Support our work on Vipps!',
+    'vipps.modal.sub':      'Scan with your phone camera',
+    'vipps.modal.close':    'Close',
+    'om.tables.label':      'tables on the map',
+    'om.story.title':       'The Story',
+    'om.story.body':        'Table tennis is one of the most fun sports there is, but in Oslo it\'s surprisingly hard to find a table beyond the one or two you already know about. Too often you end up with a racket and ball in your bag, heading to a park only to find the table is occupied, broken, or simply not there at all. After three years of that frustration, it became clear no one else was going to build a solution — so I built it myself.<br><br>What started as an idea grew into a full-featured app with a live map, photos, directions, filters, and a whole lot more. The goal is simple: find the nearest table and start playing in under ten minutes. We\'ve made that happen!<br><br>PinPong isn\'t meant to be just my project. Keeping the map fully up to date is something I unfortunately don\'t have the time or resources to do alone — but I believe it\'s something we can pull off together! Every table that gets submitted makes the app better for everyone who plays after you. This is an app built by a player, for players, with love for the sport and for Oslo.<br><br><span style="font-style:italic;color:var(--muted)">See a table that\'s missing? Submit it — and become part of the story!</span>',
+    'om.dev.title':         'Developed by',
+    'om.version':           'Version 1.0',
+    'privat.title':         'Privacy',
+    'privat.data.title':    'Data Collection',
+    'privat.data.body':     'PinPong does not collect personal data automatically. The site uses no cookies or tracking tools.',
+    'privat.email.title':   'Email via contact form',
+    'privat.email.body':    'If you voluntarily provide your email address via the contact form, it is used solely to respond to you. Your email is not shared with third parties and is deleted once your enquiry has been answered.',
+    'privat.rights.title':  'Your rights',
+    'privat.rights.body':   'You have the right to access, correct, and delete any information we hold about you. Contact us at <span style="color:var(--orange)">pinpongnorge@outlook.no</span> for questions or deletion requests.',
+    'privat.updated':       'Last updated: July 2026',
+  }
+};
+
+function tr(key) {
+  return (LANG[currentLang] && LANG[currentLang][key]) || LANG.no[key] || key;
+}
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = tr(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = tr(el.dataset.i18nHtml);
+  });
+  var si = document.getElementById('searchInput');
+  if (si) si.placeholder = tr('search.placeholder');
+  var sl = document.querySelector('.search-label');
+  if (sl) sl.textContent = tr('search.label');
+  document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
+  document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
+  var lsl = document.getElementById('langSubLabel');
+  if (lsl) lsl.textContent = tr('lang.sub');
+  var filterLabels = {
+    'pill-outdoor': 'filter.ute', 'pill-bar': 'filter.inne',
+    'pill-roof': 'filter.tak', 'pill-fav': 'filter.likte',
+    'pill-verified': 'filter.besøkt', 'pill-light': 'filter.lys'
+  };
+  Object.entries(filterLabels).forEach(([id, key]) => {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var textNodes = [...el.childNodes].filter(n => n.nodeType === 3);
+    if (textNodes.length) textNodes[textNodes.length-1].textContent = '\n' + tr(key);
+  });
+  if (typeof updateSheetNav === 'function') updateSheetNav();
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('pinpong-lang', lang);
+  applyLang();
+}
+
+// Apply language now that LANG is defined
+applyLang();
+
+// ── Settings: theme from settings page ──────────────────
+function setThemeFromSettings(isLight) {
+  applyTheme(isLight);
+  swapTiles(isLight);
+  localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
+  document.getElementById('seg-light').classList.toggle('active', isLight);
+  document.getElementById('seg-dark').classList.toggle('active', !isLight);
+}
+
+function syncSettingsUI() {
+  var isLight = document.body.classList.contains('light');
+  document.getElementById('seg-light')?.classList.toggle('active', isLight);
+  document.getElementById('seg-dark')?.classList.toggle('active', !isLight);
+  document.getElementById('seg-no')?.classList.toggle('active', currentLang === 'no');
+  document.getElementById('seg-en')?.classList.toggle('active', currentLang === 'en');
+}
+
+function profileSettings() {
+  syncSettingsUI();
+  var sp = document.getElementById('settingsPage');
+  sp.style.transition = '';
+  sp.style.transform  = '';
+  sp.classList.add('open');
+}
+function openOmPage() { document.getElementById('omPage').classList.add('open'); }
+function closeOmPage() { document.getElementById('omPage').classList.remove('open'); }
+function openPersonvernPage() { document.getElementById('personvernPage').classList.add('open'); }
+function closePersonvernPage() { document.getElementById('personvernPage').classList.remove('open'); }
+
+function closeSettings() {
+  var sp = document.getElementById('settingsPage');
+  sp.style.transition = '';
+  sp.style.transform  = '';
+  sp.classList.remove('open');
+}
+// ── Rate limiting: max 3 rapport submissions per 24h ────
+var _RAPPORT_RL_KEY = 'pinpong-rapport-rl';
+function _rapportCanSubmit() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    if (d.date !== today) return true;
+    return (d.count || 0) < 3;
+  } catch { return true; }
+}
+function _rapportRecord() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_RAPPORT_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    var count = d.date === today ? (d.count || 0) + 1 : 1;
+    localStorage.setItem(_RAPPORT_RL_KEY, JSON.stringify({ date: today, count }));
+  } catch {}
+}
+function profileRapporter() {
+  // Reset form
+  ['rNavn','rAdresse','rEmail'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('#rTypeSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ute'));
+  document.querySelectorAll('#rBelysingSeg .rapport-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'ja'));
+  _rapportPhotoData = null;
+  document.getElementById('rapportPhotoPreview').innerHTML = _CAM_EMPTY;
+  var btn = document.getElementById('rapportSubmitBtn');
+  if (btn) { btn.textContent = 'Send inn'; btn.disabled = false; }
+  document.getElementById('rapportPage').classList.add('open');
+}
+function closeRapport() {
+  document.getElementById('rapportPage').classList.remove('open');
+}
+
+/* ── Rapporter Feil ───────────────────────────────────── */
+var _FEIL_RL_KEY = 'pp_feil_rl';
+function _feilCanSubmit() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_FEIL_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    if (d.date !== today) return true;
+    return (d.count || 0) < 2;
+  } catch { return true; }
+}
+function _feilRecord() {
+  try {
+    var d = JSON.parse(localStorage.getItem(_FEIL_RL_KEY) || '{}');
+    var today = new Date().toDateString();
+    var count = d.date === today ? (d.count || 0) + 1 : 1;
+    localStorage.setItem(_FEIL_RL_KEY, JSON.stringify({ date: today, count }));
+  } catch {}
+}
+function openFeilPage() {
+  document.getElementById('feilDesc').value = '';
+  document.getElementById('feilEmail').value = '';
+  document.getElementById('feilSubject').selectedIndex = 0;
+  _feilPhotoData = null;
+  document.getElementById('feilPhotoPreview').innerHTML = _CAM_EMPTY;
+  var btn = document.getElementById('feilSubmitBtn');
+  btn.disabled = false; btn.textContent = 'Send rapport';
+  var fp = document.getElementById('feilPage');
+  fp.style.transition = '';
+  fp.style.transform  = '';
+  fp.classList.add('open');
+}
+function closeFeilPage() {
+  document.getElementById('feilPage').classList.remove('open');
+}
+function compressImage(file, callback) {
+  var reader = new FileReader();
+  reader.onerror = function() { callback(null); };
+  reader.onload = function(e) {
+    var raw = e.target.result;
+    var img = new Image();
+    img.onerror = function() {
+      // Canvas decode failed (e.g. HEIC on some browsers) — send raw base64
+      callback(raw);
+    };
+    img.onload = function() {
+      try {
+        var MAX = 1200;
+        var ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        var canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.75));
+      } catch(err) {
+        callback(raw); // fall back to uncompressed
+      }
+    };
+    img.src = raw;
+  };
+  reader.readAsDataURL(file);
+}
+var _CAM_EMPTY = '<div style="width:52px;height:52px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div style="flex:1;min-width:0"><div class="rapport-label">Legg til bilde</div><div style="font-size:14px;color:var(--muted);margin-top:2px">Valgfritt</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+var _CAM_CHEVRON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+function _photoThumbHTML(dataUrl) {
+  return '<img src="' + dataUrl + '" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0">'
+    + '<div style="flex:1;min-width:0"><div class="rapport-label">Bilde lagt til</div><div style="font-size:14px;color:var(--text);margin-top:2px">Trykk for å bytte</div></div>'
+    + _CAM_CHEVRON;
+}
+var _feilPhotoData = null;
+function feilPhotoChosen(input) {
+  if (!input.files || !input.files[0]) return;
+  compressImage(input.files[0], function(dataUrl) {
+    _feilPhotoData = dataUrl;
+    document.getElementById('feilPhotoPreview').innerHTML = dataUrl ? _photoThumbHTML(dataUrl) : _CAM_EMPTY;
+  });
+}
+async function submitFeil() {
+  if (!_feilCanSubmit()) {
+    showLocToast('For mange rapporter', 'Du har sendt inn for mange i dag! Prøv igjen i morgen.');
+    return;
+  }
+  var subject    = document.getElementById('feilSubject').value;
+  var desc       = document.getElementById('feilDesc').value.trim();
+  var replyEmail = (document.getElementById('feilEmail').value || '').trim();
+  if (!desc) { document.getElementById('feilDesc').focus(); showLocToast('Beskrivelse mangler', 'Forklar kort hva problemet er.'); return; }
+  if (!replyEmail) { document.getElementById('feilEmail').focus(); showLocToast('E-post mangler', 'Vi trenger adressen din for å svare.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('feilEmail').focus(); showLocToast('Ugyldig e-post', 'Sjekk at adressen er riktig.'); return; }
+
+  var btn = document.getElementById('feilSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sender…';
+
+  var messageBody = ['Kategori: ' + subject, '', desc].join('\n');
+
+  // Guard: Vercel rejects request bodies over 4.5 MB — keep the base64 photo well below
+  if (_feilPhotoData && _feilPhotoData.length > 4_000_000) {
+    showLocToast('Bilde for stort', 'Bildet er for stort til å sende. Prøv et annet bilde.');
+    btn.disabled = false; btn.textContent = 'Send rapport';
+    return;
+  }
+
+  try {
+    var r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'feil', subject, messageBody, replyEmail: replyEmail || null, photoData: _feilPhotoData || null })
+    });
+    if (!r.ok) throw new Error('server');
+    _feilRecord();
+    btn.textContent = '✓ Sendt!';
+    setTimeout(() => {
+      closeFeilPage();
+      setTimeout(() => showLocToast('Takk! 🙏', 'Din rapport er mottatt. Vi ser på det så fort vi kan.'), 350);
+    }, 1400);
+  } catch {
+    btn.disabled = false; btn.textContent = 'Send rapport';
+    showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');
+  }
+}
+function rapportSegPick(btn) {
+  btn.closest('.rapport-seg').querySelectorAll('.rapport-seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+var _rapportPhotoData = null;
+function rapportPhotoChosen(input) {
+  var file = input.files[0];
+  if (!file) return;
+  compressImage(file, function(dataUrl) {
+    _rapportPhotoData = dataUrl;
+    document.getElementById('rapportPhotoPreview').innerHTML = dataUrl ? _photoThumbHTML(dataUrl) : _CAM_EMPTY;
+  });
+}
+async function submitRapport() {
+  if (!_rapportCanSubmit()) {
+    showLocToast('For mange innsendelser', 'Du har sendt inn for mange bord i dag! Prøv igjen i morgen.');
+    return;
+  }
+  var navn       = document.getElementById('rNavn').value.trim();
+  var adresse    = document.getElementById('rAdresse').value.trim();
+  var type       = document.querySelector('#rTypeSeg .rapport-seg-btn.active')?.dataset.val || 'ute';
+  var belysning  = document.querySelector('#rBelysingSeg .rapport-seg-btn.active')?.dataset.val || 'ukjent';
+  var replyEmail = (document.getElementById('rEmail').value || '').trim();
+  if (!navn) { document.getElementById('rNavn').focus(); showLocToast('Navn/sted mangler', 'Fortell oss hvor bordet er.'); return; }
+  if (!replyEmail) { document.getElementById('rEmail').focus(); showLocToast('E-post mangler', 'Vi trenger adressen din for å svare.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(replyEmail)) { document.getElementById('rEmail').focus(); showLocToast('Ugyldig e-post', 'Sjekk at adressen er riktig.'); return; }
+
+  var btn = document.getElementById('rapportSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sender…';
+
+  var typeLabel  = type === 'ute' ? 'Utebord' : 'Innebord';
+  var belysLabel = belysning === 'ja' ? 'Ja' : belysning === 'nei' ? 'Nei' : 'Vet ikke';
+  var messageBody = [
+    'Navn / Sted: ' + navn,
+    'Adresse: ' + (adresse || '–'),
+    'Type: ' + typeLabel,
+    'Belysning: ' + belysLabel
+  ].join('\n');
+
+  // Guard: Vercel rejects request bodies over 4.5 MB — keep the base64 photo well below
+  if (_rapportPhotoData && _rapportPhotoData.length > 4_000_000) {
+    showLocToast('Bilde for stort', 'Bildet er for stort til å sende. Prøv et annet bilde.');
+    btn.disabled = false; btn.textContent = 'Send inn';
+    return;
+  }
+
+  try {
+    var r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'rapport', subject: navn, messageBody, replyEmail: replyEmail || null, photoData: _rapportPhotoData || null })
+    });
+    if (!r.ok) throw new Error('server');
+    _rapportRecord();
+    btn.textContent = '✓ Sendt!';
+    setTimeout(() => {
+      closeRapport();
+      setTimeout(() => showLocToast('Takk! 🙏', 'Bordet er sendt inn. Vi sjekker det og legger det til på kartet!'), 350);
+    }, 1400);
+  } catch {
+    btn.disabled = false; btn.textContent = 'Send inn';
+    showLocToast('Feil', 'Kunne ikke sende. Sjekk internett og prøv igjen.');
+  }
+}
+
+function locateMe() {
+  if (!navigator.geolocation) {
+    showLocToast('Ikke støttet', 'Nettleseren din støtter ikke stedstjenester.');
+    return;
+  }
+  // User explicitly tapped — allow retry even if previously denied
+  _locationDenied = false;
+  // Check permission state before calling watchPosition so denied users
+  // get instant feedback instead of a silent no-op
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(result => {
+      if (result.state === 'denied') {
+        _locationDenied = true;
+        showLocPermissionDenied();
+      } else {
+        startLocationWatch();
+        startCompass();
+        if (userLat !== null) { map.flyTo([userLat, userLng], 15, { duration: 1 }); showNearbyStrip(userLat, userLng); }
+      }
+    });
+  } else {
+    startLocationWatch();
+    startCompass();
+    if (userLat !== null) { map.flyTo([userLat, userLng], 15, { duration: 1 }); showNearbyStrip(userLat, userLng); }
+  }
+}
+
+function haversine(la1,ln1,la2,ln2) {
+  var R=6371e3, φ1=la1*Math.PI/180, φ2=la2*Math.PI/180;
+  var Δφ=(la2-la1)*Math.PI/180, Δλ=(ln2-ln1)*Math.PI/180;
+  var a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function fuzzyScore(name, q) {
+  name = name.toLowerCase();
+  if (name.includes(q)) return 100 + (100 - name.indexOf(q));
+  var j = 0;
+  for (var i = 0; i < name.length && j < q.length; i++) {
+    if (name[i] === q[j]) j++;
+  }
+  return j === q.length ? j : 0;
+}
+
+// ── Oslo areas / neighbourhoods ──────────────────────────
+var AREAS = [
+  { navn:'Sentrum',        lat:59.9132, lng:10.7396 },
+  { navn:'Grünerløkka',    lat:59.9239, lng:10.7604 },
+  { navn:'Tøyen',          lat:59.9150, lng:10.7730 },
+  { navn:'Grønland',       lat:59.9116, lng:10.7629 },
+  { navn:'Gamlebyen',      lat:59.9085, lng:10.7596 },
+  { navn:'Kampen',         lat:59.9139, lng:10.7831 },
+  { navn:'Vålerenga',      lat:59.9013, lng:10.7845 },
+  { navn:'Frogner',        lat:59.9195, lng:10.7119 },
+  { navn:'Majorstuen',     lat:59.9285, lng:10.7153 },
+  { navn:'St. Hanshaugen', lat:59.9273, lng:10.7428 },
+  { navn:'Bislett',        lat:59.9249, lng:10.7283 },
+  { navn:'Hegdehaugen',    lat:59.9298, lng:10.7215 },
+  { navn:'Uranienborg',    lat:59.9213, lng:10.7197 },
+  { navn:'Briskeby',       lat:59.9242, lng:10.7160 },
+  { navn:'Vika',           lat:59.9119, lng:10.7289 },
+  { navn:'Aker Brygge',    lat:59.9104, lng:10.7255 },
+  { navn:'Filipstad',      lat:59.9085, lng:10.7145 },
+  { navn:'Bjørvika',       lat:59.9070, lng:10.7530 },
+  { navn:'Sagene',         lat:59.9390, lng:10.7510 },
+  { navn:'Torshov',        lat:59.9318, lng:10.7637 },
+  { navn:'Sinsen',         lat:59.9342, lng:10.7838 },
+  { navn:'Løren',          lat:59.9320, lng:10.8041 },
+  { navn:'Hasle',          lat:59.9217, lng:10.7979 },
+  { navn:'Ensjø',          lat:59.9143, lng:10.7918 },
+  { navn:'Helsfyr',        lat:59.9082, lng:10.8000 },
+  { navn:'Nydalen',        lat:59.9509, lng:10.7692 },
+  { navn:'Storo',          lat:59.9451, lng:10.7784 },
+  { navn:'Grefsen',        lat:59.9521, lng:10.7711 },
+  { navn:'Kjelsås',        lat:59.9579, lng:10.7562 },
+  { navn:'Blindern',       lat:59.9397, lng:10.7219 },
+  { navn:'Ullevål',        lat:59.9432, lng:10.7328 },
+  { navn:'Gaustad',        lat:59.9473, lng:10.7198 },
+  { navn:'Nordberg',       lat:59.9578, lng:10.7062 },
+  { navn:'Vinderen',       lat:59.9467, lng:10.6826 },
+  { navn:'Røa',            lat:59.9434, lng:10.6658 },
+  { navn:'Holmenkollen',   lat:59.9646, lng:10.6680 },
+  { navn:'Skøyen',         lat:59.9208, lng:10.6878 },
+  { navn:'Ullern',         lat:59.9122, lng:10.6595 },
+  { navn:'Bygdøy',         lat:59.9039, lng:10.6851 },
+  { navn:'Nordstrand',     lat:59.8870, lng:10.8020 },
+  { navn:'Ekeberg',        lat:59.8950, lng:10.7880 },
+  { navn:'Manglerud',      lat:59.8980, lng:10.8120 },
+  { navn:'Lambertseter',   lat:59.8690, lng:10.8303 },
+  { navn:'Bøler',          lat:59.8947, lng:10.8450 },
+  { navn:'Alna',           lat:59.9330, lng:10.8539 },
+  { navn:'Kalbakken',      lat:59.9527, lng:10.8630 },
+  { navn:'Grorud',         lat:59.9596, lng:10.8854 },
+  { navn:'Romsås',         lat:59.9633, lng:10.8838 },
+  { navn:'Stovner',        lat:59.9700, lng:10.9237 },
+  { navn:'Furuset',        lat:59.9472, lng:10.9134 },
+  { navn:'Lillestrøm',        lat:59.9553, lng:11.0515 },
+  { navn:'Lørenskog',         lat:59.9240, lng:10.9621 },
+  { navn:'Nationaltheatret',  lat:59.9143, lng:10.7322 },
+  { navn:'Oslo S',            lat:59.9108, lng:10.7523 },
+  { navn:'Vigelandsparken',   lat:59.9274, lng:10.6984 },
+  { navn:'Karl Johan',        lat:59.9127, lng:10.7461 },
+  { navn:'Youngstorget',      lat:59.9153, lng:10.7508 },
+  { navn:'Rådhusplassen',     lat:59.9117, lng:10.7326 },
+  { navn:'Botanisk hage',     lat:59.9141, lng:10.7744 },
+  { navn:'Strømmen',          lat:59.9383, lng:11.0633 },
+];
+
+
+</script>
+<script>
+
+// ── Search ──────────────────────────────────────────────
+var searchInput  = document.getElementById('searchInput');
+var searchResults= document.getElementById('searchResults');
+var searchWrap   = document.getElementById('searchWrap');
+
+var filterFab = document.getElementById('filterFab');
+
+function toggleFilterFab() {
+  filterFab.classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  if (filterFab.classList.contains('open') && !e.target.closest('.filter-fab')) {
+    filterFab.classList.remove('open');
+  }
+});
+
+// Map pans don't produce click events — close the filter panel on drag too
+map.on('dragstart', () => {
+  if (filterFab.classList.contains('open')) filterFab.classList.remove('open');
+});
+
+function expandSearch() {
+  searchWrap.classList.add('expanded');
+  filterFab.classList.remove('open');
+  searchInput.focus();
+}
+function collapseSearch() {
+  searchResults.style.display = 'none';
+  searchInput.value = '';
+  searchWrap.classList.remove('expanded');
+  searchInput.blur();
+}
+
+searchInput.addEventListener('blur', () => {
+  setTimeout(() => {
+    if (searchInput.value.trim() === '') collapseSearch();
+  }, 150);
+});
+
+var _searchTimer = null;
+function scheduleSearch() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(runSearch, 120);
+}
+
+// Enter selects the top result (keyboard / "søk" key on mobile keyboards)
+searchInput.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  clearTimeout(_searchTimer);
+  runSearch();
+  var first = searchResults.querySelector('.search-result-item');
+  if (first) first.click();
+});
+
+function runSearch() {
+  var q = (searchInput.value || '').toLowerCase().trim();
+  if (!q) { searchResults.style.display = 'none'; return; }
+
+  var tableMatches = TABLES
+    .map(function(t, i) { return { kind:'table', t:t, i:i, score: fuzzyScore(t.navn, q) }; })
+    .filter(function(x) { return x.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, 3);
+
+  var areaMatches = AREAS
+    .map(function(a, i) { return { kind:'area', a:a, i:i, score: fuzzyScore(a.navn, q) }; })
+    .filter(function(x) { return x.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, 2);
+
+  var all = tableMatches.concat(areaMatches).slice(0, 5);
+  if (!all.length) { searchResults.style.display = 'none'; return; }
+
+  searchResults.innerHTML = all.map(function(x) {
+    if (x.kind === 'table') {
+      return '<div class="search-result-item" onclick="selectSearch(' + x.i + ')">'
+        + '<span style="font-size:10px;color:' + (x.t.type==='outdoor' ? 'var(--orange)' : 'var(--purple)') + '">●</span>'
+        + '<span>' + esc(x.t.navn) + '</span></div>';
+    } else {
+      return '<div class="search-result-item" onclick="selectArea(' + x.i + ')">'
+        + '<span>' + esc(x.a.navn) + '</span></div>';
+    }
+  }).join('');
+  searchResults.style.display = 'block';
+}
+
+function selectSearch(idx) {
+  collapseSearch();
+  clearTimeout(_pendingOpenTimer);
+  map.flyTo([TABLES[idx].lat, TABLES[idx].lng], 16, { duration: 0.8 });
+  // Open after the flight completes — opening mid-flight cancels the zoom leg
+  _pendingOpenTimer = setTimeout(() => openSheet(idx), 850);
+}
+
+function selectArea(idx) {
+  collapseSearch();
+  map.flyTo([AREAS[idx].lat, AREAS[idx].lng], 14, { duration: 0.7 });
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-results')) {
+    if (searchWrap.classList.contains('expanded')) collapseSearch();
+  }
+});
+
+
+
+function toggleFilter(type) {
+  if      (type==='outdoor')  showOutdoor      = !showOutdoor;
+  else if (type==='bar')      showBar          = !showBar;
+  else if (type==='fav')      showFavOnly      = !showFavOnly;
+  else if (type==='verified') showVerifiedOnly = !showVerifiedOnly;
+  else if (type==='roof')     showRoofOnly     = !showRoofOnly;
+  else if (type==='light')    showLightOnly    = !showLightOnly;
+
+  var pillMap  = { outdoor:'pill-outdoor', bar:'pill-bar', fav:'pill-fav', verified:'pill-verified', roof:'pill-roof', light:'pill-light' };
+  var stateMap = { outdoor:showOutdoor, bar:showBar, fav:showFavOnly, verified:showVerifiedOnly, roof:showRoofOnly, light:showLightOnly };
+  document.getElementById(pillMap[type])?.classList.toggle('active', stateMap[type]);
+
+  renderMarkers();
+  // Keep the sheet open when the selected table still passes the active filters
+  if (selectedIdx !== null && _markerByIdx[selectedIdx]) {
+    // renderMarkers() already drew the selected marker highlighted
+    buildSwipeList(selectedIdx);
+    if (typeof updateSheetNav === 'function') updateSheetNav();
+  } else {
+    closeSheet();
+  }
+  if (userLat !== null) showNearbyStrip(userLat, userLng);
+  updateMiniIndicators();
+}
+
+// ── Swipe-to-dismiss bottom sheet ───────────────────────
+var _hSwipeActive = false; // set true during horizontal card navigation
+try {
+(function() {
+  var startY = 0, currentY = 0, startTime = 0, dragging = false;
+
+  _bottomSheet.addEventListener('touchstart', e => {
+    if (!_bottomSheet.classList.contains('open')) return;
+    // Don't hijack drags that should scroll the sheet body
+    var sb = e.target.closest && e.target.closest('.sheet-body');
+    if (sb && sb.scrollTop > 0) { dragging = false; return; }
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+    currentY = 0;
+    dragging = true;
+    _bottomSheet.style.transition = 'none';
+  }, { passive: true });
+
+  _bottomSheet.addEventListener('touchmove', e => {
+    if (!dragging || _hSwipeActive) return; // yield to horizontal swipe
+    var dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { _bottomSheet.style.transform = 'translate(-50%, 0)'; return; }
+    currentY = dy;
+    _bottomSheet.style.transform = `translate(-50%, ${dy}px)`;
+  }, { passive: true });
+
+  _bottomSheet.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    // Always reset sheet inline styles so X button / CSS transitions work correctly
+    _bottomSheet.style.transition = '';
+    if (_hSwipeActive) { _bottomSheet.style.transform = ''; return; }
+    var velocity = currentY / Math.max(1, Date.now() - startTime);
+    if (currentY > 80 || velocity > 0.5) {
+      _bottomSheet.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
+      _bottomSheet.style.transform = 'translate(-50%, calc(100% + 40px))';
+      setTimeout(() => {
+        _bottomSheet.style.transition = '';
+        _bottomSheet.classList.remove('open');
+        _bottomSheet.style.transform = '';
+        _nearbyContainer.classList.remove('sheet-open');
+        _fabStack.classList.remove('sheet-open');
+        closeMapsPicker();
+        highlightMarker(null);
+        selectedIdx = null;
+        try { history.replaceState(null, '', location.pathname); } catch(e) {}
+      }, 320);
+    } else {
+      _bottomSheet.style.transition = '';
+      _bottomSheet.style.transform = '';
+    }
+  });
+})();
+} catch(e) {}
+// ── Sheet table navigation (swipe + arrow buttons) ───────
+var _swipeList = [], _swipePos = 0;
+
+function buildSwipeList(fromIdx) {
+  var ref = (userLat !== null)
+    ? { lat: userLat, lng: userLng }
+    : { lat: TABLES[fromIdx].lat, lng: TABLES[fromIdx].lng };
+  _swipeList = TABLES
+    .map((t, i) => ({ i, d: haversine(ref.lat, ref.lng, t.lat, t.lng) }))
+    .filter(({ i }) => {
+      var t = TABLES[i];
+      if ((showOutdoor || showBar) && !(t.type === 'outdoor' ? showOutdoor : showBar)) return false;
+      if (showFavOnly      && !FAVORITES.has(t.navn))                   return false;
+      if (showVerifiedOnly && t.verifisert !== 'ja')                    return false;
+      if (showRoofOnly     && t.type !== 'bar' && !/ja/i.test(t.under_tak || '')) return false;
+      if (showLightOnly    && !/ja/i.test(t.belysning || ''))                      return false;
+      return true;
+    })
+    .sort((a, b) => a.d - b.d)
+    .map(({ i }) => i);
+  _swipePos = _swipeList.indexOf(fromIdx);
+  _geoCache = {};
+}
+
+// Find the geographically nearest visible table east (dir>0) or west (dir<0) of fromIdx.
+// Memoised per swipe list — it's queried on every touchmove frame during a swipe.
+var _geoCache = {};
+function findGeoNeighbor(fromIdx, dir) {
+  var key = fromIdx + ':' + dir;
+  if (key in _geoCache) return _geoCache[key];
+  return (_geoCache[key] = _findGeoNeighbor(fromIdx, dir));
+}
+function _findGeoNeighbor(fromIdx, dir) {
+  var cur = TABLES[fromIdx];
+  var best = -1, bestDist = Infinity;
+  _swipeList.forEach(function(i) {
+    if (i === fromIdx) return;
+    var t = TABLES[i];
+    if (dir > 0 && t.lng <= cur.lng) return;  // must be east
+    if (dir < 0 && t.lng >= cur.lng) return;  // must be west
+    var d = haversine(cur.lat, cur.lng, t.lat, t.lng);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return best;
+}
+
+var _cardEase = 'cubic-bezier(0.22, 1, 0.36, 1)';
+var _cardAnimating = false;
+
+function sheetSwipeTo(nextIdx, dir) {
+  if (_cardAnimating) return;
+  _cardAnimating = true;
+
+  var nextTable = TABLES[nextIdx];
+
+  function _doSlide() {
+    var card = document.getElementById('sheetCard');
+    if (!card) { openSheet(nextIdx, true); _cardAnimating = false; return; }
+
+    // Clone ghost at exact current dimensions
+    var cardH = card.offsetHeight;
+    var ghost  = card.cloneNode(true);
+    ghost.removeAttribute('id');
+    ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    ghost.style.cssText = `position:absolute;top:0;left:0;right:0;height:${cardH}px;pointer-events:none;z-index:5;will-change:transform;`;
+    card.parentNode.insertBefore(ghost, card);
+
+    // Place new card off-screen with no transition
+    card.style.willChange = 'transform';
+    card.style.transition = 'none';
+    card.style.transform  = `translateX(${dir > 0 ? '100%' : '-100%'})`;
+
+    // Load content while new card is off-screen
+    openSheet(nextIdx, true);
+
+    // Commit initial positions to GPU synchronously (the key to zero-delay start)
+    void card.offsetWidth;
+
+    // Both cards animate at once
+    var tr = `transform 0.38s ${_cardEase}`;
+    ghost.style.transition = tr;
+    ghost.style.transform  = `translateX(${dir > 0 ? '-100%' : '100%'})`;
+    card.style.transition  = tr;
+    card.style.transform   = 'translateX(0)';
+
+    setTimeout(() => {
+      ghost.remove();
+      card.style.transition = '';
+      card.style.transform  = '';
+      card.style.willChange = '';
+      _cardAnimating = false;
+    }, 400);
+  }
+
+  // Pre-load the incoming image so it's ready before the card slides in
+  if (nextTable.bilde_url) {
+    var done = false;
+    var guard = () => { if (!done) { done = true; _doSlide(); } };
+    var img = new Image();
+    img.onload  = guard;
+    img.onerror = guard;
+    img.src = nextTable.bilde_url;
+    setTimeout(guard, 80); // don't wait longer than 80 ms
+  } else {
+    _doSlide();
+  }
+}
+
+window.sheetNav = function(dir) {
+  if (selectedIdx === null || !_swipeList.length || _cardAnimating) return;
+  var nextIdx = findGeoNeighbor(selectedIdx, dir);
+  if (nextIdx === -1) return;
+  _swipePos = _swipeList.indexOf(nextIdx);
+  sheetSwipeTo(nextIdx, dir);
+};
+
+function updateSheetNav() {
+  var label = document.getElementById('sheetNavLabel');
+  var prev  = document.getElementById('sheetNavPrev');
+  var next  = document.getElementById('sheetNavNext');
+  if (!label) return;
+  var total = _swipeList.length;
+  var pos   = _swipePos + 1;
+  label.textContent = `${pos} / ${total} ${tr('nav.bord')}`;
+  prev.disabled = selectedIdx === null || findGeoNeighbor(selectedIdx, -1) === -1;
+  next.disabled = selectedIdx === null || findGeoNeighbor(selectedIdx,  1) === -1;
+}
+
+// ── Live horizontal card swipe ───────────────────────────
+// True peek-ahead carousel: next card is pre-rendered and follows the finger
+// in real time, eliminating the white-flash between cards.
+(function() {
+  var sx = 0, sy = 0, liveDx = 0, dirLocked = null, active = false;
+  var LOCK_PX     = 7;    // px before direction is committed
+  var COMMIT_FRAC = 0.28; // fraction of card width needed to commit
+  var RESIST      = 0.18; // rubber-band at first/last card
+  var _ghost = null;      // pre-rendered next-card element
+  var _ghostDir = 0;      // direction the ghost was built for
+
+  function getCard() { return document.getElementById('sheetCard'); }
+
+  // Build a lightweight next-card clone with real content, positioned off-screen.
+  // The image is loaded immediately so it's cached by the time the swipe commits.
+  function buildGhost(nextIdx, dir) {
+    if (_ghost) { _ghost.remove(); _ghost = null; }
+    var card = getCard();
+    if (!card) return;
+    var t = TABLES[nextIdx];
+    var sheetW = _bottomSheet.offsetWidth;
+
+    // Clone the card shell (keeps CSS classes / structure, no id conflicts)
+    var g = card.cloneNode(true);
+    g.id = '';
+    g.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    g.querySelectorAll('[onclick]').forEach(el => el.removeAttribute('onclick'));
+    g.style.cssText = (
+      'position:absolute;top:0;left:0;right:0;bottom:0;' +
+      'display:flex;flex-direction:column;min-height:0;' +
+      'pointer-events:none;z-index:3;will-change:transform;overflow:hidden;' +
+      'transition:none;transform:translateX(' + (dir > 0 ? sheetW : -sheetW) + 'px);'
+    );
+
+    // Populate: photo
+    var photo = g.querySelector('.sheet-photo');
+    if (photo) {
+      if (t.bilde_url) { photo.src = t.bilde_url; photo.className = 'sheet-photo visible'; }
+      else             { photo.src = ''; photo.className = 'sheet-photo'; }
+    }
+    // Populate with exactly what openSheet() will render, so the hand-off
+    // from ghost → real card at the end of the swipe is pixel-identical.
+    var typeEl = g.querySelector('.sheet-type');
+    if (typeEl) {
+      typeEl.innerHTML = sheetTypeHtml(t);
+      typeEl.style.color = t.type === 'outdoor' ? 'var(--orange)' : 'var(--purple)';
+    }
+    var nameEl = g.querySelector('.sheet-name');
+    if (nameEl) nameEl.textContent = t.navn || 'Ukjent bord';
+    var statsEl = g.querySelector('.sheet-stats-col');
+    if (statsEl) statsEl.innerHTML = sheetStatsHtml(t);
+    var noteEl = g.querySelector('.sheet-notes-col');
+    if (noteEl) noteEl.innerHTML = sheetNotesHtml(t);
+    // Heart reflects the incoming table's favourite state
+    var faved = FAVORITES.has(t.navn);
+    var heart = g.querySelector('.btn-heart-inline');
+    if (heart) {
+      heart.classList.toggle('faved', faved);
+      var hs = heart.querySelector('svg');
+      if (hs) hs.setAttribute('fill', faved ? '#ff3b30' : 'none');
+    }
+    // Nav bar shows the incoming card's position / arrow state
+    var navLabel = g.querySelector('.sheet-nav-label');
+    if (navLabel) navLabel.textContent = (_swipeList.indexOf(nextIdx) + 1) + ' / ' + _swipeList.length + ' ' + tr('nav.bord');
+    var navBtns = g.querySelectorAll('.sheet-nav-btn');
+    if (navBtns.length === 2) {
+      navBtns[0].disabled = findGeoNeighbor(nextIdx, -1) === -1;
+      navBtns[1].disabled = findGeoNeighbor(nextIdx,  1) === -1;
+    }
+
+    card.parentNode.insertBefore(g, card.nextSibling);
+    _ghost = g;
+    _ghostDir = dir;
+  }
+
+  function clearGhost() {
+    if (_ghost) { _ghost.remove(); _ghost = null; }
+    _ghostDir = 0;
+  }
+
+  _bottomSheet.addEventListener('touchstart', e => {
+    if (!_bottomSheet.classList.contains('open') || selectedIdx === null) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    liveDx = 0; dirLocked = null; active = true;
+    clearGhost();
+  }, { passive: true });
+
+  _bottomSheet.addEventListener('touchmove', e => {
+    if (!active) return;
+    var dx = e.touches[0].clientX - sx;
+    var dy = e.touches[0].clientY - sy;
+
+    if (!dirLocked) {
+      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
+      dirLocked = Math.abs(dx) >= Math.abs(dy) * 1.1 ? 'h' : 'v';
+      // Direction just locked — build the ghost card immediately
+      if (dirLocked === 'h') {
+        var initDir     = dx < 0 ? 1 : -1;
+        var initGeoNext = findGeoNeighbor(selectedIdx, initDir);
+        if (initGeoNext !== -1) {
+          buildGhost(initGeoNext, initDir);
+        }
+      }
+    }
+    if (dirLocked !== 'h') return;
+
+    _hSwipeActive = true;
+    var card = getCard();
+    if (!card || _cardAnimating) return;
+
+    var dir     = dx < 0 ? 1 : -1;
+    var geoNext = findGeoNeighbor(selectedIdx, dir);
+    var atEdge  = geoNext === -1;
+    liveDx = atEdge ? dx * RESIST : dx;
+
+    // Move current card
+    card.style.transition = 'none';
+    card.style.transform  = 'translateX(' + liveDx + 'px)';
+
+    // Rebuild ghost if direction reversed mid-swipe
+    if (!atEdge && _ghost && _ghostDir !== dir) {
+      buildGhost(geoNext, dir);
+    } else if (atEdge && _ghost) {
+      clearGhost();
+    }
+
+    // Move ghost in sync with finger
+    if (_ghost && !atEdge) {
+      var sheetW = _bottomSheet.offsetWidth;
+      _ghost.style.transform = 'translateX(' + ((dir > 0 ? sheetW : -sheetW) + liveDx) + 'px)';
+    }
+  }, { passive: true });
+
+  // Safety: touchcancel clears all state (phone call, scroll lock, etc.)
+  _bottomSheet.addEventListener('touchcancel', () => {
+    if (!active) return;
+    active = false; dirLocked = null; liveDx = 0; _hSwipeActive = false;
+    clearGhost();
+    var card = getCard();
+    if (card) { card.style.transition = ''; card.style.transform = ''; }
+  });
+
+  _bottomSheet.addEventListener('touchend', () => {
+    if (!active) return;
+    active = false;
+
+    if (dirLocked !== 'h') { _hSwipeActive = false; liveDx = 0; return; }
+
+    var card = getCard();
+    var sheetW   = _bottomSheet.offsetWidth;
+    var threshold = sheetW * COMMIT_FRAC;
+    var dir      = liveDx < 0 ? 1 : -1;
+    var geoCommit = findGeoNeighbor(selectedIdx, dir);
+    var commit = Math.abs(liveDx) >= threshold && !_cardAnimating && geoCommit !== -1;
+
+    if (commit) {
+      _cardAnimating = true;
+      _hSwipeActive  = false;
+      _swipePos = _swipeList.indexOf(geoCommit);
+      var ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      var dur  = 'transform 0.26s ' + ease;
+
+      if (card && _ghost) {
+        // Both cards animate to their final positions simultaneously — no white gap
+        card.style.transition  = dur;
+        card.style.transform   = 'translateX(' + (dir < 0 ? sheetW : -sheetW) + 'px)';
+        _ghost.style.transition = dur;
+        _ghost.style.transform  = 'translateX(0)';
+
+        setTimeout(() => {
+          // Ghost has slid into place — now swap in the real card underneath it
+          _cardAnimating = false;
+          openSheet(geoCommit, true);   // populates real card (off-screen)
+          if (card) { card.style.transition = 'none'; card.style.transform = ''; }
+          clearGhost();  // remove ghost — real card (same content) is now visible
+        }, 270);
+
+      } else {
+        // Fallback: no ghost (e.g. direction changed at the last moment)
+        clearGhost();
+        if (card) {
+          card.style.transition = 'transform 0.16s ease-in';
+          card.style.transform  = 'translateX(' + (dir < 0 ? sheetW : -sheetW) + 'px)';
+        }
+        openSheet(geoCommit, true);
+        setTimeout(() => {
+          if (card) {
+            card.style.transition = 'none';
+            card.style.transform  = 'translateX(' + (dir < 0 ? -sheetW : sheetW) + 'px)';
+            void card.offsetWidth;
+            card.style.transition = 'transform 0.3s ' + ease;
+            card.style.transform  = '';
+          }
+          setTimeout(() => { if (card) card.style.transition = ''; _cardAnimating = false; }, 320);
+        }, 160);
+      }
+
+    } else {
+      // Not committed — spring both cards back to their resting positions
+      var springEase = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+      if (_ghost) {
+        var gDir = _ghostDir;
+        var gSheetW = _bottomSheet.offsetWidth;
+        var ghostRef = _ghost;
+        _ghost = null; _ghostDir = 0;
+        ghostRef.style.transition = springEase;
+        ghostRef.style.transform  = 'translateX(' + (gDir > 0 ? gSheetW : -gSheetW) + 'px)';
+        setTimeout(() => { if (ghostRef.parentNode) ghostRef.remove(); }, 360);
+      }
+      if (card) {
+        card.style.transition = springEase;
+        card.style.transform  = '';
+        setTimeout(() => { if (card) card.style.transition = ''; }, 360);
+      }
+      _hSwipeActive = false;
+      liveDx = 0;
+    }
+  });
+})();
+
+// ── Light / dark mode ────────────────────────────────────
+(function() {
+  var MOON_SVG = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+  var SUN_SVG  = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+
+  window.applyTheme = function applyTheme(light) {
+    document.body.classList.toggle('light', light);
+    var icon = document.getElementById('themeIcon');
+    if (icon) icon.innerHTML = light ? SUN_SVG : MOON_SVG;
+    var tc = document.getElementById('metaThemeColor');
+    if (tc) tc.content = light ? '#f2f2f7' : '#0c0c0f';
+    document.documentElement.style.background = light ? '#f2f2f7' : '#0c0c0f';
+    // Marker border/shadow depend on the theme
+    if (typeof refreshMarkerIcons === 'function') refreshMarkerIcons();
+  };
+
+  window.swapTiles = function swapTiles(light) {
+    if (typeof _darkTiles === 'undefined') return;
+    var add = light ? _lightTiles : _darkTiles;
+    var rem = light ? _darkTiles  : _lightTiles;
+    if (!map.hasLayer(add)) map.addLayer(add);
+    if (map.hasLayer(rem)) map.removeLayer(rem);
+  };
+
+  window.toggleTheme = function() {
+    var isLight = !document.body.classList.contains('light');
+    localStorage.setItem('pinpong-theme', isLight ? 'light' : 'dark');
+    applyTheme(isLight);
+    swapTiles(isLight);
+    var btn = document.getElementById('themeBtn');
+    if (btn) {
+      btn.classList.remove('spin');
+      void btn.offsetWidth; // force reflow so animation restarts
+      btn.classList.add('spin');
+    }
+  };
+
+  // Apply saved preference on load — default is light mode.
+  // (The matching tile layer is already added at map creation.)
+  var savedLight = localStorage.getItem('pinpong-theme') !== 'dark';
+  applyTheme(savedLight);
+})();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // When a new SW is waiting (new deploy is ready), prompt the user to reload
+    var checkWaiting = () => {
+      if (reg.waiting) {
+        showLocToast('Ny versjon tilgjengelig', 'Last inn siden på nytt for å oppdatere appen.');
+      }
+    };
+    reg.addEventListener('updatefound', () => {
+      var newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          checkWaiting();
+        }
+      });
+    });
+    checkWaiting(); // catch the case where SW was waiting before this page load
+  }).catch(() => {});
+}
+
+// Prevent browser-level pinch zoom (iOS Safari ignores user-scalable=no)
+document.addEventListener('gesturestart',  e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend',    e => e.preventDefault(), { passive: false });
+
+// ── Trackpad / mouse-wheel zoom ──────────────────────────
+// Let Leaflet handle two-finger scroll natively (smooth, momentum-aware).
+// Only intercept ctrlKey pinch events to normalize their wild delta values.
+map.scrollWheelZoom.enable();
+
+(function () {
+  var targetZoom = map.getZoom();
+  var raf = null;
+  var pt = null;
+
+  map.getContainer().addEventListener('wheel', e => {
+    if (!e.ctrlKey) return; // let Leaflet handle regular two-finger scroll
+    e.preventDefault();
+    e.stopPropagation();
+
+    pt = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+    var raw = Math.max(-5, Math.min(5, e.deltaY));
+    targetZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), map.getZoom() - raw * 0.06));
+
+    if (!raf) {
+      raf = requestAnimationFrame(() => {
+        map.setZoomAround(pt, targetZoom);
+        raf = null;
+      });
+    }
+  }, { passive: false });
+})();
+
+// ── Vipps desktop fallback ───────────────────────────────
+var _isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+function handleVippsClick(e) {
+  if (!_isTouchDevice) {
+    e.preventDefault();
+    document.getElementById('vippsModalBg').classList.add('visible');
+  }
+}
+function closeVippsModal(e) {
+  if (!e || e.target === document.getElementById('vippsModalBg') || e.type === 'click') {
+    document.getElementById('vippsModalBg').classList.remove('visible');
+  }
+}
+document.querySelectorAll('a.vipps-btn').forEach(function(el) {
+  el.addEventListener('click', handleVippsClick);
+});
+
+// ── Escape closes the topmost overlay (desktop keyboards) ──
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('vippsModalBg')?.classList.contains('visible')) { closeVippsModal(); return; }
+  if (document.getElementById('donateNudge')?.classList.contains('visible'))  { dismissDonateNudge(); return; }
+  var pages = [['feilPage', closeFeilPage], ['rapportPage', closeRapport],
+               ['settingsPage', closeSettings], ['favPage', closeFavPage],
+               ['omPage', closeOmPage], ['personvernPage', closePersonvernPage], ['profilePage', closeProfile]];
+  for (var i = 0; i < pages.length; i++) {
+    var el = document.getElementById(pages[i][0]);
+    if (el && el.classList.contains('open')) { pages[i][1](); return; }
+  }
+  if (_mapsModal.classList.contains('open'))        { closeMapsPicker(); return; }
+  if (searchWrap.classList.contains('expanded'))    { collapseSearch(); return; }
+  if (filterFab.classList.contains('open'))         { filterFab.classList.remove('open'); return; }
+  if (_bottomSheet.classList.contains('open'))      closeSheet();
+});
+
+// ── Donation nudge ───────────────────────────────────────
+(function() {
+  try {
+    var sessions = parseInt(localStorage.getItem('pp_sessions') || '0') + 1;
+    localStorage.setItem('pp_sessions', sessions);
+    var lastShown = parseInt(localStorage.getItem('pp_donate_shown') || '0');
+    var firstTime = lastShown === 0 && sessions >= 5;
+    var repeat    = lastShown > 0 && (sessions - lastShown) >= 15;
+    if (firstTime || repeat) {
+      setTimeout(function() {
+        // Don't interrupt an active task — try again another session instead
+        if (_bottomSheet.classList.contains('open') || document.querySelector('.profile-page.open')) return;
+        var el = document.getElementById('donateNudge');
+        var bg = document.getElementById('donateNudgeBg');
+        if (el) el.classList.add('visible');
+        if (bg) bg.classList.add('visible');
+      }, 10000); // wait 10s so they're settled in
+    }
+  } catch(e) {}
+})();
+
+function dismissDonateNudge() {
+  try { localStorage.setItem('pp_donate_shown', localStorage.getItem('pp_sessions') || '0'); } catch(e) {}
+  var el = document.getElementById('donateNudge');
+  var bg = document.getElementById('donateNudgeBg');
+  if (el) el.classList.remove('visible');
+  if (bg) bg.classList.remove('visible');
+}
+</script>
+
+<div class="vipps-modal-bg" id="vippsModalBg" onclick="closeVippsModal(event)">
+  <div class="vipps-modal">
+    <div class="vipps-modal-title" data-i18n="vipps.modal.title">Støtt arbeidet med Vipps! 🧡</div>
+    <div class="vipps-modal-sub" data-i18n="vipps.modal.sub">Skann med telefonkameraet</div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=12&data=https%3A%2F%2Fqr.vipps.no%2F28%2F2%2F01%2F031%2F4740856448%3Fv%3D1" alt="Vipps QR" style="border-radius:12px;width:180px;height:180px;margin:4px 0" loading="lazy">
+    <div class="vipps-modal-num">408 56 448</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">Wale Belal Sayed</div>
+    <button class="vipps-modal-close" data-i18n="vipps.modal.close" onclick="closeVippsModal()">Lukk</button>
+  </div>
+</div>
+
+<div class="donate-nudge-bg" id="donateNudgeBg" onclick="dismissDonateNudge()"></div>
+<div class="donate-nudge" id="donateNudge">
+  <button class="donate-nudge-close" aria-label="Lukk" onclick="dismissDonateNudge()">✕</button>
+  <div class="donate-nudge-title" data-i18n="vipps.nudge.title">Lyst til å støtte arbeidet? 🎉</div>
+  <a class="vipps-btn" href="https://qr.vipps.no/28/2/01/031/4740856448?v=1" onclick="dismissDonateNudge()" style="margin-bottom:0;margin-top:4px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.6c-5.3 0-9.6-4.3-9.6-9.6S6.7 2.4 12 2.4s9.6 4.3 9.6 9.6-4.3 9.6-9.6 9.6zm.9-14.3c-.7 0-1.3.4-1.6 1L8.6 13c-.1.2-.1.4 0 .5.1.2.3.3.5.3h1.5c.4 0 .8-.3 1-.7l.7-1.5 1.8 4c.2.4.6.7 1 .7h1c.2 0 .4-.1.5-.3.1-.2.1-.4 0-.6l-2.7-8.2c-.3-.6-.9-1-1.5-1.1h-.5z"/></svg>
+    <span data-i18n="vipps.btn">Støtt PINPONG med Vipps!</span>
+  </a>
+</div>
+
+</body>
+</html>

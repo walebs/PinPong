@@ -1,0 +1,54 @@
+// In-memory cache: one fetch to Google Sheets serves all concurrent users
+// for up to CACHE_TTL_MS milliseconds.
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let _cache = null; // { csv: string, at: number }
+
+// Browser always revalidates (max-age=0); Vercel's CDN keeps a copy for 60 s and
+// serves it instantly while refreshing in the background (stale-while-revalidate),
+// so most visitors never wait for a cold function start + Google Sheets fetch.
+const CACHE_HEADER = 'public, max-age=0, s-maxage=60, stale-while-revalidate=600';
+
+export default async function handler(req, res) {
+  const url = process.env.SHEETS_CSV_URL;
+  if (!url) {
+    res.status(500).json({ error: 'Not configured' });
+    return;
+  }
+
+  // Serve from in-memory cache if fresh
+  if (_cache && Date.now() - _cache.at < CACHE_TTL_MS) {
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Cache-Control', CACHE_HEADER);
+    res.setHeader('X-Cache', 'HIT');
+    return res.status(200).send(_cache.csv);
+  }
+
+  try {
+    const upstream = await fetch(url, { cache: 'no-store' });
+    if (!upstream.ok) {
+      // If Google fails but we have stale cache, serve it rather than erroring
+      if (_cache) {
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30');
+        res.setHeader('X-Cache', 'STALE');
+        return res.status(200).send(_cache.csv);
+      }
+      return res.status(502).json({ error: 'Upstream error' });
+    }
+
+    const csv = await upstream.text();
+    _cache = { csv, at: Date.now() };
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Cache-Control', CACHE_HEADER);
+    res.setHeader('X-Cache', 'MISS');
+    return res.status(200).send(csv);
+  } catch (e) {
+    if (_cache) {
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('X-Cache', 'STALE');
+      return res.status(200).send(_cache.csv);
+    }
+    return res.status(500).json({ error: 'Fetch failed' });
+  }
+}

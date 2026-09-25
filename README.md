@@ -1,8 +1,10 @@
 # PinPong
 
-Map of public ping pong tables in Oslo and Lillestrøm, with photos, conditions and directions.
+An intuitive and responsive app to easily find, filter and save public ping pong tables in Oslo and Lillestrøm, with photos, conditions and directions.
 
-**Live:** [pinpong.no](https://pinpong.no)
+**Live:**
+
+[pinpong.no](https://pinpong.no)
 
 ## Features
 
@@ -15,7 +17,7 @@ Map of public ping pong tables in Oslo and Lillestrøm, with photos, conditions 
 
 ## Stack
 
-- Vanilla JavaScript (ES modules), HTML, CSS: no framework or build step
+- Vanilla JavaScript (ES modules), HTML, CSS: no framework
 - [Leaflet](https://leafletjs.com) with markercluster and rotate plugins, CARTO map tiles
 - Vercel for hosting and serverless functions (Node.js)
 - Google Sheets as a lightweight CMS for table data

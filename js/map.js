@@ -50,23 +50,52 @@ export function setMapTheme(light) {
   if (map.hasLayer(hide)) map.removeLayer(hide);
 }
 
-// Trackpad pinch arrives as ctrl+wheel with erratic deltas; smooth it out.
-// Plain two-finger scrolling is left to Leaflet.
-let pinchFrame = null, pinchPoint = null, pinchZoom = null;
-map.getContainer().addEventListener('wheel', e => {
-  if (!e.ctrlKey) return;
+// Trackpads and mouse wheels both send wheel events. Leaflet treats every
+// wheel event as zoom, which makes two-finger scrolling on a Mac trackpad
+// barely nudge the zoom. Instead:
+//   two-finger scroll → pan (like Apple Maps)
+//   pinch (arrives as ctrl + wheel) → zoom
+//   mouse wheel → left to Leaflet's zoom
+// Mouse wheels report wheelDeltaY in steps of 120; trackpads report exactly -3 × deltaY.
+function isTrackpad(e) {
+  if (e.wheelDeltaY) return e.wheelDeltaY === -3 * e.deltaY;
+  return e.deltaMode === WheelEvent.DOM_DELTA_PIXEL;
+}
+
+let wheelFrame = null;
+let panX = 0, panY = 0;
+let pinchPoint = null, pinchZoom = null;
+
+function applyWheel() {
+  wheelFrame = null;
+  if (pinchZoom !== null) {
+    map.setZoomAround(pinchPoint, pinchZoom);
+    pinchZoom = null;
+  }
+  if (panX || panY) {
+    map.panBy([panX, panY], { animate: false });
+    panX = panY = 0;
+  }
+}
+
+// Capture phase on the document, so this runs before Leaflet's own wheel handler.
+document.addEventListener('wheel', e => {
+  if (!map.getContainer().contains(e.target)) return;
+  if (!e.ctrlKey && !isTrackpad(e)) return;
   e.preventDefault();
   e.stopPropagation();
-  const delta = Math.max(-5, Math.min(5, e.deltaY));
-  pinchPoint = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
-  pinchZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), map.getZoom() - delta * 0.06));
-  if (!pinchFrame) {
-    pinchFrame = requestAnimationFrame(() => {
-      map.setZoomAround(pinchPoint, pinchZoom);
-      pinchFrame = null;
-    });
+
+  if (e.ctrlKey) {
+    const delta = Math.max(-5, Math.min(5, e.deltaY));
+    const from = pinchZoom ?? map.getZoom();
+    pinchPoint = map.containerPointToLatLng(map.mouseEventToContainerPoint(e));
+    pinchZoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), from - delta * 0.06));
+  } else {
+    panX += e.deltaX;
+    panY += e.deltaY;
   }
-}, { passive: false });
+  wheelFrame ??= requestAnimationFrame(applyWheel);
+}, { capture: true, passive: false });
 
 // iOS Safari ignores user-scalable=no, so block page-level pinch zoom.
 for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {

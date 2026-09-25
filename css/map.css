@@ -1,0 +1,91 @@
+/* Leaflet map, markers, clusters and the user location dot */
+
+#map { position: fixed; inset: 0; z-index: 0; touch-action: none; }
+/* Light mode: vivid green location dot */
+body.light .user-dot-core {
+  background: #00C853;
+  box-shadow: 0 0 8px rgba(0,200,83,0.9);
+}
+body.light .user-dot-ring { background: rgba(0,200,83,0.45); }
+/* Dark mode: brighten tiles so roads are readable */
+body:not(.light) .leaflet-tile-pane {
+  filter: brightness(1.45) contrast(0.9) saturate(1.1);
+  transition: filter 0.4s ease;
+}
+body.light .leaflet-tile-pane {
+  filter: brightness(0.96) contrast(1.05) saturate(1.2);
+  transition: filter 0.4s ease;
+}
+.leaflet-tile-pane { will-change: transform; }
+.leaflet-map-pane { will-change: transform; }
+/* Prevent tile seam flicker on zoom (sub-pixel anti-aliasing gaps) */
+.leaflet-tile { outline: 1px solid transparent; }
+#map { background: var(--bg); }
+/* Zoom animation — long enough for cluster merge/split to complete */
+.leaflet-zoom-anim .leaflet-zoom-animated { transition-duration: 0.22s !important; }
+.user-dot-beam {
+  position: absolute;
+  width: 14px; height: 22px;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  background: rgba(0,200,83,0.45);
+  bottom: 50%; left: 50%;
+  margin-left: -7px; margin-bottom: -2px;
+  transform-origin: bottom center;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease-out;
+  display: none; pointer-events: none;
+}
+.user-dot-beam.active { display: block; }
+@keyframes radar-ping {
+  0%   { transform: scale(1); opacity: 0.8; }
+  70%  { transform: scale(7); opacity: 0; }
+  100% { transform: scale(7); opacity: 0; }
+}
+.user-dot {
+  width: 10px; height: 10px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.user-dot-core {
+  width: 10px; height: 10px;
+  background: #34C759; border: 2px solid rgba(255,255,255,0.95);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(52,199,89,0.8);
+  position: relative; z-index: 2;
+}
+.user-dot-ring {
+  position: absolute; width: 10px; height: 10px;
+  border-radius: 50%; background: rgba(52,199,89,0.5);
+  animation: radar-ping 5s ease-out infinite;
+}
+.user-dot-ring:nth-child(2) { animation-delay: 0.35s; }
+.user-dot-ring:nth-child(3) { display: none; }
+.leaflet-control-zoom { display: none !important; }
+.cluster-icon {
+  position: relative;
+  width: 30px; height: 30px; background: #FF9500;
+  border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 3px 14px rgba(255,107,0,0.5);
+}
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: none !important; }
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: none !important; }
+/* Cluster split/merge: markers fly from cluster → position (and back).
+   Slight overshoot on the curve so the fly-out feels energetic and visible. */
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity  0.26s ease !important;
+}
+.leaflet-control-attribution {
+  background: transparent !important; color: #222 !important;
+  font-size: 9px !important; border-radius: 0 !important;
+  box-shadow: none !important; padding: 2px 6px !important;
+  opacity: 0.35 !important;
+}
+.leaflet-control-attribution a { color: #222 !important; }
+@keyframes pulse {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  100% { transform: scale(2.4); opacity: 0; }
+}

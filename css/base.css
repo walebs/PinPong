@@ -1,0 +1,51 @@
+/* Reset, theme variables and shared keyframes */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #0c0c0f; }
+html:has(body.light) { background: #f2f2f7; }
+:root {
+  --bg:      #0c0c0f;
+  --surface: #17171c;
+  --s2:      #202028;
+  --border:  #2a2a35;
+  --text:    #f0f0f5;
+  --muted:   #606070;
+  --blue:    #3B8BFF;
+  --orange:  #FF9500;
+  --purple:  #8B5CF6;
+  --green:   #34C759;
+  --yellow:  #FFD60A;
+}
+body.light {
+  --bg:      #f2f2f7;
+  --surface: #ffffff;
+  --s2:      #e5e5ea;
+  --border:  rgba(0,0,0,0.1);
+  --text:    #1c1c1e;
+  --muted:   #8e8e93;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  overflow: hidden;
+  height: 100dvh; width: 100dvw;
+  color: var(--text);
+  touch-action: manipulation;
+}
+button { touch-action: manipulation; }
+@keyframes wordmark-glow {
+  0%, 100% {
+    text-shadow:
+      -1px -1px 0 rgba(0,0,0,0.55),  1px -1px 0 rgba(0,0,0,0.55),
+      -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
+      0 2px 6px rgba(0,0,0,0.4),
+      0 0 10px rgba(255,149,0,0.35);
+  }
+  50% {
+    text-shadow:
+      -1px -1px 0 rgba(0,0,0,0.55),  1px -1px 0 rgba(0,0,0,0.55),
+      -1px  1px 0 rgba(0,0,0,0.55),  1px  1px 0 rgba(0,0,0,0.55),
+      0 2px 6px rgba(0,0,0,0.4),
+      0 0 14px rgba(255,149,0,0.95), 0 0 30px rgba(255,149,0,0.4);
+  }
+}

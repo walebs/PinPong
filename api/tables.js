@@ -1,54 +1,41 @@
-// In-memory cache: one fetch to Google Sheets serves all concurrent users
-// for up to CACHE_TTL_MS milliseconds.
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-let _cache = null; // { csv: string, at: number }
+// Serves the table list from a published Google Sheet (CSV).
+// SHEETS_CSV_URL is set in the Vercel project settings.
 
-// Browser always revalidates (max-age=0); Vercel's CDN keeps a copy for 60 s and
-// serves it instantly while refreshing in the background (stale-while-revalidate),
-// so most visitors never wait for a cold function start + Google Sheets fetch.
+// Kept between invocations while the function instance is warm.
+const MEMORY_TTL_MS = 5 * 60 * 1000;
+let cached = null; // { csv, at }
+
+// Browsers always revalidate; Vercel's CDN keeps a copy for 60 s and refreshes it
+// in the background, so most visitors skip the cold start and the Sheets request.
 const CACHE_HEADER = 'public, max-age=0, s-maxage=60, stale-while-revalidate=600';
+
+function sendCsv(res, csv, cacheControl, source) {
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  if (cacheControl) res.setHeader('Cache-Control', cacheControl);
+  res.setHeader('X-Cache', source);
+  return res.status(200).send(csv);
+}
 
 export default async function handler(req, res) {
   const url = process.env.SHEETS_CSV_URL;
-  if (!url) {
-    res.status(500).json({ error: 'Not configured' });
-    return;
-  }
+  if (!url) return res.status(500).json({ error: 'Not configured' });
 
-  // Serve from in-memory cache if fresh
-  if (_cache && Date.now() - _cache.at < CACHE_TTL_MS) {
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Cache-Control', CACHE_HEADER);
-    res.setHeader('X-Cache', 'HIT');
-    return res.status(200).send(_cache.csv);
+  if (cached && Date.now() - cached.at < MEMORY_TTL_MS) {
+    return sendCsv(res, cached.csv, CACHE_HEADER, 'HIT');
   }
 
   try {
     const upstream = await fetch(url, { cache: 'no-store' });
     if (!upstream.ok) {
-      // If Google fails but we have stale cache, serve it rather than erroring
-      if (_cache) {
-        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30');
-        res.setHeader('X-Cache', 'STALE');
-        return res.status(200).send(_cache.csv);
-      }
+      // Prefer slightly old data over an error
+      if (cached) return sendCsv(res, cached.csv, 'public, max-age=0, s-maxage=30', 'STALE');
       return res.status(502).json({ error: 'Upstream error' });
     }
-
     const csv = await upstream.text();
-    _cache = { csv, at: Date.now() };
-
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Cache-Control', CACHE_HEADER);
-    res.setHeader('X-Cache', 'MISS');
-    return res.status(200).send(csv);
-  } catch (e) {
-    if (_cache) {
-      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('X-Cache', 'STALE');
-      return res.status(200).send(_cache.csv);
-    }
+    cached = { csv, at: Date.now() };
+    return sendCsv(res, csv, CACHE_HEADER, 'MISS');
+  } catch {
+    if (cached) return sendCsv(res, cached.csv, null, 'STALE');
     return res.status(500).json({ error: 'Fetch failed' });
   }
 }

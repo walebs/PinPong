@@ -1,0 +1,13 @@
+/* Loaded last so these overrides win over the other stylesheets */
+
+/* Respect the user's reduced-motion preference: stop decorative
+   animations and make UI transitions near-instant (same end states). */
+@media (prefers-reduced-motion: reduce) {
+  .nearby-label, .profile-app-name, .app-wordmark { animation: none; }
+  .user-dot-ring { animation: none; opacity: 0; }
+  .leaflet-marker-pane * { animation: none !important; }
+  .filter-panel, .filter-toggle, .bottom-sheet, .profile-page,
+  .search-wrap, .donate-nudge, .donate-nudge-bg, .loc-toast,
+  .vipps-modal, .vipps-modal-bg, .maps-modal, .nearby-container,
+  .fab-stack { transition-duration: 0.01ms !important; }
+}

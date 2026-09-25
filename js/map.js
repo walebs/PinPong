@@ -65,15 +65,45 @@ function isTrackpad(e) {
   return e.deltaMode === WheelEvent.DOM_DELTA_PIXEL;
 }
 
+// While the gesture runs, the map is moved the same way Leaflet's own touch
+// pinch does it: existing tiles are scaled and new ones load only when the
+// gesture ends. Committing a full zoom every frame would swap tile levels
+// mid-gesture and flash the background.
+const GESTURE_END_MS = 150;
+
 let pendingZoom = 0;
 let zoomOrigin = null;
 let zoomFrame = null;
+let gestureActive = false;
+let gestureEndTimer = null;
+
+// Same maths as map.setZoomAround(): keep the point under the cursor fixed.
+function centerForZoom(containerPoint, zoom) {
+  const half = map.getSize().divideBy(2);
+  const offset = containerPoint.subtract(half).multiplyBy(1 - 1 / map.getZoomScale(zoom));
+  return map.containerPointToLatLng(half.add(offset));
+}
 
 function applyZoom() {
   zoomFrame = null;
   const zoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), map.getZoom() + pendingZoom));
   pendingZoom = 0;
-  if (zoom !== map.getZoom()) map.setZoomAround(zoomOrigin, zoom, { animate: false });
+  if (zoom === map.getZoom()) return;
+  if (!gestureActive) {
+    gestureActive = true;
+    map._stop();
+    map._moveStart(true, false);
+  }
+  map._move(centerForZoom(zoomOrigin, zoom), zoom, { pinch: true, round: false });
+}
+
+function endGesture() {
+  if (!gestureActive) return;
+  gestureActive = false;
+  // A plain zoom event lets the tile layer switch to sharp tiles for the new
+  // level; old tiles stay visible until the new ones have loaded.
+  map._move(map.getCenter(), map.getZoom());
+  map._moveEnd(true);
 }
 
 // Capture phase on the document, so this runs before Leaflet's own wheel handler.
@@ -87,6 +117,9 @@ document.addEventListener('wheel', e => {
   pendingZoom -= Math.max(-50, Math.min(50, e.deltaY)) * perPx;
   zoomOrigin = map.mouseEventToContainerPoint(e); // zoom towards the cursor
   zoomFrame ??= requestAnimationFrame(applyZoom);
+
+  clearTimeout(gestureEndTimer);
+  gestureEndTimer = setTimeout(endGesture, GESTURE_END_MS);
 }, { capture: true, passive: false });
 
 // iOS Safari ignores user-scalable=no, so block page-level pinch zoom.

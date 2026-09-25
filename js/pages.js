@@ -59,7 +59,7 @@ export function openFavorites() {
     list.innerHTML = items.map(({ i, table, d }) => {
       const outdoor = table.type === 'outdoor';
       const image = table.bilde_url
-        ? `<img src="${table.bilde_url}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover"/>`
+        ? `<img src="${esc(table.bilde_url)}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover"/>`
         : '🏓';
       return `<div class="fav-card" data-action="open-favorite" data-idx="${i}">
         <div class="fav-card-img">${image}</div>

@@ -1,10 +1,9 @@
 // UI strings. Keys are looked up with t() in i18n.js.
 export const LANG = {
   no: {
-    'nearby.label':         'Nærmeste',
     'sheet.directions':     'Veibeskrivelse',
     'search.placeholder':   'Søk etter bord…',
-    'search.label':         'Søk…',
+    'search.label':         'Søk etter bord',
     'stats.status':         'Status',
     'stats.tilstand':       'Tilstand',
     'stats.antall':         'Antall',
@@ -70,10 +69,9 @@ export const LANG = {
     'privat.updated':       'Sist oppdatert: juli 2026',
   },
   en: {
-    'nearby.label':         'Nearest',
     'sheet.directions':     'Directions',
     'search.placeholder':   'Search tables…',
-    'search.label':         'Search…',
+    'search.label':         'Search tables',
     'stats.status':         'Status',
     'stats.tilstand':       'Condition',
     'stats.antall':         'Tables',

@@ -11,18 +11,40 @@ const input = $('searchInput');
 const results = $('searchResults');
 let debounce = null;
 
+const bottomRow = $('nearbyContainer');
+
+// The search field sits at the bottom of the screen, so while typing it is
+// lifted above the on-screen keyboard (the part of the page the visual
+// viewport no longer covers).
+function followKeyboard() {
+  const vv = window.visualViewport;
+  const hidden = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+  bottomRow.style.setProperty('--keyboard', `${hidden}px`);
+}
+
 export function expandSearch() {
   wrap.classList.add('expanded');
+  bottomRow.classList.add('searching');
   closePanel();
   input.focus();
+  followKeyboard();
 }
 
 export function collapseSearch() {
   results.style.display = 'none';
   input.value = '';
   wrap.classList.remove('expanded');
+  bottomRow.classList.remove('searching');
+  bottomRow.style.removeProperty('--keyboard');
   input.blur();
 }
+
+window.visualViewport?.addEventListener('resize', () => {
+  if (isSearchOpen()) followKeyboard();
+});
+window.visualViewport?.addEventListener('scroll', () => {
+  if (isSearchOpen()) followKeyboard();
+});
 
 export const isSearchOpen = () => wrap.classList.contains('expanded');
 
@@ -48,7 +70,7 @@ function runSearch() {
   const html = [...tables, ...areas].slice(0, 5);
   if (!html.length) { results.style.display = 'none'; return; }
   results.innerHTML = html.join('');
-  results.style.display = 'block';
+  results.style.display = 'flex';
 }
 
 export function selectTable(idx) {

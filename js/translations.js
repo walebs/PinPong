@@ -2,7 +2,7 @@
 export const LANG = {
   no: {
     'sheet.directions':     'Veibeskrivelse',
-    'search.placeholder':   'Søk etter bord…',
+    'search.placeholder':   'Søk…',
     'search.label':         'Søk etter bord',
     'stats.status':         'Status',
     'stats.tilstand':       'Tilstand',
@@ -70,7 +70,7 @@ export const LANG = {
   },
   en: {
     'sheet.directions':     'Directions',
-    'search.placeholder':   'Search tables…',
+    'search.placeholder':   'Search…',
     'search.label':         'Search tables',
     'stats.status':         'Status',
     'stats.tilstand':       'Condition',

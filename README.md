@@ -1,6 +1,8 @@
 # PinPong
 
-An intuitive and responsive app to easily find, filter and save public ping pong tables in Oslo and Lillestrøm, with photos, conditions and directions.
+An intuitive and responsive app to easily find, filter and save public ping pong tables in Oslo, Lørenskog and Lillestrøm, with photos, conditions and directions.
+
+Developed June–September 2026 and deployed directly to Vercel.
 
 **Live:**
 
@@ -61,7 +63,7 @@ The app has no accounts and stores no personal data on a server, so the attack s
 
 **Form endpoint (`api/report.js`)**
 - Only accepts requests from pinpong.no (and Vercel previews); others get `403`
-- Rate limited per IP (best effort, in memory) on top of a per-device daily limit in the app
+- Rate-limited per IP (best effort, in memory) on top of a per-device daily limit in the app
 - Validates every field server-side: type, length, email format; line breaks are stripped from the subject
 - Attachments must be real JPEG, PNG, WebP or HEIC, checked by file signature rather than the declared type
 - Errors are logged server-side; the client only gets a generic message

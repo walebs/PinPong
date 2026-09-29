@@ -9,9 +9,18 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MAX_PHOTO_CHARS = 4_000_000;
 
 function isAllowedOrigin(origin) {
-  return origin === 'https://pinpong.no'
-    || /^https:\/\/[\w-]+\.vercel\.app$/.test(origin)
-    || /^http:\/\/localhost(:\d+)?$/.test(origin);
+  if (origin === 'https://pinpong.no') return true;
+
+  // Vercel sets these to this deployment's own URLs, so a preview only
+  // accepts requests from itself, not from any other *.vercel.app site.
+  const ownUrls = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
+    .filter(Boolean)
+    .map(host => `https://${host}`);
+  if (ownUrls.includes(origin)) return true;
+
+  // localhost only when running locally with `vercel dev`
+  return process.env.VERCEL_ENV === 'development'
+    && /^http:\/\/localhost(:\d+)?$/.test(origin);
 }
 
 // Best-effort limit per IP. Kept in memory, so it resets when Vercel starts a

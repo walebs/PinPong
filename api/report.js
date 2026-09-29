@@ -38,15 +38,19 @@ function rateLimited(ip) {
   return hits.length > RATE_MAX;
 }
 
+// HEIF brands that follow 'ftyp'. MP4/MOV use the same box but other brands.
+const HEIF_BRANDS = ['heic', 'heix', 'heim', 'heis', 'hevc', 'hevx', 'mif1', 'msf1'];
+
 // Accept only real JPEG, PNG, WebP or HEIC data, whatever the data URL claims.
 function isImage(base64) {
   const head = Buffer.from(base64.slice(0, 24), 'base64');
   const hex = head.toString('hex');
   const ascii = head.toString('latin1');
-  return hex.startsWith('ffd8ff')                                  // JPEG
-    || hex.startsWith('89504e47')                                  // PNG
-    || (ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP') // WebP
-    || ascii.slice(4, 8) === 'ftyp';                               // HEIC/HEIF
+  return hex.startsWith('ffd8ff')                                   // JPEG
+    || hex.startsWith('89504e47')                                   // PNG
+    || (ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP')  // WebP
+    || (ascii.slice(4, 8) === 'ftyp'
+        && HEIF_BRANDS.includes(ascii.slice(8, 12)));               // HEIC/HEIF
 }
 
 export default async function handler(req, res) {

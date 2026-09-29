@@ -194,7 +194,7 @@ body.light .search-results {
    widening a little (same size as the original search bar) while typing */
 .search-wrap {
   position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
-  width: 164px;
+  width: 120px;
   transition: width 0.22s cubic-bezier(0.28, 0.84, 0.42, 1);
 }
 .search-wrap.expanded { width: min(200px, calc(100% - 148px)); }

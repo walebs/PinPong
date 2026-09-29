@@ -2,7 +2,9 @@
 
 An intuitive and responsive app to easily find, filter and save public ping pong tables in Oslo, Lørenskog and Lillestrøm, with photos, conditions and directions.
 
-Developed June–September 2026 and deployed directly to Vercel.
+I built PinPong to solve a problem of my own, and I visited and verified 80/130 tables myself. 
+
+Developed June–September 2026 and deployed directly to Vercel. Built with help from Claude Code, with my own architecture, security design and testing. 
 
 **Live:**
 
@@ -25,6 +27,12 @@ Developed June–September 2026 and deployed directly to Vercel.
 - Vercel for hosting and serverless functions (Node.js)
 - Google Sheets as a lightweight CMS for table data
 - [Resend](https://resend.com) for email
+
+## Known limitations
+
+- The origin check blocks other websites, not scripts: Origin can be forged outside a browser. Rate limiting is the real protection.
+- Rate limiting is in memory per function instance, so it resets on cold starts. A shared store (e.g. Redis) would be needed for a hard limit.
+- The CSP does not yet restrict script-src; XSS protection currently relies on HTML escaping and SRI.
 
 ## Structure
 

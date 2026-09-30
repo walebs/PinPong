@@ -4,7 +4,7 @@ An intuitive and responsive app to easily find, filter and save public ping pong
 
 I built PinPong to solve a problem of my own, and I visited and verified 80/130 tables myself. 
 
-Developed June–September 2026 and deployed directly to Vercel. Built with help from Claude Code, with my own architecture, security design and testing. 
+Developed June–September 2026 and deployed directly to Vercel. Built with help from Claude Code, with my supervision, validation and testing.
 
 **Live:**
 

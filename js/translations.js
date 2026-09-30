@@ -3,7 +3,6 @@ export const LANG = {
   no: {
     'sheet.directions':     'Veibeskrivelse',
     'search.placeholder':   'Søk…',
-    'search.label':         'Søk…',
     'stats.status':         'Status',
     'stats.tilstand':       'Tilstand',
     'stats.antall':         'Antall',
@@ -71,7 +70,6 @@ export const LANG = {
   en: {
     'sheet.directions':     'Directions',
     'search.placeholder':   'Search…',
-    'search.label':         'Search…',
     'stats.status':         'Status',
     'stats.tilstand':       'Condition',
     'stats.antall':         'Tables',

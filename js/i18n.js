@@ -28,7 +28,6 @@ export function applyLang() {
   });
 
   document.getElementById('searchInput').placeholder = t('search.placeholder');
-  document.querySelector('.search-label').textContent = t('search.label');
   document.getElementById('langSubLabel').textContent = t('lang.sub');
   document.getElementById('seg-no').classList.toggle('active', lang === 'no');
   document.getElementById('seg-en').classList.toggle('active', lang === 'en');
